@@ -1,0 +1,55 @@
+Logs
+
+logs
+.log
+npm-debug.log
+yarn-debug.log*
+yarn-error.log*
+firebase-debug.log*
+firebase-debug..log
+
+Runtime data
+
+pids
+*.pid
+*.seed
+*.pid.lock
+
+Dependency directories
+
+node_modules/
+/jspm_packages/
+.npm
+
+Ficheiros de Build e Cache
+
+/dist
+/build
+/tmp
+lib-cov
+coverage
+.nyc_output
+.grunt
+bower_components
+
+Arquivos de IDEs (VS Code)
+
+.vscode/
+.history
+
+Configurações do Firebase/Ferramentas Locais (CRÍTICO)
+
+Estes ficheiros NUNCA devem ser enviados para o Git.
+
+.firebase/
+.firebaserc
+hosting.cache
+.dataconnect
+
+Outros
+
+.eslintcache
+.node_repl_history
+*.tgz
+.yarn-integrity
+.env
