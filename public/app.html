@@ -614,14 +614,19 @@
                         // Tenta login anônimo. O erro 'auth/configuration-not-found' indica
                         // que o método de login ANÔNIMO precisa ser ativado no Firebase Console.
                         try {
+                             // --- FORÇAR NOVA AUTENTICAÇÃO ---
+                             // Este passo ajuda a limpar tokens corrompidos que podem causar erros de permissão
+                             await signOut(auth); // Garante que a sessão antiga foi encerrada
+                             await signInAnonymously(auth); // Inicia uma nova sessão
+                            // ---------------------------------
+                            
                             if (initialAuthToken) {
                                 // Se estivesse no ambiente Canvas
                                 // await signInWithCustomToken(auth, initialAuthToken);
                                 state.error = "O token inicial não está disponível. Use o login manual.";
                                 state.view = 'login';
-                            } else {
-                                await signInAnonymously(auth);
-                            }
+                            } 
+                            // Note: signInAnonymously já foi chamado e, se falhar, cai no catch
                         } catch (e) {
                              if (e.code === 'auth/configuration-not-found') {
                                  state.error = `SOLUÇÃO NECESSÁRIA: O método de autenticação 'Anónima (Anonymous)' não está ativo no seu projeto Firebase. Vá ao Console > Authentication > Sign-in method e HABILITE o Anonymous.`;
