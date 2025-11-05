@@ -110,8 +110,7 @@
 
         // --- Funções de Utilitários ---
         function getCollectionPath(collectionName) {
-            // FIX APLICADO: Restaurando o caminho completo, pois é onde os dados foram inseridos
-            // Você pode tentar simplificar para 'return collectionName;' se tiver problemas (mas exige regra diferente no Firebase)
+            // FIX APLICADO: Usando o caminho completo e correto, que deve corresponder à REGRA DE SEGURANÇA FINAL
             return `artifacts/${appId}/public/data/${collectionName}`; 
         }
 
