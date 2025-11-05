@@ -110,8 +110,9 @@
 
         // --- Funções de Utilitários ---
         function getCollectionPath(collectionName) {
-            // FIX APLICADO: Simplificando o caminho para o nome da coleção, assumindo que a regra de segurança cobre a raiz.
-            return collectionName;
+            // FIX APLICADO: Restaurando o caminho completo, pois é onde os dados foram inseridos
+            // Você pode tentar simplificar para 'return collectionName;' se tiver problemas (mas exige regra diferente no Firebase)
+            return `artifacts/${appId}/public/data/${collectionName}`; 
         }
 
         // Converte a opção de prazo em um objeto Date
