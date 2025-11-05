@@ -615,9 +615,10 @@
                         // que o método de login ANÔNIMO precisa ser ativado no Firebase Console.
                         try {
                              // --- FORÇAR NOVA AUTENTICAÇÃO ---
-                             // Este passo ajuda a limpar tokens corrompidos que podem causar erros de permissão
-                             await signOut(auth); // Garante que a sessão antiga foi encerrada
-                             await signInAnonymously(auth); // Inicia uma nova sessão
+                             // Garante que a sessão antiga foi encerrada
+                             await signOut(auth); 
+                             // Inicia uma nova sessão (usando o método mais robusto)
+                             await signInAnonymously(auth); 
                             // ---------------------------------
                             
                             if (initialAuthToken) {
