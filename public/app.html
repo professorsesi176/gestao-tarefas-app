@@ -110,8 +110,8 @@
 
         // --- Funções de Utilitários ---
         function getCollectionPath(collectionName) {
-            // Usaremos o caminho PUBLICO
-            return `artifacts/${appId}/public/data/${collectionName}`;
+            // CÓDIGO CORRIGIDO: Retorna apenas o nome da coleção para simplificar a regra de segurança do Firestore
+            return collectionName;
         }
 
         // Converte a opção de prazo em um objeto Date
