@@ -11,15 +11,16 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f7f9fb;
-            color: #1f2937;
+            color: #1e1e1e; /* Quase preto */
         }
         .card {
             background-color: white;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+        /* Design Primário: Vermelho SESI */
         .btn-primary {
-            background-color: #1e3a8a;
+            background-color: #CC0000; /* Vermelho Escuro */
             color: white;
             padding: 10px 20px;
             border-radius: 8px;
@@ -27,7 +28,7 @@
             cursor: pointer;
         }
         .btn-primary:hover {
-            background-color: #172554;
+            background-color: #A00000; /* Vermelho mais escuro para hover */
         }
         .input-style {
             padding: 10px;
@@ -46,7 +47,7 @@
     <div id="app-container" class="min-h-screen p-4 sm:p-8 flex flex-col items-center">
         <!-- Conteúdo da aplicação será injetado aqui -->
         <div id="loading-spinner" class="text-center p-12">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto"></div>
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
             <p class="mt-4 text-gray-600">Carregando aplicação...</p>
         </div>
     </div>
@@ -54,7 +55,7 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, addDoc, setDoc, onSnapshot, collection, query, where, serverTimestamp, updateDoc, deleteDoc, getDoc, setLogLevel, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- O SEU BLOCO REAL DE CONFIGURAÇÃO FIREBASE ---
@@ -76,6 +77,8 @@
         const appId = firebaseConfig.projectId; 
         // --- FIM DO BLOCO REAL DE CONFIGURAÇÃO FIREBASE ---
 
+        // Custom error code for handling permission failures
+        const PERMISSIONS_ERROR = "PERMISSAO_FALHOU";
 
         let db, auth, app;
         let userId = null;
@@ -104,20 +107,6 @@
             "10001": { email: "aluno1a@escola.com", ra: "10001", perfil: "Aluno", id_turma: "1A", nome: "João M. Santos" },
             "30005": { email: "aluno3b@escola.com", ra: "30005", perfil: "Aluno", id_turma: "3B", nome: "Maria T. Costa" },
         };
-
-        // Função para obter perfil do Firestore ou fallback
-        function getProfileByCredentials(email, ra) {
-            const raKey = ra.toUpperCase();
-            const emailLower = email.toLowerCase();
-            
-            // 1. Tenta encontrar no estado de usuários (Firestore)
-            const profile = state.users.find(p => p.email === emailLower && p.ra === raKey);
-            if (profile) return profile;
-
-            // 2. Tenta encontrar no MOCK (se o Firestore estiver vazio)
-            const mockProfile = Object.values(MOCK_USER_PROFILES).find(p => p.email === emailLower && p.ra === raKey);
-            return mockProfile || null;
-        }
 
         // --- Funções de Utilitários ---
         function getCollectionPath(collectionName) {
@@ -159,117 +148,43 @@
             const d = date.toDate ? date.toDate() : new Date(date);
             return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
         }
-
-        // --- Inicialização do Firebase e Auth ---
-        async function initFirebase() {
-            if (!firebaseConfig) {
-                state.error = "Erro de configuração do Firebase.";
-                renderApp();
-                return;
-            }
-
-            try {
-                // setLogLevel('debug');
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-                
-                // NOTA: REMOVIDO getStorage(app) para evitar exigência do Plano Blaze
-
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        
-                        await ensureInitialTurmas();
-                        setupFirestoreListeners();
-                        
-                        if (state.users.length === 0) {
-                            userProfile = MOCK_USER_PROFILES["99999"]; // Voltando ao mock Professor original
-                            state.view = 'professor_dashboard';
-                        } else {
-                            state.view = 'login';
-                        }
-
-                    } else {
-                        // Tenta login anônimo. O erro 'auth/configuration-not-found' indica
-                        // que o método de login ANÔNIMO precisa ser ativado no Firebase Console.
-                        try {
-                            if (initialAuthToken) {
-                                // Se estivesse no ambiente Canvas
-                                // await signInWithCustomToken(auth, initialAuthToken);
-                                state.error = "O token inicial não está disponível. Use o login manual.";
-                                state.view = 'login';
-                            } else {
-                                await signInAnonymously(auth);
-                            }
-                        } catch (e) {
-                             if (e.code === 'auth/configuration-not-found') {
-                                 state.error = `SOLUÇÃO NECESSÁRIA: O método de autenticação 'Anónima (Anonymous)' não está ativo no seu projeto Firebase. Vá ao Console > Authentication > Sign-in method e HABILITE o Anonymous.`;
-                            } else {
-                                 state.error = `Erro na autenticação: ${e.message}. Verifique as chaves e regras.`;
-                            }
-                            state.view = 'login';
-                        }
-                    }
-                    state.loading = false;
-                    renderApp();
-                });
-            } catch (e) {
-                console.error("Erro ao inicializar Firebase ou Autenticação:", e);
-                state.error = "Erro ao carregar o aplicativo. Verifique a conexão.";
-                state.loading = false;
-                renderApp();
-            }
-        }
         
-        async function ensureInitialTurmas() {
-            const turmasCol = collection(db, getCollectionPath('turmas'));
-            for (const nome of state.turmas) {
-                const turmaDoc = doc(turmasCol, nome);
-                const docSnap = await getDoc(turmaDoc);
-                if (!docSnap.exists()) {
-                    await setDoc(turmaDoc, { nome: nome, criadaEm: serverTimestamp() });
-                }
-            }
-        }
+        // =========================================================================
+        // FUNÇÕES GLOBAIS (Chamadas pelo onclick do HTML) - CORRIGIDAS PARA ESCOPO GLOBAL (window)
+        // =========================================================================
 
-        // --- Listeners do Firestore (Real-time) ---
-        function setupFirestoreListeners() {
-            // Listener de Usuários (para o login funcionar com dados reais)
-            const usersQuery = query(collection(db, getCollectionPath('users')));
-            onSnapshot(usersQuery, (snapshot) => {
-                state.users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderApp();
-            }, (error) => console.error("Erro ao ouvir usuários:", error));
+        // Função para obter perfil do Firestore ou fallback
+        function getProfileByCredentials(email, ra) {
+            const raKey = ra.toUpperCase();
+            const emailLower = email.toLowerCase();
             
-            // Listener de Tarefas
-            const tarefasQuery = query(collection(db, getCollectionPath('tarefas')));
-            onSnapshot(tarefasQuery, (snapshot) => {
-                state.tarefas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderApp();
-            }, (error) => console.error("Erro ao ouvir tarefas:", error));
+            // 1. Tenta encontrar no estado de usuários (Firestore)
+            const profile = state.users.find(p => p.email === emailLower && p.ra === raKey);
+            if (profile) return profile;
 
-            // Listener de Entregas
-            const entregasQuery = query(collection(db, getCollectionPath('entregas')));
-            onSnapshot(entregasQuery, (snapshot) => {
-                state.entregas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderApp();
-            }, (error) => console.error("Erro ao ouvir entregas:", error));
+            // 2. Tenta encontrar no MOCK (se o Firestore estiver vazio)
+            const mockProfile = Object.values(MOCK_USER_PROFILES).find(p => p.email === emailLower && p.ra === raKey);
+            return mockProfile || null;
         }
 
-        // --- Logout Function ---
-        function handleLogout() {
+        // --- Logout Function (FIXED: Realiza o sign out no Firebase Auth) ---
+        window.handleLogout = function() {
+            // 1. Tenta encerrar a sessão do Firebase
+            if (auth) {
+                signOut(auth).catch(e => console.error("Erro ao fazer sign out:", e));
+            }
+            
+            // 2. Limpa o estado local
             userProfile = null;
             state.loginEmail = '';
             state.loginRA = '';
             state.view = 'login';
             state.message = "Sessão terminada com sucesso.";
             renderApp();
-            // Numa aplicação real com Firebase Auth: auth.signOut();
         }
 
         // --- Login Manual (Simulado para o requisito Email/RA) ---
-        async function handleLogin() {
+        window.handleLogin = async function() {
             state.error = null;
             state.message = null;
 
@@ -285,9 +200,49 @@
             }
         }
         
-        // --- Ações (Professor) ---
+        window.navigate = function(viewName, data = null) {
+            state.view = viewName;
+            state.selectedTask = data;
+            state.editingUser = null; // Limpa o estado de edição ao navegar
+            state.error = null;
+            state.message = null;
+            renderApp();
+        }
 
-        async function deleteAllUsers() {
+        window.toggleTaskStatus = function(entregaId, currentStatus) {
+            const newStatus = currentStatus === 'Concluída' ? 'Pendente' : 'Concluída';
+            const entregaRef = doc(db, getCollectionPath('entregas'), entregaId);
+            
+            updateDoc(entregaRef, { 
+                status_avaliacao: newStatus,
+                data_correcao: serverTimestamp() 
+            }).catch(e => {
+                console.error("Erro ao atualizar status:", e);
+                state.error = "Não foi possível atualizar o status da entrega.";
+                renderApp();
+            });
+        }
+        
+        window.sendReminder = function(turma) {
+            state.message = `Lembretes automáticos (simulados) enviados para a turma ${turma}!`;
+            renderApp();
+        }
+
+        window.startEditUser = function(user) {
+            state.editingUser = user;
+            state.error = null;
+            state.message = null;
+            renderApp();
+        }
+
+        window.cancelEditUser = function() {
+            state.editingUser = null;
+            state.error = null;
+            state.message = null;
+            renderApp();
+        }
+
+        window.deleteAllUsers = async function() {
             state.error = null;
             state.message = null;
 
@@ -327,7 +282,7 @@
             }
         }
         
-        async function deleteUser(ra) {
+        window.deleteUser = async function(ra) {
             state.error = null;
             state.message = null;
 
@@ -343,22 +298,9 @@
                 renderApp();
             }
         }
-        
-        function startEditUser(user) {
-            state.editingUser = user;
-            state.error = null;
-            state.message = null;
-            renderApp();
-        }
 
-        function cancelEditUser() {
-            state.editingUser = null;
-            state.error = null;
-            state.message = null;
-            renderApp();
-        }
-        
-        async function saveUser(e) {
+        // Funções de Criação/Submissão (chamadas pelo HTML)
+        window.saveUser = async function(e) {
             e.preventDefault();
             const form = e.target;
             
@@ -400,7 +342,7 @@
             }
         }
 
-        async function handleUserImport(e) {
+        window.handleUserImport = async function(e) {
             e.preventDefault();
             const form = e.target;
             const dataInput = form.userData.value.trim();
@@ -519,7 +461,7 @@
         }
 
 
-        async function createNewTask(e) {
+        window.createNewTask = async function(e) {
             e.preventDefault();
             const form = e.target;
             const prazoOpcao = form.prazo_opcao.value;
@@ -571,31 +513,7 @@
             }
         }
 
-        function toggleTaskStatus(entregaId, currentStatus) {
-            const newStatus = currentStatus === 'Concluída' ? 'Pendente' : 'Concluída';
-            const entregaRef = doc(db, getCollectionPath('entregas'), entregaId);
-            
-            updateDoc(entregaRef, { 
-                status_avaliacao: newStatus,
-                data_correcao: serverTimestamp() 
-            }).catch(e => {
-                console.error("Erro ao atualizar status:", e);
-                state.error = "Não foi possível atualizar o status da entrega.";
-                renderApp();
-            });
-        }
-        
-        function navigate(viewName, data = null) {
-            state.view = viewName;
-            state.selectedTask = data;
-            state.editingUser = null; // Limpa o estado de edição ao navegar
-            state.error = null;
-            state.message = null;
-            renderApp();
-        }
-
-        // --- Ações (Aluno) ---
-        async function submitTask(e) {
+        window.submitTask = async function(e) {
             e.preventDefault();
             const form = e.target;
             const selectedTaskId = form.id_tarefa.value;
@@ -655,11 +573,122 @@
                 renderApp();
             }
         }
-        
-        function sendReminder(turma) {
-            state.message = `Lembretes automáticos (simulados) enviados para a turma ${turma}!`;
-            renderApp();
+
+
+        // =========================================================================
+        // FIM DAS FUNÇÕES GLOBAIS
+        // =========================================================================
+
+
+        // --- Inicialização do Firebase e Auth ---
+        async function initFirebase() {
+            if (!firebaseConfig) {
+                state.error = "Erro de configuração do Firebase.";
+                renderApp();
+                return;
+            }
+
+            try {
+                // setLogLevel('debug');
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                
+                // NOTA: REMOVIDO getStorage(app) para evitar exigência do Plano Blaze
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        
+                        await ensureInitialTurmas();
+                        setupFirestoreListeners();
+                        
+                        if (state.users.length === 0) {
+                            userProfile = MOCK_USER_PROFILES["99999"]; // Voltando ao mock Professor original
+                            state.view = 'professor_dashboard';
+                        } else {
+                            state.view = 'login';
+                        }
+
+                    } else {
+                        // Tenta login anônimo. O erro 'auth/configuration-not-found' indica
+                        // que o método de login ANÔNIMO precisa ser ativado no Firebase Console.
+                        try {
+                            if (initialAuthToken) {
+                                // Se estivesse no ambiente Canvas
+                                // await signInWithCustomToken(auth, initialAuthToken);
+                                state.error = "O token inicial não está disponível. Use o login manual.";
+                                state.view = 'login';
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                        } catch (e) {
+                             if (e.code === 'auth/configuration-not-found') {
+                                 state.error = `SOLUÇÃO NECESSÁRIA: O método de autenticação 'Anónima (Anonymous)' não está ativo no seu projeto Firebase. Vá ao Console > Authentication > Sign-in method e HABILITE o Anonymous.`;
+                            } else {
+                                 state.error = `Erro na autenticação: ${e.message}. Verifique as chaves e regras.`;
+                            }
+                            state.view = 'login';
+                        }
+                    }
+                    state.loading = false;
+                    renderApp();
+                });
+            } catch (e) {
+                console.error("Erro ao inicializar Firebase ou Autenticação:", e);
+                state.error = "Erro ao carregar o aplicativo. Verifique a conexão.";
+                state.loading = false;
+                renderApp();
+            }
         }
+        
+        async function ensureInitialTurmas() {
+            const turmasCol = collection(db, getCollectionPath('turmas'));
+            for (const nome of state.turmas) {
+                const turmaDoc = doc(turmasCol, nome);
+                const docSnap = await getDoc(turmaDoc);
+                if (!docSnap.exists()) {
+                    await setDoc(turmaDoc, { nome: nome, criadaEm: serverTimestamp() });
+                }
+            }
+        }
+
+        // --- Listeners do Firestore (Real-time) ---
+        function setupFirestoreListeners() {
+            
+            const handleError = (error, collectionName) => {
+                console.error(`Erro ao ouvir ${collectionName}:`, error);
+                if (error.code === 'permission-denied') {
+                    // Set a global error state to trigger the prominent fix message
+                    state.error = PERMISSIONS_ERROR; 
+                } else {
+                    state.error = `Erro ao carregar ${collectionName}. ${error.message}`;
+                }
+                renderApp();
+            };
+
+            // Listener de Usuários (para o login funcionar com dados reais)
+            const usersQuery = query(collection(db, getCollectionPath('users')));
+            onSnapshot(usersQuery, (snapshot) => {
+                state.users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderApp();
+            }, (error) => handleError(error, 'usuários')); // Use handleError
+
+            // Listener de Tarefas
+            const tarefasQuery = query(collection(db, getCollectionPath('tarefas')));
+            onSnapshot(tarefasQuery, (snapshot) => {
+                state.tarefas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderApp();
+            }, (error) => handleError(error, 'tarefas')); // Use handleError
+
+            // Listener de Entregas
+            const entregasQuery = query(collection(db, getCollectionPath('entregas')));
+            onSnapshot(entregasQuery, (snapshot) => {
+                state.entregas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderApp();
+            }, (error) => handleError(error, 'entregas')); // Use handleError
+        }
+
 
         // --- Componentes de Renderização ---
 
@@ -673,6 +702,19 @@
                             <p class="mb-3 text-sm">${state.error}</p>
                             <p class="font-semibold text-sm">
                                 Ação: Vá ao Console do Firebase > Authentication > Sign-in method e HABILITE o método 'Anonymous'.
+                            </p>
+                        </div>`;
+            }
+
+            // Tratamento de Erro Crítico (Permissões de Firestore)
+            if (state.error === PERMISSIONS_ERROR) {
+                return `<div class="bg-red-200 border-2 border-red-700 text-red-800 px-6 py-4 rounded-xl relative mb-6">
+                            <h3 class="font-bold text-lg mb-2">ERRO CRÍTICO DE PERMISSÕES!</h3>
+                            <p class="mb-3 text-sm">O aplicativo não consegue ler ou escrever na base de dados (Firestore). Isso é quase sempre devido a uma falha nas Regras de Segurança. </p>
+                            <p class="font-semibold text-sm">
+                                Ação: Vá ao Console do Firebase > Firestore > Regras e certifique-se de que a regra é: 
+                                <code>allow read, write: if request.auth != null;</code>
+                                (Esta regra permite o acesso a qualquer utilizador logado).
                             </p>
                         </div>`;
             }
@@ -699,7 +741,7 @@
             return `
                 <div class="w-full max-w-md mt-20">
                     <div class="card p-8">
-                        <h2 class="text-3xl font-bold text-center text-indigo-800 mb-6">Acesso ao Sistema de Tarefas</h2>
+                        <h2 class="text-3xl font-bold text-center text-red-800 mb-6">Acesso ao Sistema de Tarefas</h2>
                         ${renderMessages()}
                         <form id="login-form" onsubmit="event.preventDefault(); handleLogin();">
                             <div class="mb-4">
@@ -753,7 +795,7 @@
             return `
                 <div class="w-full max-w-6xl">
                     ${renderHeader()}
-                    <h1 class="text-3xl font-bold text-indigo-800 mb-6">Dashboard do Professor</h1>
+                    <h1 class="text-3xl font-bold text-red-800 mb-6">Dashboard do Professor</h1>
                     
                     ${renderMessages()}
 
@@ -763,7 +805,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
                             Criar Nova Tarefa
                         </button>
-                        <button onclick="navigate('professor_manage_users')" class="btn-primary flex items-center bg-indigo-600 hover:bg-indigo-700">
+                        <button onclick="navigate('professor_manage_users')" class="btn-primary flex items-center bg-red-600 hover:bg-red-700">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906C15.86 13.91 16 14.59 16 15v3h2v-3a5.972 5.972 0 00-.75-2.906z" fill-rule="evenodd" clip-rule="evenodd"/></svg>
                             Gerenciar Usuários (${state.users.length})
                         </button>
@@ -773,13 +815,13 @@
                     <h2 class="text-xl font-semibold mb-4 text-gray-700">Relatório de Tarefas por Turma</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                         ${turmas.map(t => `
-                            <div class="card p-5 border-t-4 border-indigo-500 hover:shadow-lg transition">
+                            <div class="card p-5 border-t-4 border-red-600 hover:shadow-lg transition">
                                 <h3 class="text-2xl font-bold mb-2">${t.nome}</h3>
                                 <p class="text-sm text-gray-600">Total de Alunos: ${t.totalAlunos}</p>
                                 <div class="mt-3 space-y-2">
                                     <div class="flex justify-between text-sm">
                                         <span>Tarefas Atribuídas:</span>
-                                        <span class="font-medium text-indigo-600">${t.tarefasCount}</span>
+                                        <span class="font-medium text-red-600">${t.tarefasCount}</span>
                                     </div>
                                     <div class="flex justify-between text-sm">
                                         <span>Entregas Registradas:</span>
@@ -790,7 +832,7 @@
                                         <span class="font-medium text-red-600">${t.pendentesCount}</span>
                                     </div>
                                 </div>
-                                <button onclick="sendReminder('${t.nome}')" class="w-full mt-4 text-xs py-2 bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200 transition">
+                                <button onclick="sendReminder('${t.nome}')" class="w-full mt-4 text-xs py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">
                                     Enviar Lembretes
                                 </button>
                             </div>
@@ -838,7 +880,7 @@
             return `
                 <div class="w-full max-w-6xl">
                     ${renderHeader()}
-                    <h1 class="text-3xl font-bold text-indigo-800 mb-2">Olá, ${userProfile.nome} (Turma: ${turmaAluno})</h1>
+                    <h1 class="text-3xl font-bold text-red-800 mb-2">Olá, ${userProfile.nome} (Turma: ${turmaAluno})</h1>
                     <p class="text-gray-600 mb-6">Aqui estão suas tarefas e histórico de entregas.</p>
                     
                     ${renderMessages()}
@@ -872,8 +914,8 @@
                                         </td>
                                         <td class="px-3 py-4 whitespace-nowrap text-sm font-medium">
                                             <button onclick="navigate('aluno_submit_task', ${JSON.stringify(t).split('"').join("''")})" 
-                                                    class="text-indigo-600 hover:text-indigo-900 text-sm font-medium p-1 rounded-lg transition 
-                                                    ${t.status_entrega === 'Entregue' ? 'bg-yellow-50 hover:bg-yellow-100' : 'bg-indigo-50 hover:bg-indigo-100'}">
+                                                    class="text-red-600 hover:text-red-900 text-sm font-medium p-1 rounded-lg transition 
+                                                    ${t.status_entrega === 'Entregue' ? 'bg-yellow-50 hover:bg-yellow-100' : 'bg-red-50 hover:bg-red-100'}">
                                                 ${t.status_entrega === 'Entregue' ? 'Ver/Alterar Envio' : 'Enviar Tarefa'}
                                             </button>
                                         </td>
@@ -938,7 +980,7 @@
             return `
                 <div class="w-full max-w-3xl">
                     ${renderHeader()}
-                    <h1 class="text-3xl font-bold text-indigo-800 mb-6">Criar Nova Tarefa</h1>
+                    <h1 class="text-3xl font-bold text-red-800 mb-6">Criar Nova Tarefa</h1>
                     
                     ${renderMessages()}
 
@@ -963,12 +1005,12 @@
                             </div>
 
                             <!-- Seleção de Turmas (Checkboxes) -->
-                            <div class="mb-6 border p-4 rounded-lg bg-indigo-50">
-                                <label class="block text-lg font-bold text-indigo-800 mb-3">Turmas Alvo (Seleção Múltipla)</label>
+                            <div class="mb-6 border p-4 rounded-lg bg-red-50">
+                                <label class="block text-lg font-bold text-red-800 mb-3">Turmas Alvo (Seleção Múltipla)</label>
                                 <div class="grid grid-cols-3 gap-3">
                                     ${turmas.map(turma => `
                                         <div class="flex items-center">
-                                            <input id="turma_${turma}" name="turma_alvo" type="checkbox" value="${turma}" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                            <input id="turma_${turma}" name="turma_alvo" type="checkbox" value="${turma}" class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
                                             <label for="turma_${turma}" class="ml-2 block text-sm font-medium text-gray-700">${turma}</label>
                                         </div>
                                     `).join('')}
@@ -991,7 +1033,7 @@
                                 <button type="button" onclick="navigate('professor_dashboard')" class="w-1/2 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
                                     Cancelar
                                 </button>
-                                <button type="submit" class="w-1/2 py-2 btn-primary bg-green-600 hover:bg-green-700">
+                                <button type="submit" class="w-1/2 py-2 btn-primary bg-red-600 hover:bg-red-700">
                                     Criar Tarefa
                                 </button>
                             </div>
@@ -1010,14 +1052,14 @@
             return `
                 <div class="w-full max-w-3xl">
                     ${renderHeader()}
-                    <h1 class="text-3xl font-bold text-indigo-800 mb-4">Enviar Tarefa: ${tarefa.tema}</h1>
+                    <h1 class="text-3xl font-bold text-red-800 mb-4">Enviar Tarefa: ${tarefa.tema}</h1>
                     <p class="text-sm text-gray-600 mb-6">Turma: ${tarefa.id_turma} | Prazo: ${formatDeadline(tarefa.data_prazo)}</p>
                     
                     ${renderMessages()}
 
                     <div class="card p-8">
-                        <div class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-lg">
-                            <h2 class="text-lg font-semibold text-blue-800">Instruções</h2>
+                        <div class="mb-6 p-4 bg-gray-50 border-l-4 border-gray-500 rounded-lg">
+                            <h2 class="text-lg font-semibold text-gray-800">Instruções</h2>
                             <p class="text-gray-700 text-sm mt-1 whitespace-pre-wrap">${tarefa.descricao}</p>
                         </div>
                         
@@ -1027,7 +1069,7 @@
                                 <p class="text-gray-700 text-sm mt-1">
                                     Esta tarefa já foi enviada em ${formatDeadline(entregaExistente.data_entrega)}. Você pode reenviar o link se necessário.
                                 </p>
-                                <p class="text-xs text-gray-600 mt-2">Link Anterior: <a href="${entregaExistente.caminho_arquivo_pdf}" target="_blank" class="text-indigo-600 hover:text-indigo-800 underline">${entregaExistente.caminho_arquivo_pdf}</a></p>
+                                <p class="text-xs text-gray-600 mt-2">Link Anterior: <a href="${entregaExistente.caminho_arquivo_pdf}" target="_blank" class="text-red-600 hover:text-red-800 underline">${entregaExistente.caminho_arquivo_pdf}</a></p>
                             </div>
                         ` : ''}
 
@@ -1047,7 +1089,7 @@
                                 <button type="button" onclick="navigate('aluno_dashboard')" class="w-1/2 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
                                     Voltar
                                 </button>
-                                <button type="submit" id="submit-button" class="w-1/2 py-2 btn-primary bg-indigo-600 hover:bg-indigo-700">
+                                <button type="submit" id="submit-button" class="w-1/2 py-2 btn-primary bg-red-600 hover:bg-red-700">
                                     ${entregaExistente ? 'Reenviar Link' : 'Enviar Tarefa'}
                                 </button>
                             </div>
@@ -1087,8 +1129,8 @@
             return `
                 <div class="w-full max-w-6xl">
                     ${renderHeader()}
-                    <h1 class="text-3xl font-bold text-indigo-800 mb-4">Correção de Entregas</h1>
-                    <button onclick="navigate('professor_dashboard')" class="text-indigo-600 hover:text-indigo-800 mb-6 flex items-center">
+                    <h1 class="text-3xl font-bold text-red-800 mb-4">Correção de Entregas</h1>
+                    <button onclick="navigate('professor_dashboard')" class="text-red-600 hover:text-red-800 mb-6 flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414L7.586 9.096 5.293 6.803a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
                         Voltar ao Dashboard
                     </button>
@@ -1133,7 +1175,7 @@
                                         <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${a.dataEntrega}</td>
                                         <td class="px-3 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
                                             ${a.pdfLink ? `
-                                                <a href="${a.pdfLink}" target="_blank" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1 rounded-lg transition text-xs font-semibold">
+                                                <a href="${a.pdfLink}" target="_blank" class="text-red-600 hover:text-red-900 bg-red-50 px-3 py-1 rounded-lg transition text-xs font-semibold">
                                                     Ver PDF (Link)
                                                 </a>
                                             ` : `
@@ -1191,7 +1233,7 @@
                                 <tr>
                                     <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-truncate max-w-xs">${t.tema}</td>
                                     <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${t.disciplina}</td>
-                                    <td class="px-3 py-4 whitespace-nowrap text-sm font-bold text-indigo-600">${t.id_turma}</td>
+                                    <td class="px-3 py-4 whitespace-nowrap text-sm font-bold text-red-600">${t.id_turma}</td>
                                     <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${formatDeadline(t.data_prazo)}</td>
                                     
                                     ${isProfessor ? `
@@ -1201,7 +1243,7 @@
                                         </td>
                                         <td class="px-3 py-4 whitespace-nowrap text-center text-sm font-medium">
                                             <button onclick="navigate('professor_view_delivery', ${JSON.stringify(t).split('"').join("''")})" 
-                                                    class="text-sm bg-blue-100 text-blue-600 hover:bg-blue-200 px-3 py-1 rounded-lg transition font-semibold">
+                                                    class="text-sm bg-red-100 text-red-600 hover:bg-red-200 px-3 py-1 rounded-lg transition font-semibold">
                                                 Corrigir (${entregues})
                                             </button>
                                         </td>
@@ -1222,7 +1264,7 @@
             return `
                 <div class="w-full max-w-6xl">
                     ${renderHeader()}
-                    <h1 class="text-3xl font-bold text-indigo-800 mb-6">Gerenciamento de Usuários</h1>
+                    <h1 class="text-3xl font-bold text-red-800 mb-6">Gerenciamento de Usuários</h1>
                     
                     ${renderMessages()}
 
@@ -1243,7 +1285,7 @@
                     </div>
 
                     ${state.editingUser ? `
-                        <div class="card p-6 mb-8 border-t-4 border-blue-500">
+                        <div class="card p-6 mb-8 border-t-4 border-red-600">
                             <h2 class="text-xl font-semibold mb-4">${state.editingUser.ra ? 'Editar Usuário' : 'Incluir Novo Usuário'}</h2>
                             <form onsubmit="saveUser(event)">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -1275,7 +1317,7 @@
                                     <button type="button" onclick="cancelEditUser()" class="py-2 px-4 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
                                         Cancelar
                                     </button>
-                                    <button type="submit" class="py-2 px-4 btn-primary bg-blue-600 hover:bg-blue-700">
+                                    <button type="submit" class="py-2 px-4 btn-primary bg-red-600 hover:bg-red-700">
                                         ${state.editingUser.ra ? 'Salvar Alterações' : 'Incluir Usuário'}
                                     </button>
                                 </div>
@@ -1296,7 +1338,7 @@
                         ${renderUserTable(alunos, 'Aluno')}
                     </div>
                     
-                    <button onclick="navigate('professor_dashboard')" class="text-indigo-600 hover:text-indigo-800 flex items-center mt-6">
+                    <button onclick="navigate('professor_dashboard')" class="text-red-600 hover:text-red-800 flex items-center mt-6">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
                         Voltar ao Dashboard
                     </button>
@@ -1325,12 +1367,12 @@
                             <tr>
                                 <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${u.nome}</td>
                                 <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${u.email}</td>
-                                <td class="px-3 py-4 whitespace-nowrap text-sm text-indigo-600 font-semibold">${u.ra}</td>
+                                <td class="px-3 py-4 whitespace-nowrap text-sm text-red-600 font-semibold">${u.ra}</td>
                                 <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-700">
                                     ${u.id_turma || u.perfil}
                                 </td>
                                 <td class="px-3 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
-                                    <button onclick="startEditUser(${JSON.stringify(u).split('"').join("''")})" class="text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1 rounded-lg transition font-semibold">
+                                    <button onclick="startEditUser(${JSON.stringify(u).split('"').join("''")})" class="text-sm bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 rounded-lg transition font-semibold">
                                         Editar
                                     </button>
                                     <button onclick="deleteUser('${u.ra}')" class="text-sm bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 rounded-lg transition font-semibold">
@@ -1350,7 +1392,7 @@
             return `
                 <div class="w-full max-w-4xl">
                     ${renderHeader()}
-                    <h1 class="text-3xl font-bold text-indigo-800 mb-6">Importação em Massa (Apenas Alunos)</h1>
+                    <h1 class="text-3xl font-bold text-red-800 mb-6">Importação em Massa (Apenas Alunos)</h1>
                     
                     ${renderMessages()}
                     
@@ -1396,10 +1438,10 @@
                         <p>${message}</p>
                     </div>
                     ${userProfile ? `
-                        <button onclick="navigate('professor_dashboard')" class="mt-6 text-indigo-600 hover:text-indigo-800 flex items-center">
+                        <button onclick="navigate('professor_dashboard')" class="mt-6 text-red-600 hover:text-red-800 flex items-center">
                             Voltar ao Dashboard
                         </button>
-                    ` : `<button onclick="navigate('login')" class="mt-6 text-indigo-600 hover:text-indigo-800 flex items-center">
+                    ` : `<button onclick="navigate('login')" class="mt-6 text-red-600 hover:text-red-800 flex items-center">
                             Voltar ao Login
                         </button>`
                     }
