@@ -1,89 +1,1452 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome to Firebase Hosting</title>
-
-    <!-- update the version number as needed -->
-    <script defer src="/__/firebase/12.5.0/firebase-app-compat.js"></script>
-    <!-- include only the Firebase features as you need -->
-    <script defer src="/__/firebase/12.5.0/firebase-auth-compat.js"></script>
-    <script defer src="/__/firebase/12.5.0/firebase-database-compat.js"></script>
-    <script defer src="/__/firebase/12.5.0/firebase-firestore-compat.js"></script>
-    <script defer src="/__/firebase/12.5.0/firebase-functions-compat.js"></script>
-    <script defer src="/__/firebase/12.5.0/firebase-messaging-compat.js"></script>
-    <script defer src="/__/firebase/12.5.0/firebase-storage-compat.js"></script>
-    <script defer src="/__/firebase/12.5.0/firebase-analytics-compat.js"></script>
-    <script defer src="/__/firebase/12.5.0/firebase-remote-config-compat.js"></script>
-    <script defer src="/__/firebase/12.5.0/firebase-performance-compat.js"></script>
-    <!-- 
-      initialize the SDK after all desired features are loaded, set useEmulator to false
-      to avoid connecting the SDK to running emulators.
-    -->
-    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
-
-    <style media="screen">
-      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
-      #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
-      #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
-      #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
-      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
-      #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
-      #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
-      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
-      @media (max-width: 600px) {
-        body, #message { margin-top: 0; background: white; box-shadow: none; }
-        body { border-top: 16px solid #ffa100; }
-      }
-    </style>
-  </head>
-  <body>
-    <div id="message">
-      <h2>Welcome</h2>
-      <h1>Firebase Hosting Setup Complete</h1>
-      <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
-      <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
-    </div>
-    <p id="load">Firebase SDK Loading&hellip;</p>
-
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const loadEl = document.querySelector('#load');
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        // // The Firebase SDK is initialized and available here!
-        //
-        // firebase.auth().onAuthStateChanged(user => { });
-        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
-        // firebase.firestore().doc('/foo/bar').get().then(() => { });
-        // firebase.functions().httpsCallable('yourFunction')().then(() => { });
-        // firebase.messaging().requestPermission().then(() => { });
-        // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
-        // firebase.analytics(); // call to activate
-        // firebase.analytics().logEvent('tutorial_completed');
-        // firebase.performance(); // call to activate
-        //
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-
-        try {
-          let app = firebase.app();
-          let features = [
-            'auth', 
-            'database', 
-            'firestore',
-            'functions',
-            'messaging', 
-            'storage', 
-            'analytics', 
-            'remoteConfig',
-            'performance',
-          ].filter(feature => typeof app[feature] === 'function');
-          loadEl.textContent = `Firebase SDK loaded with ${features.join(', ')}`;
-        } catch (e) {
-          console.error(e);
-          loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Tarefas Escolares</title>
+    <!-- Carrega Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+            color: #1f2937;
         }
-      });
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #1e3a8a;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            background-color: #172554;
+        }
+        .input-style {
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            width: 100%;
+        }
+        .text-truncate {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container" class="min-h-screen p-4 sm:p-8 flex flex-col items-center">
+        <!-- Conteúdo da aplicação será injetado aqui -->
+        <div id="loading-spinner" class="text-center p-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto"></div>
+            <p class="mt-4 text-gray-600">Carregando aplicação...</p>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, addDoc, setDoc, onSnapshot, collection, query, where, serverTimestamp, updateDoc, deleteDoc, getDoc, setLogLevel, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // --- O SEU BLOCO REAL DE CONFIGURAÇÃO FIREBASE ---
+        // Estes valores vieram da sua Consola do Firebase.
+        const firebaseConfig = {
+            apiKey: "AIzaSyDrtUpuLS25wMu-PkfN4ZEXLmbBdqqa0cI",
+            authDomain: "aluno-de-alto-rendimento-c1d59.firebaseapp.com",
+            projectId: "aluno-de-alto-rendimento-c1d59",
+            storageBucket: "aluno-de-alto-rendimento-c1d59.firebasestorage.app",
+            messagingSenderId: "790456770419",
+            appId: "1:790456770419:web:a579719a37a99b3925af06",
+            measurementId: "G-E05K79QE6G"
+        };
+        
+        // VARIÁVEL LOCAL PARA COMPATIBILIDADE: DEVE SER null na produção
+        const initialAuthToken = null; 
+        
+        // O seu ID de projeto é usado para caminhos de coleções
+        const appId = firebaseConfig.projectId; 
+        // --- FIM DO BLOCO REAL DE CONFIGURAÇÃO FIREBASE ---
+
+
+        let db, auth, app;
+        let userId = null;
+        let userProfile = null;
+        
+        // Estado da Aplicação
+        const state = {
+            view: 'loading', // 'login', 'professor_dashboard', 'aluno_dashboard', 'professor_create_task', 'aluno_submit_task', 'professor_view_delivery', 'professor_import_users', 'professor_manage_users'
+            turmas: ['1A', '1B', '2A', '2B', '3A', '3B'],
+            tarefas: [],
+            entregas: [],
+            users: [], // Nova coleção para usuários reais
+            selectedTask: null,
+            editingUser: null, // Usuário a ser editado (ou null para novo)
+            loading: true,
+            error: null,
+            message: null,
+            // Estado para simular o login manual antes do redirecionamento
+            loginEmail: '',
+            loginRA: ''
+        };
+
+        // --- MOCK/Simulação de Perfil (usado apenas como fallback inicial para login simulado) ---
+        const MOCK_USER_PROFILES = {
+            "99999": { email: "prof@escola.com", ra: "99999", perfil: "Professor", nome: "Prof. Ana Silva" },
+            "10001": { email: "aluno1a@escola.com", ra: "10001", perfil: "Aluno", id_turma: "1A", nome: "João M. Santos" },
+            "30005": { email: "aluno3b@escola.com", ra: "30005", perfil: "Aluno", id_turma: "3B", nome: "Maria T. Costa" },
+        };
+
+        // Função para obter perfil do Firestore ou fallback
+        function getProfileByCredentials(email, ra) {
+            const raKey = ra.toUpperCase();
+            const emailLower = email.toLowerCase();
+            
+            // 1. Tenta encontrar no estado de usuários (Firestore)
+            const profile = state.users.find(p => p.email === emailLower && p.ra === raKey);
+            if (profile) return profile;
+
+            // 2. Tenta encontrar no MOCK (se o Firestore estiver vazio)
+            const mockProfile = Object.values(MOCK_USER_PROFILES).find(p => p.email === emailLower && p.ra === raKey);
+            return mockProfile || null;
+        }
+
+        // --- Funções de Utilitários ---
+        function getCollectionPath(collectionName) {
+            // Usaremos o caminho PUBLICO
+            return `artifacts/${appId}/public/data/${collectionName}`;
+        }
+
+        // Converte a opção de prazo em um objeto Date
+        function calculateDeadline(prazo) {
+            const now = new Date();
+            const date = new Date(now);
+            
+            switch (prazo) {
+                case 'dia_18h':
+                    date.setHours(18, 0, 0, 0);
+                    if (date < now) {
+                        date.setDate(date.getDate() + 1);
+                    }
+                    return date;
+                case '1_semana':
+                    date.setDate(date.getDate() + 7);
+                    date.setHours(23, 59, 59, 999);
+                    return date;
+                case '14_dias':
+                    date.setDate(date.getDate() + 14);
+                    date.setHours(23, 59, 59, 999);
+                    return date;
+                case '1_mes':
+                    date.setMonth(date.getMonth() + 1);
+                    date.setHours(23, 59, 59, 999);
+                    return date;
+                default:
+                    return now;
+            }
+        }
+
+        function formatDeadline(date) {
+            if (!date) return 'N/A';
+            const d = date.toDate ? date.toDate() : new Date(date);
+            return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        // --- Inicialização do Firebase e Auth ---
+        async function initFirebase() {
+            if (!firebaseConfig) {
+                state.error = "Erro de configuração do Firebase.";
+                renderApp();
+                return;
+            }
+
+            try {
+                // setLogLevel('debug');
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                
+                // NOTA: REMOVIDO getStorage(app) para evitar exigência do Plano Blaze
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        
+                        await ensureInitialTurmas();
+                        setupFirestoreListeners();
+                        
+                        if (state.users.length === 0) {
+                            userProfile = MOCK_USER_PROFILES["99999"]; // Voltando ao mock Professor original
+                            state.view = 'professor_dashboard';
+                        } else {
+                            state.view = 'login';
+                        }
+
+                    } else {
+                        // Tenta login anônimo. O erro 'auth/configuration-not-found' indica
+                        // que o método de login ANÔNIMO precisa ser ativado no Firebase Console.
+                        try {
+                            if (initialAuthToken) {
+                                // Se estivesse no ambiente Canvas
+                                // await signInWithCustomToken(auth, initialAuthToken);
+                                state.error = "O token inicial não está disponível. Use o login manual.";
+                                state.view = 'login';
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                        } catch (e) {
+                             if (e.code === 'auth/configuration-not-found') {
+                                 state.error = `SOLUÇÃO NECESSÁRIA: O método de autenticação 'Anónima (Anonymous)' não está ativo no seu projeto Firebase. Vá ao Console > Authentication > Sign-in method e HABILITE o Anonymous.`;
+                            } else {
+                                 state.error = `Erro na autenticação: ${e.message}. Verifique as chaves e regras.`;
+                            }
+                            state.view = 'login';
+                        }
+                    }
+                    state.loading = false;
+                    renderApp();
+                });
+            } catch (e) {
+                console.error("Erro ao inicializar Firebase ou Autenticação:", e);
+                state.error = "Erro ao carregar o aplicativo. Verifique a conexão.";
+                state.loading = false;
+                renderApp();
+            }
+        }
+        
+        async function ensureInitialTurmas() {
+            const turmasCol = collection(db, getCollectionPath('turmas'));
+            for (const nome of state.turmas) {
+                const turmaDoc = doc(turmasCol, nome);
+                const docSnap = await getDoc(turmaDoc);
+                if (!docSnap.exists()) {
+                    await setDoc(turmaDoc, { nome: nome, criadaEm: serverTimestamp() });
+                }
+            }
+        }
+
+        // --- Listeners do Firestore (Real-time) ---
+        function setupFirestoreListeners() {
+            // Listener de Usuários (para o login funcionar com dados reais)
+            const usersQuery = query(collection(db, getCollectionPath('users')));
+            onSnapshot(usersQuery, (snapshot) => {
+                state.users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderApp();
+            }, (error) => console.error("Erro ao ouvir usuários:", error));
+            
+            // Listener de Tarefas
+            const tarefasQuery = query(collection(db, getCollectionPath('tarefas')));
+            onSnapshot(tarefasQuery, (snapshot) => {
+                state.tarefas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderApp();
+            }, (error) => console.error("Erro ao ouvir tarefas:", error));
+
+            // Listener de Entregas
+            const entregasQuery = query(collection(db, getCollectionPath('entregas')));
+            onSnapshot(entregasQuery, (snapshot) => {
+                state.entregas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderApp();
+            }, (error) => console.error("Erro ao ouvir entregas:", error));
+        }
+
+        // --- Logout Function ---
+        function handleLogout() {
+            userProfile = null;
+            state.loginEmail = '';
+            state.loginRA = '';
+            state.view = 'login';
+            state.message = "Sessão terminada com sucesso.";
+            renderApp();
+            // Numa aplicação real com Firebase Auth: auth.signOut();
+        }
+
+        // --- Login Manual (Simulado para o requisito Email/RA) ---
+        async function handleLogin() {
+            state.error = null;
+            state.message = null;
+
+            const profile = getProfileByCredentials(state.loginEmail, state.loginRA);
+            
+            if (profile) {
+                userProfile = profile;
+                state.view = profile.perfil === 'Professor' ? 'professor_dashboard' : 'aluno_dashboard';
+                renderApp();
+            } else {
+                state.error = "E-mail ou RA incorretos. Verifique os dados importados ou use os mockados (prof@escola.com/99999).";
+                renderApp();
+            }
+        }
+        
+        // --- Ações (Professor) ---
+
+        async function deleteAllUsers() {
+            state.error = null;
+            state.message = null;
+
+            // Adicionado confirmação específica:
+            if (!confirm("ATENÇÃO: Você tem certeza que deseja EXCLUIR TODOS os ALUNOS? (Professores serão mantidos). Esta ação é irreversível.")) return;
+
+            try {
+                const usersColRef = collection(db, getCollectionPath('users'));
+                
+                // Query modificada para buscar APENAS alunos
+                const alunosQuery = query(usersColRef, where("perfil", "==", "Aluno"));
+                const querySnapshot = await getDocs(alunosQuery);
+                
+                if (querySnapshot.empty) {
+                    state.message = "Nenhum aluno encontrado para exclusão.";
+                    renderApp();
+                    return;
+                }
+
+                // Usa WriteBatch para exclusão eficiente
+                const batch = writeBatch(db);
+                let deletedCount = 0;
+
+                querySnapshot.forEach((doc) => {
+                    batch.delete(doc.ref);
+                    deletedCount++;
+                });
+
+                await batch.commit();
+                state.message = `Sucesso! ${deletedCount} alunos foram excluídos.`;
+                // Redireciona para o dashboard, que irá refletir a lista atualizada
+                navigate('professor_dashboard');
+            } catch (error) {
+                console.error("Erro ao excluir todos os alunos:", error);
+                state.error = "Erro ao excluir todos os alunos. Tente novamente.";
+                renderApp();
+            }
+        }
+        
+        async function deleteUser(ra) {
+            state.error = null;
+            state.message = null;
+
+            if (!confirm(`Tem certeza que deseja excluir o usuário com RA: ${ra}?`)) return;
+
+            try {
+                await deleteDoc(doc(db, getCollectionPath('users'), ra));
+                state.message = `Usuário com RA ${ra} excluído com sucesso.`;
+                renderApp();
+            } catch (error) {
+                console.error("Erro ao excluir usuário:", error);
+                state.error = "Erro ao excluir usuário. Tente novamente.";
+                renderApp();
+            }
+        }
+        
+        function startEditUser(user) {
+            state.editingUser = user;
+            state.error = null;
+            state.message = null;
+            renderApp();
+        }
+
+        function cancelEditUser() {
+            state.editingUser = null;
+            state.error = null;
+            state.message = null;
+            renderApp();
+        }
+        
+        async function saveUser(e) {
+            e.preventDefault();
+            const form = e.target;
+            
+            // Filtro para garantir apenas números no RA (voltando à regra original)
+            const ra = form.ra.value.replace(/[^0-9]/g, '').toUpperCase();
+            const id_turma_raw = form.id_turma.value.toUpperCase();
+            const id_turma = id_turma_raw.length > 0 ? id_turma_raw : null;
+
+            const isAluno = id_turma && state.turmas.includes(id_turma);
+            const perfil = isAluno ? 'Aluno' : 'Professor';
+
+            const userData = {
+                nome: form.nome.value.trim(),
+                email: form.email.value.toLowerCase(),
+                ra: ra,
+                perfil: perfil,
+                id_turma: perfil === 'Aluno' ? id_turma : null,
+                importadoEm: state.editingUser ? state.editingUser.importadoEm : serverTimestamp()
+            };
+
+            state.error = null;
+            state.message = null;
+
+            if (ra.length === 0) {
+                 state.error = "RA não pode ser vazio e deve conter apenas números.";
+                 renderApp();
+                 return;
+            }
+
+            try {
+                await setDoc(doc(db, getCollectionPath('users'), ra), userData);
+                state.message = `Usuário ${userData.nome} salvo com sucesso!`;
+                state.editingUser = null; // Fecha o formulário
+                renderApp();
+            } catch (error) {
+                console.error("Erro ao salvar usuário:", error);
+                state.error = "Erro ao salvar usuário. Verifique os dados.";
+                renderApp();
+            }
+        }
+
+        async function handleUserImport(e) {
+            e.preventDefault();
+            const form = e.target;
+            const dataInput = form.userData.value.trim();
+            
+            if (!dataInput) {
+                state.error = "O campo de dados não pode estar vazio.";
+                renderApp();
+                return;
+            }
+
+            const lines = dataInput.split('\n').filter(line => line.trim() !== '');
+            const batch = writeBatch(db);
+            const usersCol = collection(db, getCollectionPath('users'));
+            let importedCount = 0;
+
+            // Regex para tentar separar os 4 campos fundidos: (Nome)(Email)(RA)(Turma)
+            // Usa separadores (TAB, vírgula, múltiplos espaços) ou o padrão fundido
+            const FUSION_REGEX = /(.+)([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})(\d{2,})(.+)?/i;
+
+            for (const line of lines) {
+                const trimmedLine = line.trim().replace(/\r/g, ''); // Limpa quebras de linha do Windows
+                if (!trimmedLine) continue;
+
+                let nome = '';
+                let email = '';
+                let ra = '';
+                let turma = '';
+                let successfulParse = false;
+                
+                // Tenta splitar primeiro por TAB, vírgula ou múltiplos espaços (cenários não fundidos)
+                const parts = trimmedLine.split(/[\t,]+| {2,}/).map(p => p.trim()).filter(p => p.length > 0);
+                
+                if (parts.length >= 4) {
+                    // Cenário 1: Split padrão funcionou
+                    nome = parts[0];
+                    email = parts[1];
+                    ra = parts[2];
+                    turma = parts.slice(3).join(' ');
+                    successfulParse = true;
+                } else {
+                    // Cenário 2: Dados fundidos (como no exemplo do usuário)
+                    const match = trimmedLine.match(FUSION_REGEX);
+
+                    if (match && match.length >= 5) {
+                        const nameAndEmailPrefix = match[1]; 
+                        const emailDomain = match[2];        
+                        ra = match[3];                       
+                        turma = match[4] || '';              
+                        
+                        // Lógica para separar Name do Email Prefix:
+                        const lastSpace = nameAndEmailPrefix.lastIndexOf(' ');
+                        
+                        if (lastSpace !== -1) {
+                            nome = nameAndEmailPrefix.substring(0, lastSpace).trim();
+                            const emailPrefix = nameAndEmailPrefix.substring(lastSpace + 1).trim();
+                            email = emailPrefix + emailDomain;
+                            successfulParse = true;
+                        } else {
+                            nome = "NOME REV. (" + nameAndEmailPrefix.substring(0, 15) + ")"; // Marca para revisão
+                            email = nameAndEmailPrefix + emailDomain;
+                            successfulParse = true;
+                        }
+                    }
+                }
+                
+                if (!successfulParse) {
+                    console.warn("Linha ignorada: Não foi possível determinar o formato dos campos Name, Email, RA, Turma.", trimmedLine);
+                    continue;
+                }
+
+                // VALIDAÇÃO E NORMALIZAÇÃO
+                const finalRA = ra.replace(/[^0-9]/g, '').toUpperCase();
+                
+                // Lógica de procura de Turma mais robusta: limpa acentos e pontuação
+                const cleanTurmaInput = turma.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^0-9A-Z]/g, '');
+                
+                const turmaFound = state.turmas.find(t => cleanTurmaInput.includes(t.replace(/[^0-9A-Z]/g, '')));
+                const final_id_turma = turmaFound || null;
+                
+                const isAluno = final_id_turma !== null;
+                const perfil = isAluno ? 'Aluno' : 'Professor';
+                
+                // Regra: Importação em massa deve ser apenas para alunos.
+                if (perfil === 'Professor') {
+                    console.warn(`Linha ignorada: Importação em massa apenas para alunos (Turma não identificada): ${trimmedLine}`);
+                    continue; 
+                }
+
+                if (!nome || !email.includes('@') || finalRA.length === 0) {
+                     console.warn("Dados de usuário inválidos após a separação (email ou RA ausentes/inválidos):", trimmedLine);
+                    continue;
+                }
+                
+                const userData = {
+                    nome: nome,
+                    email: email.toLowerCase(),
+                    ra: finalRA,
+                    perfil: perfil,
+                    id_turma: final_id_turma, // Aqui é garantido que é Aluno, então id_turma está preenchido
+                    importadoEm: serverTimestamp()
+                };
+
+                batch.set(doc(usersCol, finalRA), userData);
+                importedCount++;
+            }
+
+            try {
+                await batch.commit();
+                state.message = `Sucesso! ${importedCount} alunos importados/atualizados.`;
+                navigate('professor_dashboard');
+            } catch (error) {
+                console.error("Erro ao importar usuários:", error);
+                state.error = "Erro ao importar dados. Verifique o formato e tente novamente.";
+                renderApp();
+            }
+        }
+
+
+        async function createNewTask(e) {
+            e.preventDefault();
+            const form = e.target;
+            const prazoOpcao = form.prazo_opcao.value;
+            
+            const turmasSelecionadas = [];
+            form.querySelectorAll('input[name="turma_alvo"]:checked').forEach(checkbox => {
+                turmasSelecionadas.push(checkbox.value);
+            });
+
+            if (turmasSelecionadas.length === 0) {
+                state.error = "Selecione pelo menos uma turma para atribuir a tarefa.";
+                renderApp();
+                return;
+            }
+
+            const baseData = {
+                disciplina: form.disciplina.value,
+                tema: form.tema.value,
+                descricao: form.descricao.value,
+                prazo_opcao: prazoOpcao,
+                data_prazo: calculateDeadline(prazoOpcao),
+                id_professor: userProfile.ra, 
+                nome_professor: userProfile.nome,
+                criadaEm: serverTimestamp(),
+            };
+            
+            const tarefasCol = collection(db, getCollectionPath('tarefas'));
+            const batch = writeBatch(db);
+            let createdCount = 0;
+
+            try {
+                // Cria uma tarefa individual no Firestore para cada turma selecionada
+                for (const turma of turmasSelecionadas) {
+                    const taskData = { ...baseData, id_turma: turma };
+                    const newDocRef = doc(tarefasCol); // Cria uma nova referência de documento
+                    batch.set(newDocRef, taskData);
+                    createdCount++;
+                }
+
+                await batch.commit();
+                
+                state.message = `Sucesso! ${createdCount} tarefas criadas para ${turmasSelecionadas.join(', ')}.`;
+                state.view = 'professor_dashboard';
+                renderApp();
+            } catch (error) {
+                console.error("Erro ao criar tarefa:", error);
+                state.error = "Erro ao criar tarefa. Tente novamente.";
+                renderApp();
+            }
+        }
+
+        function toggleTaskStatus(entregaId, currentStatus) {
+            const newStatus = currentStatus === 'Concluída' ? 'Pendente' : 'Concluída';
+            const entregaRef = doc(db, getCollectionPath('entregas'), entregaId);
+            
+            updateDoc(entregaRef, { 
+                status_avaliacao: newStatus,
+                data_correcao: serverTimestamp() 
+            }).catch(e => {
+                console.error("Erro ao atualizar status:", e);
+                state.error = "Não foi possível atualizar o status da entrega.";
+                renderApp();
+            });
+        }
+        
+        function navigate(viewName, data = null) {
+            state.view = viewName;
+            state.selectedTask = data;
+            state.editingUser = null; // Limpa o estado de edição ao navegar
+            state.error = null;
+            state.message = null;
+            renderApp();
+        }
+
+        // --- Ações (Aluno) ---
+        async function submitTask(e) {
+            e.preventDefault();
+            const form = e.target;
+            const selectedTaskId = form.id_tarefa.value;
+            // Campo de entrada agora é URL (não file)
+            const urlDoArquivo = form.pdf_link.value.trim(); 
+
+            state.error = null;
+            state.message = null;
+            
+            if (!selectedTaskId || !urlDoArquivo) {
+                state.error = "Selecione uma tarefa e cole o link de compartilhamento do PDF.";
+                renderApp();
+                return;
+            }
+            
+            // Validação simples de URL
+            if (!urlDoArquivo.startsWith('http')) {
+                state.error = "O link fornecido não parece ser um URL válido (deve começar com http:// ou https://).";
+                renderApp();
+                return;
+            }
+
+            const selectedTask = state.tarefas.find(t => t.id === selectedTaskId);
+            if (!selectedTask) {
+                state.error = "Tarefa não encontrada.";
+                renderApp();
+                return;
+            }
+
+            const entregaData = {
+                ra_aluno: userProfile.ra,
+                id_aluno: userProfile.ra,
+                nome_aluno: userProfile.nome,
+                id_tarefa: selectedTaskId,
+                tema_tarefa: selectedTask.tema,
+                id_turma: userProfile.id_turma,
+                data_entrega: serverTimestamp(),
+                // SALVA A URL NO FIRESTORE (Em vez de fazer upload para o Storage)
+                caminho_arquivo_pdf: urlDoArquivo, 
+                status_avaliacao: 'Pendente',
+            };
+
+            try {
+                const existing = state.entregas.find(e => e.id_tarefa === selectedTaskId && e.ra_aluno === userProfile.ra);
+                
+                if (existing) {
+                    await updateDoc(doc(db, getCollectionPath('entregas'), existing.id), entregaData);
+                } else {
+                    await addDoc(collection(db, getCollectionPath('entregas')), entregaData);
+                }
+                
+                state.message = "Tarefa enviada com sucesso! (Link salvo)";
+                navigate('aluno_dashboard');
+            } catch (error) {
+                console.error("Erro ao enviar tarefa:", error);
+                state.error = "Erro ao enviar tarefa. Tente novamente.";
+                renderApp();
+            }
+        }
+        
+        function sendReminder(turma) {
+            state.message = `Lembretes automáticos (simulados) enviados para a turma ${turma}!`;
+            renderApp();
+        }
+
+        // --- Componentes de Renderização ---
+
+        function renderMessages() {
+            let html = '';
+            
+            // Tratamento de Erro Crítico (Auth)
+            if (state.error && state.error.includes('SOLUÇÃO NECESSÁRIA')) {
+                return `<div class="bg-red-200 border-2 border-red-700 text-red-800 px-6 py-4 rounded-xl relative mb-6">
+                            <h3 class="font-bold text-lg mb-2">ERRO CRÍTICO DE CONFIGURAÇÃO!</h3>
+                            <p class="mb-3 text-sm">${state.error}</p>
+                            <p class="font-semibold text-sm">
+                                Ação: Vá ao Console do Firebase > Authentication > Sign-in method e HABILITE o método 'Anonymous'.
+                            </p>
+                        </div>`;
+            }
+
+
+            if (state.error) {
+                html += `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                            <strong class="font-bold">Erro:</strong>
+                            <span class="block sm:inline">${state.error}</span>
+                        </div>`;
+            }
+            if (state.message) {
+                html += `<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                            <strong class="font-bold">Sucesso:</strong>
+                            <span class="block sm:inline">${state.message}</span>
+                        </div>`;
+            }
+            return html;
+        }
+
+        function renderLogin() {
+            const mockUsers = state.users.length > 0 ? state.users : Object.values(MOCK_USER_PROFILES);
+            
+            return `
+                <div class="w-full max-w-md mt-20">
+                    <div class="card p-8">
+                        <h2 class="text-3xl font-bold text-center text-indigo-800 mb-6">Acesso ao Sistema de Tarefas</h2>
+                        ${renderMessages()}
+                        <form id="login-form" onsubmit="event.preventDefault(); handleLogin();">
+                            <div class="mb-4">
+                                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                                <input type="text" id="email" name="email" value="${state.loginEmail}" oninput="state.loginEmail = this.value;" class="input-style" placeholder="seu.email@escola.com" required>
+                            </div>
+                            <div class="mb-6">
+                                <label for="ra" class="block text-sm font-medium text-gray-700 mb-1">RA (Registro Acadêmico)</label>
+                                <input type="text" id="ra" name="ra" value="${state.loginRA}" oninput="state.loginRA = this.value.replace(/[^0-9]/g, '');" class="input-style" placeholder="Apenas números" required>
+                            </div>
+                            <button type="submit" class="btn-primary w-full text-lg">Entrar</button>
+                        </form>
+                        
+                        <p class="mt-6 text-center text-sm text-gray-500">
+                            Usuários disponíveis (Use um par e-mail/RA):
+                        </p>
+                        <ul class="list-disc list-inside text-xs text-gray-500 mt-2 max-h-24 overflow-y-auto bg-gray-50 p-2 rounded">
+                            ${mockUsers.map(u => `<li>${u.nome} (${u.perfil}) | E: ${u.email} / RA: ${u.ra}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProfessorDashboard() {
+            const turmas = state.turmas.map(turma => {
+                const tarefasDaTurma = state.tarefas.filter(t => t.id_turma === turma);
+                const entreguesCount = tarefasDaTurma.reduce((count, tarefa) => {
+                    const entregasDaTarefa = state.entregas.filter(e => e.id_tarefa === tarefa.id);
+                    // Conta quantos alunos da turma entregaram a tarefa
+                    const alunosEntregaram = entregasDaTarefa.length;
+                    return count + alunosEntregaram;
+                }, 0);
+                
+                // Simulação: em um app real, buscaríamos o número total de alunos no Firestore
+                const totalAlunosSimulado = turma.includes('1') ? 25 : (turma.includes('2') ? 30 : 28);
+                const tarefasPendentesCount = tarefasDaTurma.filter(t => {
+                    const entregasCount = state.entregas.filter(e => e.id_tarefa === t.id && e.id_turma === turma).length;
+                    return entregasCount < totalAlunosSimulado;
+                }).length;
+
+                return {
+                    nome: turma,
+                    tarefasCount: tarefasDaTurma.length,
+                    entreguesCount: entreguesCount,
+                    totalAlunos: totalAlunosSimulado,
+                    pendentesCount: tarefasPendentesCount,
+                };
+            });
+
+            return `
+                <div class="w-full max-w-6xl">
+                    ${renderHeader()}
+                    <h1 class="text-3xl font-bold text-indigo-800 mb-6">Dashboard do Professor</h1>
+                    
+                    ${renderMessages()}
+
+                    <!-- Ações Rápidas -->
+                    <div class="flex flex-wrap gap-3 mb-8">
+                        <button onclick="navigate('professor_create_task')" class="btn-primary flex items-center bg-green-600 hover:bg-green-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+                            Criar Nova Tarefa
+                        </button>
+                        <button onclick="navigate('professor_manage_users')" class="btn-primary flex items-center bg-indigo-600 hover:bg-indigo-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906C15.86 13.91 16 14.59 16 15v3h2v-3a5.972 5.972 0 00-.75-2.906z" fill-rule="evenodd" clip-rule="evenodd"/></svg>
+                            Gerenciar Usuários (${state.users.length})
+                        </button>
+                    </div>
+
+                    <!-- Relatório por Turma -->
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Relatório de Tarefas por Turma</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        ${turmas.map(t => `
+                            <div class="card p-5 border-t-4 border-indigo-500 hover:shadow-lg transition">
+                                <h3 class="text-2xl font-bold mb-2">${t.nome}</h3>
+                                <p class="text-sm text-gray-600">Total de Alunos: ${t.totalAlunos}</p>
+                                <div class="mt-3 space-y-2">
+                                    <div class="flex justify-between text-sm">
+                                        <span>Tarefas Atribuídas:</span>
+                                        <span class="font-medium text-indigo-600">${t.tarefasCount}</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span>Entregas Registradas:</span>
+                                        <span class="font-medium text-green-600">${t.entreguesCount}</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span>Tarefas Pendentes:</span>
+                                        <span class="font-medium text-red-600">${t.pendentesCount}</span>
+                                    </div>
+                                </div>
+                                <button onclick="sendReminder('${t.nome}')" class="w-full mt-4 text-xs py-2 bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200 transition">
+                                    Enviar Lembretes
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <!-- Visualização de Tarefas -->
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Tarefas Atribuídas</h2>
+                    <div class="card p-6 overflow-x-auto">
+                        ${renderTaskTable(state.tarefas, 'professor_dashboard')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAlunoDashboard() {
+            if (!userProfile || !userProfile.id_turma) {
+                return renderErrorState("Seu perfil de aluno não tem uma turma atribuída. Contate o administrador.");
+            }
+            
+            const turmaAluno = userProfile.id_turma;
+
+            const tarefasDaTurma = state.tarefas.filter(t => t.id_turma === turmaAluno);
+            
+            const tarefasFormatadas = tarefasDaTurma.map(t => {
+                const entrega = state.entregas.find(e => e.id_tarefa === t.id && e.ra_aluno === userProfile.ra);
+                
+                return {
+                    ...t,
+                    status_entrega: entrega ? (entrega.status_avaliacao === 'Concluída' ? 'Concluída' : 'Entregue') : 'Pendente',
+                    data_entrega: entrega ? formatDeadline(entrega.data_entrega) : 'N/A',
+                    entregaId: entrega ? entrega.id : null,
+                };
+            }).sort((a, b) => {
+                // Ordena por status Pendente primeiro
+                if (a.status_entrega === 'Pendente' && b.status_entrega !== 'Pendente') return -1;
+                if (a.status_entrega !== 'Pendente' && b.status_entrega === 'Pendente') return 1;
+                // Depois por prazo (mais próximo primeiro)
+                return a.data_prazo.seconds - b.data_prazo.seconds;
+            });
+            
+            const pendentes = tarefasFormatadas.filter(t => t.status_entrega === 'Pendente' || t.status_entrega === 'Entregue');
+            const historico = tarefasFormatadas.filter(t => t.status_entrega === 'Concluída');
+
+            return `
+                <div class="w-full max-w-6xl">
+                    ${renderHeader()}
+                    <h1 class="text-3xl font-bold text-indigo-800 mb-2">Olá, ${userProfile.nome} (Turma: ${turmaAluno})</h1>
+                    <p class="text-gray-600 mb-6">Aqui estão suas tarefas e histórico de entregas.</p>
+                    
+                    ${renderMessages()}
+
+                    <!-- Tarefas Pendentes -->
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Tarefas Pendentes / Entregues (Aguardando Correção)</h2>
+                    <div class="card p-6 mb-8 overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr class="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-3 py-3">Disciplina / Tema</th>
+                                    <th class="px-3 py-3">Prazo Final</th>
+                                    <th class="px-3 py-3">Status</th>
+                                    <th class="px-3 py-3">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${pendentes.length > 0 ? pendentes.map(t => `
+                                    <tr>
+                                        <td class="px-3 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">${t.disciplina}</div>
+                                            <div class="text-xs text-gray-500 text-truncate max-w-xs">${t.tema}</div>
+                                        </td>
+                                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${formatDeadline(t.data_prazo)}</td>
+                                        <td class="px-3 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                ${t.status_entrega === 'Pendente' ? 'bg-red-100 text-red-800' : (t.status_entrega === 'Entregue' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800')}">
+                                                ${t.status_entrega}
+                                            </span>
+                                            ${t.status_entrega === 'Entregue' ? `<div class="text-xs text-gray-500">Entregue em: ${t.data_entrega}</div>` : ''}
+                                        </td>
+                                        <td class="px-3 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button onclick="navigate('aluno_submit_task', ${JSON.stringify(t).split('"').join("''")})" 
+                                                    class="text-indigo-600 hover:text-indigo-900 text-sm font-medium p-1 rounded-lg transition 
+                                                    ${t.status_entrega === 'Entregue' ? 'bg-yellow-50 hover:bg-yellow-100' : 'bg-indigo-50 hover:bg-indigo-100'}">
+                                                ${t.status_entrega === 'Entregue' ? 'Ver/Alterar Envio' : 'Enviar Tarefa'}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('') : `
+                                <tr><td colspan="4" class="py-4 text-center text-gray-500">Nenhuma tarefa pendente no momento.</td></tr>
+                                `}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Histórico de Tarefas Concluídas -->
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Histórico (Corrigidas)</h2>
+                    <div class="card p-6 overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr class="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-3 py-3">Disciplina / Tema</th>
+                                    <th class="px-3 py-3">Data da Entrega</th>
+                                    <th class="px-3 py-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${historico.length > 0 ? historico.map(t => `
+                                    <tr>
+                                        <td class="px-3 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">${t.disciplina}</div>
+                                            <div class="text-xs text-gray-500 text-truncate max-w-xs">${t.tema}</div>
+                                        </td>
+                                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${t.data_entrega}</td>
+                                        <td class="px-3 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                Concluída
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join('') : `
+                                <tr><td colspan="3" class="py-4 text-center text-gray-500">Nenhuma tarefa corrigida ainda.</td></tr>
+                                `}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderHeader() {
+            if (!userProfile) return '';
+            return `
+                <div class="w-full flex justify-end p-2 mb-4">
+                    <button onclick="handleLogout()" class="text-sm text-red-600 hover:text-red-800 bg-red-100 px-4 py-2 rounded-lg transition shadow-sm">
+                        Sair
+                    </button>
+                </div>
+            `;
+        }
+
+
+        function renderProfessorCreateTask() {
+            const turmas = state.turmas;
+            
+            return `
+                <div class="w-full max-w-3xl">
+                    ${renderHeader()}
+                    <h1 class="text-3xl font-bold text-indigo-800 mb-6">Criar Nova Tarefa</h1>
+                    
+                    ${renderMessages()}
+
+                    <div class="card p-8">
+                        <form onsubmit="createNewTask(event)">
+                            <!-- Disciplina e Tema -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label for="disciplina" class="block text-sm font-medium text-gray-700 mb-1">Disciplina</label>
+                                    <input type="text" id="disciplina" name="disciplina" class="input-style" placeholder="Ex: Matemática" required>
+                                </div>
+                                <div>
+                                    <label for="tema" class="block text-sm font-medium text-gray-700 mb-1">Tema da Tarefa</label>
+                                    <input type="text" id="tema" name="tema" class="input-style" placeholder="Ex: Introdução à Álgebra" required>
+                                </div>
+                            </div>
+
+                            <!-- Descrição -->
+                            <div class="mb-4">
+                                <label for="descricao" class="block text-sm font-medium text-gray-700 mb-1">Instruções Detalhadas</label>
+                                <textarea id="descricao" name="descricao" rows="4" class="input-style" placeholder="Descreva aqui o que os alunos precisam fazer e os critérios de avaliação." required></textarea>
+                            </div>
+
+                            <!-- Seleção de Turmas (Checkboxes) -->
+                            <div class="mb-6 border p-4 rounded-lg bg-indigo-50">
+                                <label class="block text-lg font-bold text-indigo-800 mb-3">Turmas Alvo (Seleção Múltipla)</label>
+                                <div class="grid grid-cols-3 gap-3">
+                                    ${turmas.map(turma => `
+                                        <div class="flex items-center">
+                                            <input id="turma_${turma}" name="turma_alvo" type="checkbox" value="${turma}" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                            <label for="turma_${turma}" class="ml-2 block text-sm font-medium text-gray-700">${turma}</label>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            
+                            <!-- Prazos -->
+                            <div class="mb-6">
+                                <label for="prazo_opcao" class="block text-sm font-medium text-gray-700 mb-1">Prazo de Entrega (Opções Dinâmicas)</label>
+                                <select id="prazo_opcao" name="prazo_opcao" class="input-style" required>
+                                    <option value="">Selecione um Prazo</option>
+                                    <option value="dia_18h">Hoje (até as 18:00h)</option>
+                                    <option value="1_semana">1 Semana (7 dias)</option>
+                                    <option value="14_dias">14 Dias</option>
+                                    <option value="1_mes">1 Mês (aprox. 30 dias)</option>
+                                </select>
+                            </div>
+
+                            <div class="flex justify-between space-x-4">
+                                <button type="button" onclick="navigate('professor_dashboard')" class="w-1/2 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="w-1/2 py-2 btn-primary bg-green-600 hover:bg-green-700">
+                                    Criar Tarefa
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAlunoSubmitTask() {
+            const tarefa = state.selectedTask;
+            if (!tarefa) return renderErrorState("Nenhuma tarefa selecionada.");
+
+            const entregaExistente = state.entregas.find(e => e.id_tarefa === tarefa.id && e.ra_aluno === userProfile.ra);
+
+            return `
+                <div class="w-full max-w-3xl">
+                    ${renderHeader()}
+                    <h1 class="text-3xl font-bold text-indigo-800 mb-4">Enviar Tarefa: ${tarefa.tema}</h1>
+                    <p class="text-sm text-gray-600 mb-6">Turma: ${tarefa.id_turma} | Prazo: ${formatDeadline(tarefa.data_prazo)}</p>
+                    
+                    ${renderMessages()}
+
+                    <div class="card p-8">
+                        <div class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-lg">
+                            <h2 class="text-lg font-semibold text-blue-800">Instruções</h2>
+                            <p class="text-gray-700 text-sm mt-1 whitespace-pre-wrap">${tarefa.descricao}</p>
+                        </div>
+                        
+                        ${entregaExistente ? `
+                            <div class="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-lg">
+                                <h2 class="text-lg font-semibold text-yellow-800">Reenvio</h2>
+                                <p class="text-gray-700 text-sm mt-1">
+                                    Esta tarefa já foi enviada em ${formatDeadline(entregaExistente.data_entrega)}. Você pode reenviar o link se necessário.
+                                </p>
+                                <p class="text-xs text-gray-600 mt-2">Link Anterior: <a href="${entregaExistente.caminho_arquivo_pdf}" target="_blank" class="text-indigo-600 hover:text-indigo-800 underline">${entregaExistente.caminho_arquivo_pdf}</a></p>
+                            </div>
+                        ` : ''}
+
+                        <form onsubmit="submitTask(event)">
+                            <input type="hidden" name="id_tarefa" value="${tarefa.id}">
+
+                            <div class="mb-6">
+                                <label for="pdf_link" class="block text-sm font-medium text-gray-700 mb-1">Link de Compartilhamento do PDF</label> 
+                                <input type="url" id="pdf_link" name="pdf_link" class="input-style" placeholder="Cole o link (Google Drive, Dropbox, etc.) aqui" 
+                                    value="${entregaExistente ? entregaExistente.caminho_arquivo_pdf : ''}" required>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    Cole o link de compartilhamento do seu arquivo PDF (ex: do Google Drive). Lembre-se de configurar as permissões para que o professor possa visualizar.
+                                </p>
+                            </div>
+
+                            <div class="flex justify-between space-x-4">
+                                <button type="button" onclick="navigate('aluno_dashboard')" class="w-1/2 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+                                    Voltar
+                                </button>
+                                <button type="submit" id="submit-button" class="w-1/2 py-2 btn-primary bg-indigo-600 hover:bg-indigo-700">
+                                    ${entregaExistente ? 'Reenviar Link' : 'Enviar Tarefa'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProfessorViewDelivery() {
+            const tarefa = state.selectedTask;
+            if (!tarefa) return renderErrorState("Nenhuma tarefa selecionada.");
+
+            const entregasDaTarefa = state.entregas
+                .filter(e => e.id_tarefa === tarefa.id)
+                .sort((a, b) => a.nome_aluno.localeCompare(b.nome_aluno));
+            
+            const alunosDaTurma = state.users.filter(u => u.perfil === 'Aluno' && u.id_turma === tarefa.id_turma);
+            
+            const alunosParaRevisar = alunosDaTurma.map(aluno => {
+                const entrega = entregasDaTarefa.find(e => e.ra_aluno === aluno.ra);
+                return {
+                    nome: aluno.nome,
+                    ra: aluno.ra,
+                    status: entrega ? (entrega.status_avaliacao === 'Concluída' ? 'Concluída' : 'Entregue') : 'Pendente',
+                    dataEntrega: entrega ? formatDeadline(entrega.data_entrega) : 'N/A',
+                    entregaId: entrega ? entrega.id : null,
+                    pdfLink: entrega ? entrega.caminho_arquivo_pdf : null,
+                };
+            });
+
+            const entregues = alunosParaRevisar.filter(a => a.status === 'Entregue').length;
+            const concluidas = alunosParaRevisar.filter(a => a.status === 'Concluída').length;
+            const pendentes = alunosParaRevisar.filter(a => a.status === 'Pendente').length;
+            
+
+            return `
+                <div class="w-full max-w-6xl">
+                    ${renderHeader()}
+                    <h1 class="text-3xl font-bold text-indigo-800 mb-4">Correção de Entregas</h1>
+                    <button onclick="navigate('professor_dashboard')" class="text-indigo-600 hover:text-indigo-800 mb-6 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414L7.586 9.096 5.293 6.803a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                        Voltar ao Dashboard
+                    </button>
+                    
+                    ${renderMessages()}
+
+                    <div class="card p-6 mb-8">
+                        <h2 class="text-xl font-semibold mb-2">${tarefa.tema} (${tarefa.id_turma})</h2>
+                        <p class="text-gray-600 text-sm">Prazo: ${formatDeadline(tarefa.data_prazo)} | Descrição: ${tarefa.descricao.substring(0, 100)}...</p>
+                        <div class="flex space-x-4 mt-3 pt-3 border-t">
+                            <span class="text-gray-700 font-medium">Total de Alunos: ${alunosDaTurma.length}</span>
+                            <span class="text-green-600 font-medium">Concluídas: ${concluidas}</span>
+                            <span class="text-yellow-600 font-medium">Para Corrigir: ${entregues}</span>
+                            <span class="text-red-600 font-medium">Pendentes (Não Entregues): ${pendentes}</span>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Alunos e Status -->
+                    <div class="card p-6 overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr class="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th class="px-3 py-3">Aluno (RA)</th>
+                                    <th class="px-3 py-3">Status</th>
+                                    <th class="px-3 py-3">Data Entrega</th>
+                                    <th class="px-3 py-3 text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${alunosParaRevisar.map(a => `
+                                    <tr>
+                                        <td class="px-3 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">${a.nome}</div>
+                                            <div class="text-xs text-gray-500">RA: ${a.ra}</div>
+                                        </td>
+                                        <td class="px-3 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                ${a.status === 'Pendente' ? 'bg-red-100 text-red-800' : (a.status === 'Entregue' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800')}">
+                                                ${a.status}
+                                            </span>
+                                        </td>
+                                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${a.dataEntrega}</td>
+                                        <td class="px-3 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
+                                            ${a.pdfLink ? `
+                                                <a href="${a.pdfLink}" target="_blank" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1 rounded-lg transition text-xs font-semibold">
+                                                    Ver PDF (Link)
+                                                </a>
+                                            ` : `
+                                                <span class="text-gray-400 text-xs">Aguardando Envio</span>
+                                            `}
+
+                                            ${a.status !== 'Concluída' && a.entregaId ? `
+                                                <button onclick="toggleTaskStatus('${a.entregaId}', 'Entregue')" 
+                                                            class="text-sm bg-green-50 text-green-600 hover:bg-green-100 px-3 py-1 rounded-lg transition font-semibold">
+                                                    Marcar como Concluída
+                                                </button>
+                                            ` : (a.entregaId ? `
+                                                <button onclick="toggleTaskStatus('${a.entregaId}', 'Concluída')" 
+                                                            class="text-sm bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 rounded-lg transition font-semibold">
+                                                    Desfazer Conclusão
+                                                </button>
+                                            ` : '')}
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTaskTable(tasks, viewContext) {
+            if (tasks.length === 0) {
+                return `<p class="text-gray-500 py-4 text-center">Nenhuma tarefa atribuída ainda.</p>`;
+            }
+
+            const isProfessor = viewContext === 'professor_dashboard';
+
+            return `
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr class="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-3 py-3">Tema</th>
+                            <th class="px-3 py-3">Disciplina</th>
+                            <th class="px-3 py-3">Turma</th>
+                            <th class="px-3 py-3">Prazo</th>
+                            ${isProfessor ? '<th class="px-3 py-3">Status Entregas</th>' : ''}
+                            ${isProfessor ? '<th class="px-3 py-3 text-center">Ações</th>' : ''}
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${tasks.map(t => {
+                            const entregas = state.entregas.filter(e => e.id_tarefa === t.id);
+                            const entregues = entregas.length;
+                            const concluidas = entregas.filter(e => e.status_avaliacao === 'Concluída').length;
+                            const totalAlunos = t.id_turma.includes('1') ? 25 : (t.id_turma.includes('2') ? 30 : 28);
+
+                            return `
+                                <tr>
+                                    <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-truncate max-w-xs">${t.tema}</td>
+                                    <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${t.disciplina}</td>
+                                    <td class="px-3 py-4 whitespace-nowrap text-sm font-bold text-indigo-600">${t.id_turma}</td>
+                                    <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${formatDeadline(t.data_prazo)}</td>
+                                    
+                                    ${isProfessor ? `
+                                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-700">
+                                            ${entregues}/${totalAlunos} 
+                                            <span class="text-xs text-green-600">(${concluidas} corrigidas)</span>
+                                        </td>
+                                        <td class="px-3 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                            <button onclick="navigate('professor_view_delivery', ${JSON.stringify(t).split('"').join("''")})" 
+                                                    class="text-sm bg-blue-100 text-blue-600 hover:bg-blue-200 px-3 py-1 rounded-lg transition font-semibold">
+                                                Corrigir (${entregues})
+                                            </button>
+                                        </td>
+                                    ` : ''}
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function renderProfessorManageUsers() {
+            const turmasList = state.turmas;
+            const alunos = state.users.filter(u => u.perfil === 'Aluno').sort((a, b) => a.nome.localeCompare(b.nome));
+            const professores = state.users.filter(u => u.perfil === 'Professor').sort((a, b) => a.nome.localeCompare(b.nome));
+
+            return `
+                <div class="w-full max-w-6xl">
+                    ${renderHeader()}
+                    <h1 class="text-3xl font-bold text-indigo-800 mb-6">Gerenciamento de Usuários</h1>
+                    
+                    ${renderMessages()}
+
+                    <!-- Ações Rápidas -->
+                    <div class="flex flex-wrap gap-3 mb-8">
+                        <button onclick="startEditUser({perfil: 'Professor', ra: '', email: '', nome: '', id_turma: ''})" class="btn-primary flex items-center bg-green-600 hover:bg-green-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+                            Incluir Novo Usuário
+                        </button>
+                        <button onclick="navigate('professor_import_users')" class="btn-primary flex items-center bg-yellow-600 hover:bg-yellow-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M5.5 13a.5.5 0 000 1h12a.5.5 0 000-1H5.5zM4 9h14a.5.5 0 000-1H4a.5.5 0 000 1zm0 4h14a.5.5 0 000-1H4a.5.5 0 000 1z"/></svg>
+                            Importação em Massa
+                        </button>
+                        <button onclick="deleteAllUsers()" class="btn-primary flex items-center bg-red-600 hover:bg-red-700">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                            Excluir TODOS os Alunos
+                        </button>
+                    </div>
+
+                    ${state.editingUser ? `
+                        <div class="card p-6 mb-8 border-t-4 border-blue-500">
+                            <h2 class="text-xl font-semibold mb-4">${state.editingUser.ra ? 'Editar Usuário' : 'Incluir Novo Usuário'}</h2>
+                            <form onsubmit="saveUser(event)">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label for="nome" class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                                        <input type="text" id="nome" name="nome" value="${state.editingUser.nome}" class="input-style" required>
+                                    </div>
+                                    <div>
+                                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                                        <input type="email" id="email" name="email" value="${state.editingUser.email}" class="input-style" required>
+                                    </div>
+                                    <div>
+                                        <label for="ra" class="block text-sm font-medium text-gray-700 mb-1">RA (Apenas Números)</label>
+                                        <input type="text" id="ra" name="ra" value="${state.editingUser.ra}" class="input-style" ${state.editingUser.ra ? 'disabled' : ''} required>
+                                        ${state.editingUser.ra ? '<p class="text-xs text-gray-500 mt-1">RA não pode ser alterado.</p>' : ''}
+                                    </div>
+                                    <div>
+                                        <label for="id_turma" class="block text-sm font-medium text-gray-700 mb-1">Turma (Define o Perfil)</label>
+                                        <select id="id_turma" name="id_turma" onchange="document.getElementById('profile-status').textContent = this.value && state.turmas.includes(this.value) ? 'Perfil: Aluno' : 'Perfil: Professor'; document.getElementById('profile-status').className = 'mt-1 text-sm font-semibold ' + (this.value && state.turmas.includes(this.value) ? 'text-green-600' : 'text-gray-600')" class="input-style">
+                                            <option value="">-- Professor (Sem Turma) --</option>
+                                            ${turmasList.map(t => `<option value="${t}" ${state.editingUser.id_turma === t ? 'selected' : ''}>${t}</option>`).join('')}
+                                        </select>
+                                        <p id="profile-status" class="mt-1 text-sm font-semibold ${state.editingUser.id_turma ? 'text-green-600' : 'text-gray-600'}">
+                                            Perfil: ${state.editingUser.id_turma ? 'Aluno' : 'Professor'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end space-x-4 mt-4">
+                                    <button type="button" onclick="cancelEditUser()" class="py-2 px-4 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" class="py-2 px-4 btn-primary bg-blue-600 hover:bg-blue-700">
+                                        ${state.editingUser.ra ? 'Salvar Alterações' : 'Incluir Usuário'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    ` : ''}
+
+
+                    <!-- Lista de Professores -->
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Professores (${professores.length})</h2>
+                    <div class="card p-6 mb-8 overflow-x-auto">
+                        ${renderUserTable(professores, 'Professor')}
+                    </div>
+
+                    <!-- Lista de Alunos -->
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700">Alunos (${alunos.length})</h2>
+                    <div class="card p-6 overflow-x-auto">
+                        ${renderUserTable(alunos, 'Aluno')}
+                    </div>
+                    
+                    <button onclick="navigate('professor_dashboard')" class="text-indigo-600 hover:text-indigo-800 flex items-center mt-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
+                        Voltar ao Dashboard
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderUserTable(users, perfil) {
+            if (users.length === 0) {
+                return `<p class="text-gray-500 py-4 text-center">Nenhum ${perfil.toLowerCase()} cadastrado. Use a Importação em Massa ou Incluir Novo Usuário.</p>`;
+            }
+            
+            return `
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr class="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-3 py-3">Nome</th>
+                            <th class="px-3 py-3">E-mail</th>
+                            <th class="px-3 py-3">RA</th>
+                            <th class="px-3 py-3">Turma/Perfil</th>
+                            <th class="px-3 py-3 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${users.map(u => `
+                            <tr>
+                                <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${u.nome}</td>
+                                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${u.email}</td>
+                                <td class="px-3 py-4 whitespace-nowrap text-sm text-indigo-600 font-semibold">${u.ra}</td>
+                                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-700">
+                                    ${u.id_turma || u.perfil}
+                                </td>
+                                <td class="px-3 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
+                                    <button onclick="startEditUser(${JSON.stringify(u).split('"').join("''")})" class="text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1 rounded-lg transition font-semibold">
+                                        Editar
+                                    </button>
+                                    <button onclick="deleteUser('${u.ra}')" class="text-sm bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 rounded-lg transition font-semibold">
+                                        Excluir
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+        
+        function renderProfessorImportUsers() {
+            const turmasList = state.turmas.join(', ');
+
+            return `
+                <div class="w-full max-w-4xl">
+                    ${renderHeader()}
+                    <h1 class="text-3xl font-bold text-indigo-800 mb-6">Importação em Massa (Apenas Alunos)</h1>
+                    
+                    ${renderMessages()}
+                    
+                    <div class="card p-8 border-t-4 border-yellow-500">
+                        <p class="mb-4 text-gray-700">
+                            Cole os dados da sua planilha abaixo. A importação em massa está configurada para **APENAS INCLUIR ALUNOS**.
+                            Linhas sem um código de turma válido (${turmasList}) serão **ignoradas**.
+                        </p>
+                        
+                        <p class="mb-6 font-semibold text-sm bg-yellow-100 p-3 rounded-lg border border-yellow-300">
+                            Formato Esperado:
+                            <br>
+                            <span class="font-normal text-gray-700 block mt-1">
+                                Nome Completo | E-mail | RA (Apenas Números) | Turma (Ex: Ensino Médio - 1.° Ano A)
+                            </span>
+                        </p>
+
+                        <form onsubmit="handleUserImport(event)">
+                            <div class="mb-6">
+                                <label for="userData" class="block text-sm font-medium text-gray-700 mb-1">Dados da Planilha (Copiar e Colar)</label>
+                                <textarea id="userData" name="userData" rows="10" class="input-style" placeholder="Cole aqui todas as linhas de alunos, uma por linha." required></textarea>
+                            </div>
+
+                            <div class="flex justify-between space-x-4">
+                                <button type="button" onclick="navigate('professor_manage_users')" class="w-1/2 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+                                    Voltar para Gestão
+                                </button>
+                                <button type="submit" class="w-1/2 py-2 btn-primary bg-yellow-600 hover:bg-yellow-700">
+                                    Importar Alunos
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderErrorState(message) {
+            return `
+                <div class="w-full max-w-2xl mt-12">
+                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-lg" role="alert">
+                        <p class="font-bold">Erro de Aplicação</p>
+                        <p>${message}</p>
+                    </div>
+                    ${userProfile ? `
+                        <button onclick="navigate('professor_dashboard')" class="mt-6 text-indigo-600 hover:text-indigo-800 flex items-center">
+                            Voltar ao Dashboard
+                        </button>
+                    ` : `<button onclick="navigate('login')" class="mt-6 text-indigo-600 hover:text-indigo-800 flex items-center">
+                            Voltar ao Login
+                        </button>`
+                    }
+                </div>
+            `;
+        }
+
+        // --- Renderização Principal ---
+        function renderApp() {
+            const container = document.getElementById('app-container');
+            if (state.loading) {
+                container.innerHTML = document.getElementById('loading-spinner').outerHTML;
+                return;
+            }
+
+            switch (state.view) {
+                case 'login':
+                    container.innerHTML = renderLogin();
+                    break;
+                case 'professor_dashboard':
+                    container.innerHTML = renderProfessorDashboard();
+                    break;
+                case 'professor_create_task':
+                    container.innerHTML = renderProfessorCreateTask();
+                    break;
+                case 'professor_manage_users':
+                    container.innerHTML = renderProfessorManageUsers();
+                    break;
+                case 'professor_import_users':
+                    container.innerHTML = renderProfessorImportUsers();
+                    break;
+                case 'professor_view_delivery':
+                    container.innerHTML = renderProfessorViewDelivery();
+                    break;
+                case 'aluno_dashboard':
+                    container.innerHTML = renderAlunoDashboard();
+                    break;
+                case 'aluno_submit_task':
+                    container.innerHTML = renderAlunoSubmitTask();
+                    break;
+                default:
+                    container.innerHTML = renderErrorState("Estado da aplicação desconhecido.");
+            }
+        }
+
+        // Inicia a aplicação
+        window.onload = initFirebase;
     </script>
-  </body>
+</body>
 </html>
