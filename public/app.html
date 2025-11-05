@@ -110,8 +110,8 @@
 
         // --- Funções de Utilitários ---
         function getCollectionPath(collectionName) {
-            // CÓDIGO CORRIGIDO: Retorna apenas o nome da coleção para simplificar a regra de segurança do Firestore
-            return collectionName;
+            // FIX APLICADO: Restaurando o caminho completo, pois é onde os dados foram inseridos
+            return `artifacts/${appId}/public/data/${collectionName}`;
         }
 
         // Converte a opção de prazo em um objeto Date
