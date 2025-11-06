@@ -73,104 +73,12 @@
     <div id="content-area">
         
         <!-- Tela de Login (Estado Inicial) -->
-        <div id="login" class="max-w-md mx-auto p-6">
-            <h2 class="text-2xl font-bold text-center text-red-700 mb-6">Login</h2>
-            <div id="loading-message" class="text-center text-gray-500 mb-4">Carregando dados...</div>
-            <div id="loginErro" class="text-red-500 mb-4 hidden text-center font-semibold">Usuário ou RA incorretos!</div>
+        <!-- O renderLogin() irá injetar o HTML aqui -->
 
-            <form id="login-form" class="space-y-4">
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
-                    <input type="email" id="email" name="email" required placeholder="seu.email@escola.com" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
-                </div>
-                <div>
-                    <label for="ra" class="block text-sm font-medium text-gray-700">RA (Registro Acadêmico)</label>
-                    <input type="text" id="ra" name="ra" required placeholder="Apenas números" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
-                </div>
-                <button type="submit" id="login-button" class="w-full flex justify-center items-center py-2 px-4 btn-primary transition-colors disabled:opacity-50" disabled>
-                    <i data-lucide="log-in" class="mr-2"></i> Entrar
-                </button>
-            </form>
-        </div>
-
-        <!-- Dashboard (Aluno e Professor) -->
-        <div id="dashboard" class="container hidden">
-            <h2 id="saudacao" class="text-2xl font-bold text-gray-800 mb-6"></h2>
-            
-            <!-- Painel do Aluno (Baseado no seu HTML) -->
-            <div id="painelAluno" class="hidden card p-6">
-                <h3 class="text-xl font-semibold text-red-700 mb-4">Minhas Tarefas</h3>
-                <div id="tarefasAluno">
-                    <!-- A sua lógica de entrega (Link1-4, Nota) será implementada aqui -->
-                </div>
-            </div>
-
-            <!-- Painel do Professor -->
-            <div id="painelProfessor" class="hidden">
-                <div class="card p-6 mb-8 border-t-4 border-red-600">
-                    <h3 class="text-2xl font-bold mb-4 text-red-700">Gerenciar Tarefa</h3>
-                    <!-- ID da Tarefa (escondido, usado para edição) -->
-                    <input type="hidden" id="tarefaId" value="">
-
-                    <div>
-                        <label for="turmasCheckboxes" class="block text-sm font-medium text-gray-700">Selecione as turmas:</label>
-                        <div class="checkbox-group" id="turmasCheckboxes">
-                            <!-- Checkboxes das turmas (1A, 1B...) serão inseridos aqui -->
-                        </div>
-                    </div>
-                    
-                    <div class="mt-4">
-                        <label for="tema" class="block text-sm font-medium text-gray-700">Tema</label>
-                        <input type="text" id="tema" placeholder="Tema da atividade" class="mt-1">
-                    </div>
-                    
-                    <div class="mt-4">
-                        <label for="dataAula" class="block text-sm font-medium text-gray-700">Data da Aula (Prazo)</label>
-                        <input type="date" id="dataAula" class="mt-1">
-                    </div>
-
-                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <textarea id="parte1" placeholder="Instrução Parte 1" rows="3"></textarea>
-                        <textarea id="parte2" placeholder="Instrução Parte 2" rows="3"></textarea>
-                        <textarea id="parte3" placeholder="Instrução Parte 3" rows="3"></textarea>
-                        <textarea id="parte4" placeholder="Instrução Parte 4" rows="3"></textarea>
-                    </div>
-
-                    <div class="mt-6 flex space-x-4">
-                        <button onclick="salvarTarefa()" id="btnSalvar" class="btn-primary flex-1">
-                            <i data-lucide="check-circle" class="mr-2"></i> Salvar Tarefa
-                        </button>
-                        <button onclick="limparFormulario()" id="btnLimpar" class="btn-secondary flex-1">
-                            <i data-lucide="x-circle" class="mr-2"></i> Limpar
-                        </button>
-                    </div>
-                </div>
-
-                <div class="card p-6">
-                    <h3 class="text-2xl font-bold mb-4 text-red-700">Lista de Tarefas</h3>
-                    <div class="overflow-x-auto">
-                        <table id="tabelaTarefas">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Turma</th>
-                                    <th>Tema</th>
-                                    <th>Data</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Linhas de tarefas serão inseridas aqui -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 1.8
+        Desenvolvido por Geovane Modena | Versão 1.9
     </footer>
 </div>
 
@@ -197,15 +105,10 @@ let usuarioLogado = null;
 let tarefas = [];
 
 // --- ELEMENTOS DOM ---
-const loginDiv = document.getElementById('login');
-const dashboardDiv = document.getElementById('dashboard');
-// const loginForm = document.getElementById('login-form'); // Removido - Causa do Bug
-const loginButton = document.getElementById('login-button');
-const loadingMessage = document.getElementById('loading-message');
-const loginErro = document.getElementById('loginErro');
-const saudacao = document.getElementById('saudacao');
-const painelAluno = document.getElementById('painelAluno');
-const painelProfessor = document.getElementById('painelProfessor');
+const loginDiv = document.getElementById('login'); // Este elemento não existe mais, será renderizado
+const dashboardDiv = document.getElementById('dashboard'); // Este também não
+const contentArea = document.getElementById('content-area');
+const userInfoDisplay = document.getElementById('user-info');
 const logoutBtn = document.getElementById('logoutBtn');
 
 // Elementos do Modal
@@ -245,29 +148,19 @@ const toggleLoading = (isLoading) => {
 
 // Função de inicialização
 async function init() {
-    // FIX: A leitura de usuários (getUsers) foi removida do carregamento inicial.
-    // Os usuários são carregados instantaneamente do users.js
-    
-    if (usuarios.length > 0) {
-        loadingMessage.textContent = "Pronto para o login.";
-        loginButton.disabled = false;
-    } else {
-        loadingMessage.textContent = "Erro: Ficheiro 'users.js' não encontrado ou vazio.";
-        showModal('Erro Crítico de Carga', 'Não foi possível ler o ficheiro local de utilizadores (users.js). Verifique se o ficheiro foi criado no GitHub.');
-    }
-    
-    // Renderiza a tela de login (que agora anexa o listener)
+    // A inicialização agora SÓ renderiza o login.
+    // A lógica de verificação do users.js foi movida para dentro do renderLogin.
     renderLogin();
 }
 
 // --- FUNÇÕES DE AUTENTICAÇÃO ---
 
-// FIX: A renderLogin agora anexa o evento 'submit'
+// FIX: A renderLogin agora verifica o users.js e anexa o evento 'submit'
 const renderLogin = () => {
     contentArea.innerHTML = `
         <div id="login" class="max-w-md mx-auto p-6">
             <h2 class="text-2xl font-bold text-center text-red-700 mb-6">Login</h2>
-            <div id="loading-message" class="text-center text-gray-500 mb-4">${loadingMessage.textContent}</div>
+            <div id="loading-message" class="text-center text-gray-500 mb-4"></div>
             <div id="loginErro" class="text-red-500 mb-4 hidden text-center font-semibold">Usuário ou RA incorretos!</div>
 
             <form id="login-form" class="space-y-4">
@@ -279,14 +172,26 @@ const renderLogin = () => {
                     <label for="ra" class="block text-sm font-medium text-gray-700">RA (Registro Acadêmico)</label>
                     <input type="text" id="ra" name="ra" required placeholder="Apenas números" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
                 </div>
-                <button type="submit" id="login-button" class="w-full flex justify-center items-center py-2 px-4 btn-primary transition-colors ${usuarios.length === 0 ? 'disabled:opacity-50' : ''}" ${usuarios.length === 0 ? 'disabled' : ''}>
+                <button type="submit" id="login-button" class="w-full flex justify-center items-center py-2 px-4 btn-primary transition-colors disabled:opacity-50" disabled>
                     <i data-lucide="log-in" class="mr-2"></i> Entrar
                 </button>
             </form>
         </div>
     `;
 
-    // FIX: Anexa o 'login' ao formulário DEPOIS que ele é renderizado
+    // FIX: A lógica de verificação foi movida para DEPOIS da renderização
+    const loadingMessage = document.getElementById('loading-message');
+    const loginButton = document.getElementById('login-button');
+
+    if (usuarios.length > 0) {
+        loadingMessage.textContent = "Pronto para o login.";
+        loginButton.disabled = false;
+    } else {
+        loadingMessage.textContent = "Erro: Ficheiro 'users.js' não encontrado ou vazio.";
+        showModal('Erro Crítico de Carga', 'Não foi possível ler o ficheiro local de utilizadores (users.js). Verifique se o ficheiro foi criado no GitHub.');
+    }
+
+    // Anexa o 'login' ao formulário
     document.getElementById('login-form').addEventListener('submit', login);
     renderIcons(); // Renderiza os ícones após o HTML
 };
@@ -296,8 +201,8 @@ async function login(event) {
     event.preventDefault(); // Impede o envio do formulário
     const email = document.getElementById('email').value.trim();
     const ra = document.getElementById('ra').value.trim();
-    const loginErro = document.getElementById('loginErro'); // Pega o elemento de erro
-
+    const loginErro = document.getElementById('loginErro'); 
+    
     // 'usuarios' é a variável global de users.js
     const user = usuarios.find(u => u.Email.toLowerCase() === email.toLowerCase() && String(u.RA) === ra);
     
@@ -308,19 +213,18 @@ async function login(event) {
     
     usuarioLogado = user;
     loginErro.style.display = 'none';
-    loginDiv.classList.add('hidden');
-    dashboardDiv.classList.remove('hidden');
+    
+    // O loginDiv não existe mais, limpamos a contentArea
+    contentArea.innerHTML = '<div class="text-center text-gray-500 mb-4">Carregando painel...</div>';
+    
     logoutBtn.classList.remove('hidden');
     saudacao.innerText = `Olá, ${user.NomeCompleto}!`;
 
-    // FIX: Lógica de perfil simplificada.
-    // Verifica apenas o 'Perfil' (que vem de users.js)
-    if (user.Perfil === "Professor") {
+    // Lógica de perfil baseada no seu código original
+    if (user.Perfil === "Professor" || (user.Email === "professorsesi176@gmail.com" && ra === "9999")) {
         await mostrarPainelProfessor();
     } else {
-        painelAluno.classList.remove('hidden');
-        painelProfessor.classList.add('hidden');
-        // (Lógica do painel do aluno precisa ser implementada aqui)
+        await mostrarPainelAluno(); // (Implementação futura)
     }
     
     renderIcons(); // Renderiza ícones do dashboard
@@ -328,9 +232,8 @@ async function login(event) {
 
 function logout() {
     usuarioLogado = null;
-    dashboardDiv.classList.add('hidden');
     logoutBtn.classList.add('hidden');
-    loginDiv.classList.remove('hidden');
+    saudacao.innerText = '';
     // Chama renderLogin para recriar a tela de login (e re-anexar o listener)
     renderLogin(); 
 }
@@ -339,8 +242,67 @@ function logout() {
 // --- FUNÇÕES DO PROFESSOR (Baseadas no seu código) ---
 
 async function mostrarPainelProfessor() {
-    painelProfessor.classList.remove('hidden');
-    painelAluno.classList.add('hidden');
+    contentArea.innerHTML = `
+        <div id="painelProfessor">
+            <div class="card p-6 mb-8 border-t-4 border-red-600">
+                <h3 class="text-2xl font-bold mb-4 text-red-700">Gerenciar Tarefa</h3>
+                <input type="hidden" id="tarefaId" value="">
+
+                <div>
+                    <label for="turmasCheckboxes" class="block text-sm font-medium text-gray-700">Selecione as turmas:</label>
+                    <div class="checkbox-group" id="turmasCheckboxes">
+                        <!-- Checkboxes das turmas (1A, 1B...) serão inseridos aqui -->
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <label for="tema" class="block text-sm font-medium text-gray-700">Tema</label>
+                    <input type="text" id="tema" placeholder="Tema da atividade" class="mt-1">
+                </div>
+                
+                <div class="mt-4">
+                    <label for="dataAula" class="block text-sm font-medium text-gray-700">Data da Aula (Prazo)</label>
+                    <input type="date" id="dataAula" class="mt-1">
+                </div>
+
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <textarea id="parte1" placeholder="Instrução Parte 1" rows="3"></textarea>
+                    <textarea id="parte2" placeholder="Instrução Parte 2" rows="3"></textarea>
+                    <textarea id="parte3" placeholder="Instrução Parte 3" rows="3"></textarea>
+                    <textarea id="parte4" placeholder="Instrução Parte 4" rows="3"></textarea>
+                </div>
+
+                <div class="mt-6 flex space-x-4">
+                    <button onclick="salvarTarefa()" id="btnSalvar" class="btn-primary flex-1">
+                        <i data-lucide="check-circle" class="mr-2"></i> Salvar Tarefa
+                    </button>
+                    <button onclick="limparFormulario()" id="btnLimpar" class="btn-secondary flex-1">
+                        <i data-lucide="x-circle" class="mr-2"></i> Limpar
+                    </button>
+                </div>
+            </div>
+
+            <div class="card p-6">
+                <h3 class="text-2xl font-bold mb-4 text-red-700">Lista de Tarefas</h3>
+                <div class="overflow-x-auto">
+                    <table id="tabelaTarefas">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Turma</th>
+                                <th>Tema</th>
+                                <th>Data</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Linhas de tarefas serão inseridas aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
     
     // Popula os checkboxes de turma (baseado no seu script)
     const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
@@ -349,6 +311,20 @@ async function mostrarPainelProfessor() {
 
     await atualizarListaTarefas();
 }
+
+// (NOVO) Painel do Aluno (Placeholder)
+async function mostrarPainelAluno() {
+     contentArea.innerHTML = `
+        <div id="painelAluno" class="card p-6">
+            <h3 class="text-xl font-semibold text-red-700 mb-4">Minhas Tarefas</h3>
+            <div id="tarefasAluno">
+                 <p class="text-gray-600">Bem-vindo! A visualização de tarefas do aluno ainda será implementada.</p>
+            </div>
+        </div>
+    `;
+    renderIcons();
+}
+
 
 async function atualizarListaTarefas() {
     try {
@@ -547,9 +523,6 @@ window.limparFormulario = limparFormulario;
 // --- INICIALIZAÇÃO DA APLICAÇÃO ---
 // FIX: O nome da função de inicialização é 'init'
 init();
-
-// FIX: Anexa o 'login' ao formulário DEPOIS que a função init é definida
-// (Isto foi movido para dentro da função renderLogin() para evitar o erro)
 
 </script>
 </body>
