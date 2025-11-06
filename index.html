@@ -171,7 +171,7 @@
     </div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena
+        Desenvolvido por Geovane Modena | Versão 1.0
     </footer>
 </div>
 
@@ -517,6 +517,9 @@ window.limparFormulario = limparFormulario;
 // --- INICIALIZAÇÃO DA APLICAÇÃO ---
 // FIX: O nome da função de inicialização é 'init'
 init();
+
+// FIX: Anexa o 'login' ao formulário DEPOIS que a função init é definida
+document.getElementById('login-form').addEventListener('submit', login);
 
 </script>
 </body>
