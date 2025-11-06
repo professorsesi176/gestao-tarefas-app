@@ -1,314 +1,529 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gestão de Tarefas</title>
-
-  <style>
-    body {
-      font-family: "Poppins", sans-serif;
-      background-color: #ffffff;
-      color: #000;
-      margin: 0;
-      padding: 0;
-    }
-
-    header {
-      background-color: #d32f2f;
-      color: #fff;
-      text-align: center;
-      padding: 20px;
-      font-size: 2.2em;
-      font-weight: bold;
-    }
-
-    .container {
-      width: 90%;
-      max-width: 900px;
-      margin: 20px auto;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      padding: 20px;
-    }
-
-    h2 {
-      color: #d32f2f;
-      border-bottom: 2px solid #d32f2f;
-      padding-bottom: 5px;
-    }
-
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-
-    input, textarea, select {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-
-    button {
-      background-color: #d32f2f;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-
-    button:hover {
-      background-color: #b71c1c;
-    }
-
-    .logout {
-      position: fixed;
-      top: 15px;
-      right: 20px;
-      background-color: #000;
-      font-size: 0.9em;
-      padding: 5px 10px;
-    }
-
-    .task-card {
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 10px;
-      margin-top: 15px;
-      background-color: #fafafa;
-    }
-
-    .footer {
-      text-align: center;
-      font-size: 0.9em;
-      color: #555;
-      margin: 20px 0;
-    }
-
-    .checkbox-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .checkbox-group label {
-      font-weight: normal;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Tarefas Escolar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca de Ícones Lucide (Carregamento Robusto) -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
+        .card { background-color: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.2); }
+        /* Design Primário: Vermelho SESI */
+        .btn-primary { background-color: #CC0000; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; }
+        .btn-primary:hover { background-color: #A00000; }
+        .btn-secondary { background-color: #d1d5db; color: #1e1e1e; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; }
+        .btn-secondary:hover { background-color: #9ca3af; }
+        input[type="email"], input[type="text"], input[type="url"], input[type="date"], textarea, select {
+            border: 1px solid #d1d5db; padding: 10px; border-radius: 8px; width: 100%; box-sizing: border-box;
+            transition: border-color 0.2s; margin-top: 4px; margin-bottom: 8px;
+        }
+        input:focus, textarea:focus, select:focus { border-color: #CC0000; outline: none; }
+        [data-lucide] {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+        }
+        /* Estilo da Tabela */
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #CC0000; color: white; }
+        tbody tr:nth-child(even) { background-color: #f9f9f9; }
+        .hidden { display: none; }
+        
+        /* Checkboxes (do seu layout antigo) */
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        .checkbox-group label {
+            font-weight: normal;
+            display: flex;
+            align-items: center;
+        }
+        .checkbox-group input {
+            width: auto; /* Checkboxes não devem ter 100% de largura */
+            margin: 0 5px 0 0;
+        }
+    </style>
 </head>
+<body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
 
-<body>
-  <header>Gestão de Tarefas</header>
+<div id="app-container" class="w-full max-w-4xl bg-white shadow-xl rounded-2xl p-6 sm:p-10 transition-all duration-300">
+    <header class="mb-8 border-b pb-4 flex justify-between items-center">
+        <h1 class="text-3xl font-extrabold text-red-700 flex items-center">
+            <svg class="w-8 h-8 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Gestão de Tarefas
+        </h1>
+        <button onclick="logout()" id="logoutBtn" class="btn-secondary hidden">Sair</button>
+    </header>
 
-  <button class="logout" id="logoutBtn" style="display:none;">Sair</button>
+    <!-- Conteúdo da Aplicação -->
+    <div id="content-area">
+        
+        <!-- Tela de Login (Estado Inicial) -->
+        <div id="login" class="max-w-md mx-auto p-6">
+            <h2 class="text-2xl font-bold text-center text-red-700 mb-6">Login</h2>
+            <div id="loading-message" class="text-center text-gray-500 mb-4">Carregando dados...</div>
+            <div id="loginErro" class="text-red-500 mb-4 hidden text-center font-semibold">Usuário ou RA incorretos!</div>
 
-  <div class="container" id="loginContainer">
-    <h2>Login</h2>
-    <label for="email">E-mail SESI:</label>
-    <input type="email" id="email" placeholder="nome.sobrenome@portalsesisp.org.br" />
-    <label for="ra">RA:</label>
-    <input type="text" id="ra" placeholder="Digite seu RA" />
-    <button onclick="login()">Entrar</button>
-  </div>
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
+                    <input type="email" id="email" name="email" required placeholder="seu.email@escola.com" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                </div>
+                <div>
+                    <label for="ra" class="block text-sm font-medium text-gray-700">RA (Registro Acadêmico)</label>
+                    <input type="text" id="ra" name="ra" required placeholder="Apenas números" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                </div>
+                <button type="submit" id="login-button" class="w-full flex justify-center items-center py-2 px-4 btn-primary transition-colors disabled:opacity-50" disabled>
+                    <i data-lucide="log-in" class="mr-2"></i> Entrar
+                </button>
+            </form>
+        </div>
 
-  <div class="container" id="professorContainer" style="display:none;">
-    <h2>Painel do Professor</h2>
-    <label>Selecione as turmas:</label>
-    <div class="checkbox-group" id="turmasCheckboxes"></div>
+        <!-- Dashboard (Aluno e Professor) -->
+        <div id="dashboard" class="container hidden">
+            <h2 id="saudacao" class="text-2xl font-bold text-gray-800 mb-6"></h2>
+            
+            <!-- Painel do Aluno (Baseado no seu HTML) -->
+            <div id="painelAluno" class="hidden card p-6">
+                <h3 class="text-xl font-semibold text-red-700 mb-4">Minhas Tarefas</h3>
+                <div id="tarefasAluno">
+                    <!-- O seu código de lógica de entrega (Link1-4, Nota) precisa ser adicionado aqui -->
+                </div>
+            </div>
 
-    <label>Tema:</label>
-    <input type="text" id="tema" />
+            <!-- Painel do Professor -->
+            <div id="painelProfessor" class="hidden">
+                <div class="card p-6 mb-8 border-t-4 border-red-600">
+                    <h3 class="text-2xl font-bold mb-4 text-red-700">Gerenciar Tarefa</h3>
+                    <!-- ID da Tarefa (escondido, usado para edição) -->
+                    <input type="hidden" id="tarefaId" value="">
 
-    <label>Parte 1:</label>
-    <textarea id="parte1"></textarea>
+                    <div>
+                        <label for="turmasCheckboxes" class="block text-sm font-medium text-gray-700">Selecione as turmas:</label>
+                        <div class="checkbox-group" id="turmasCheckboxes">
+                            <!-- Checkboxes das turmas (1A, 1B...) serão inseridos aqui -->
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label for="tema" class="block text-sm font-medium text-gray-700">Tema</label>
+                        <input type="text" id="tema" placeholder="Tema da atividade" class="mt-1">
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label for="dataAula" class="block text-sm font-medium text-gray-700">Data da Aula (Prazo)</label>
+                        <input type="date" id="dataAula" class="mt-1">
+                    </div>
 
-    <label>Parte 2:</label>
-    <textarea id="parte2"></textarea>
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <textarea id="parte1" placeholder="Instrução Parte 1" rows="3"></textarea>
+                        <textarea id="parte2" placeholder="Instrução Parte 2" rows="3"></textarea>
+                        <textarea id="parte3" placeholder="Instrução Parte 3" rows="3"></textarea>
+                        <textarea id="parte4" placeholder="Instrução Parte 4" rows="3"></textarea>
+                    </div>
 
-    <label>Parte 3:</label>
-    <textarea id="parte3"></textarea>
+                    <div class="mt-6 flex space-x-4">
+                        <button onclick="salvarTarefa()" id="btnSalvar" class="btn-primary flex-1">
+                            <i data-lucide="check-circle" class="mr-2"></i> Salvar Tarefa
+                        </button>
+                        <button onclick="limparFormulario()" id="btnLimpar" class="btn-secondary flex-1">
+                            <i data-lucide="x-circle" class="mr-2"></i> Limpar
+                        </button>
+                    </div>
+                </div>
 
-    <label>Parte 4:</label>
-    <textarea id="parte4"></textarea>
+                <div class="card p-6">
+                    <h3 class="text-2xl font-bold mb-4 text-red-700">Lista de Tarefas</h3>
+                    <div class="overflow-x-auto">
+                        <table id="tabelaTarefas">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Turma</th>
+                                    <th>Tema</th>
+                                    <th>Data</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Linhas de tarefas serão inseridas aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <label>Data da Aula:</label>
-    <input type="date" id="dataAula" />
+    <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
+        Desenvolvido por Geovane Modena
+    </footer>
+</div>
 
-    <button onclick="criarTarefa()">💾 Salvar Tarefa</button>
+<!-- Modal Customizado para Avisos -->
+<div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg p-6 max-w-sm w-full shadow-2xl">
+        <h3 id="modal-title" class="text-xl font-bold mb-3 text-red-600"></h3>
+        <p id="modal-message" class="text-gray-700 mb-4 whitespace-pre-wrap"></p>
+        <button id="modal-close-button" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">
+            OK
+        </button>
+    </div>
+</div>
 
-    <h2>Tarefas Criadas</h2>
-    <div id="listaTarefas"></div>
-  </div>
+<script type="module">
+// --- CONFIGURAÇÃO ---
+// URL do Backend (Apps Script) - Usando a URL que você forneceu
+const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
 
-  <div class="container" id="alunoContainer" style="display:none;">
-    <h2>Suas Tarefas</h2>
-    <div id="tarefasAluno"></div>
-  </div>
+// --- ESTADO DA APLICAÇÃO ---
+let usuarios = [];
+let usuarioLogado = null;
+let tarefas = [];
 
-  <div class="footer">Desenvolvido por Geovane Módena</div>
+// --- ELEMENTOS DOM ---
+const loginDiv = document.getElementById('login');
+const dashboardDiv = document.getElementById('dashboard');
+const loginForm = document.getElementById('login-form');
+const loginButton = document.getElementById('login-button');
+const loadingMessage = document.getElementById('loading-message');
+const loginErro = document.getElementById('loginErro');
+const saudacao = document.getElementById('saudacao');
+const painelAluno = document.getElementById('painelAluno');
+const painelProfessor = document.getElementById('painelProfessor');
+const logoutBtn = document.getElementById('logoutBtn');
 
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
-    let usuarioAtual = null;
-    let dadosUsuarios = [];
-    let dadosTarefas = [];
+// Elementos do Modal
+const modalOverlay = document.getElementById('modal-overlay');
+const modalTitle = document.getElementById('modal-title');
+const modalMessage = document.getElementById('modal-message');
+const modalCloseButton = document.getElementById('modal-close-button');
 
-    async function carregarDados() {
-      const respUsers = await fetch(`${API_URL}?func=getUsers`);
-      const usersJson = await respUsers.json();
-      dadosUsuarios = usersJson.users;
+// --- FUNÇÕES UTILITÁRIAS ---
+const showModal = (title, message) => {
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    modalOverlay.classList.remove('hidden');
+    modalOverlay.classList.add('flex');
+};
 
-      const respTarefas = await fetch(`${API_URL}?func=getTarefas`);
-      const tarefasJson = await respTarefas.json();
-      dadosTarefas = tarefasJson.tarefas;
+const closeModal = () => {
+    modalOverlay.classList.add('hidden');
+}
+window.closeModal = closeModal;
+modalCloseButton.onclick = closeModal;
+
+const renderIcons = () => {
+    if (window.lucide) {
+        window.lucide.createIcons();
     }
+}
 
-    async function login() {
-      const email = document.getElementById('email').value.trim().toLowerCase();
-      const ra = document.getElementById('ra').value.trim();
+const toggleLoading = (isLoading) => {
+    const indicator = document.getElementById('loading-indicator');
+    if (indicator) {
+        indicator.classList.toggle('hidden', !isLoading);
+    }
+}
 
-      await carregarDados();
-      usuarioAtual = dadosUsuarios.find(u => u.Email?.toLowerCase() === email && u.RA?.toString() === ra);
+// --- INICIALIZAÇÃO ---
 
-      if (!usuarioAtual) {
-        alert("Usuário não encontrado. Verifique o e-mail e RA.");
+// Função de inicialização
+async function init() {
+    try {
+        loadingMessage.textContent = "Carregando usuários...";
+        // Usa a lógica GET (doGet) do seu Apps Script
+        const res = await fetch(`${API_URL}?func=getUsers`, { mode: 'cors' });
+        
+        if (!res.ok) {
+            // Se o fetch falhar (CORS ou rede), lança um erro
+            throw new Error(`Falha ao buscar usuários (Status: ${res.status}). Verifique o console para detalhes de CORS.`);
+        }
+        
+        usuarios = await res.json();
+        
+        loadingMessage.textContent = "Pronto para o login.";
+        loginButton.disabled = false;
+        
+    } catch (error) {
+        console.error("Erro ao carregar usuários:", error);
+        loadingMessage.textContent = "Erro ao carregar dados.";
+        showModal('Erro Crítico de Carga (Failed to fetch)', 
+                  'Não foi possível conectar ao Google Apps Script. \n\n' +
+                  'Solução: \n' +
+                  '1. Verifique se o URL no código `index.html` está correto. \n' +
+                  '2. Verifique se o `Codigo.gs` (Apps Script) contém a função `doOptions(e)`. \n' +
+                  '3. RE-PUBLIQUE o Apps Script (Deploy -> Manage -> Edit -> New Version -> Deploy). \n' +
+                  '\nDetalhe do Erro: ' + error.message);
+    }
+    
+    // Renderiza ícones da tela de login
+    renderIcons();
+}
+
+// --- FUNÇÕES DE AUTENTICAÇÃO ---
+
+async function login(event) {
+    event.preventDefault(); // Impede o envio do formulário
+    const email = document.getElementById('email').value.trim();
+    const ra = document.getElementById('ra').value.trim();
+
+    const user = usuarios.find(u => u.Email.toLowerCase() === email.toLowerCase() && String(u.RA) === ra);
+    
+    if (!user) {
+        loginErro.style.display = 'block';
         return;
-      }
-
-      document.getElementById('loginContainer').style.display = 'none';
-      document.getElementById('logoutBtn').style.display = 'block';
-
-      if (usuarioAtual.Email === "professorsesi176@gmail.com" && usuarioAtual.RA == "9999" || usuarioAtual.Turma.toLowerCase() === "professor") {
-        mostrarPainelProfessor();
-      } else {
-        mostrarPainelAluno();
-      }
     }
+    
+    usuarioLogado = user;
+    loginErro.style.display = 'none';
+    loginDiv.classList.add('hidden');
+    dashboardDiv.classList.remove('hidden');
+    logoutBtn.classList.remove('hidden');
+    saudacao.innerText = `Olá, ${user.NomeCompleto}!`;
 
-    function logout() {
-      location.reload();
+    // Lógica de perfil baseada no seu código original
+    if (user.Perfil === "Professor" || (user.Email === "professorsesi176@gmail.com" && ra === "9999")) {
+        await mostrarPainelProfessor();
+    } else {
+        painelAluno.classList.remove('hidden');
+        painelProfessor.classList.add('hidden');
+        // (Lógica do painel do aluno precisa ser implementada aqui)
     }
+    
+    renderIcons(); // Renderiza ícones do dashboard
+}
 
-    document.getElementById("logoutBtn").addEventListener("click", logout);
+function logout() {
+    usuarioLogado = null;
+    dashboardDiv.classList.add('hidden');
+    logoutBtn.classList.add('hidden');
+    loginDiv.classList.remove('hidden');
+    document.getElementById('email').value = '';
+    document.getElementById('ra').value = '';
+    renderIcons(); // Renderiza ícones da tela de login
+}
 
-    function mostrarPainelProfessor() {
-      document.getElementById('professorContainer').style.display = 'block';
-      const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
-      const checkboxes = turmas.map(t => `<label><input type='checkbox' value='${t}'> ${t}</label>`).join("");
-      document.getElementById('turmasCheckboxes').innerHTML = checkboxes;
 
-      atualizarListaTarefas();
+// --- FUNÇÕES DO PROFESSOR (Baseadas no seu código) ---
+
+async function mostrarPainelProfessor() {
+    painelProfessor.classList.remove('hidden');
+    painelAluno.classList.add('hidden');
+    
+    // Popula os checkboxes de turma (baseado no seu script)
+    const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
+    const checkboxes = turmas.map(t => `<label><input type='checkbox' value='${t}' class="w-auto m-2"> ${t}</label>`).join("");
+    document.getElementById('turmasCheckboxes').innerHTML = checkboxes;
+
+    await atualizarListaTarefas();
+}
+
+async function atualizarListaTarefas() {
+    try {
+        toggleLoading(true);
+        // Usa a lógica GET (doGet) do seu Apps Script
+        const res = await fetch(`${API_URL}?func=getTarefas`, { mode: 'cors' });
+        if (!res.ok) throw new Error('Falha ao buscar tarefas.');
+        
+        tarefas = await res.json();
+        renderizarTabela();
+    } catch (error) {
+        showModal('Erro ao Carregar Tarefas', error.message);
+    } finally {
+        toggleLoading(false);
+        renderIcons(); // Renderiza ícones da tabela
     }
+}
 
-    async function criarTarefa() {
-      const selecionadas = Array.from(document.querySelectorAll('#turmasCheckboxes input:checked')).map(c => c.value);
-      if (selecionadas.length === 0) {
+function renderizarTabela() {
+    const tbody = document.querySelector("#tabelaTarefas tbody");
+    tbody.innerHTML = "";
+    
+    tarefas.sort((a, b) => new Date(b.DataAula) - new Date(a.DataAula));
+
+    tarefas.forEach(t => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${t.ID.substring(0, 8)}...</td> <!-- Mostra ID abreviado -->
+            <td>${t.Turma}</td>
+            <td>${t.Tema}</td>
+            <td>${t.DataAula}</td>
+            <td>
+                <button onclick="preencherFormularioParaEditar('${t.ID}')" class="text-blue-600 hover:text-blue-800" title="Editar">
+                    <i data-lucide="edit" class="w-5 h-5"></i>
+                </button>
+                <button onclick="excluirTarefa('${t.ID}')" class="text-red-600 hover:text-red-800 ml-2" title="Excluir">
+                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                </button>
+            </td>`;
+        tbody.appendChild(tr);
+    });
+    renderIcons();
+}
+
+// Função 'wrapper' para decidir entre criar ou editar
+async function salvarTarefa() {
+    const id = document.getElementById('tarefaId').value;
+    if (id) {
+        await editarTarefa(id);
+    } else {
+        await criarTarefa();
+    }
+}
+
+async function criarTarefa() {
+    const turmasSelecionadas = Array.from(document.querySelectorAll('#turmasCheckboxes input:checked')).map(c => c.value);
+    if (turmasSelecionadas.length === 0) {
         alert("Selecione pelo menos uma turma.");
         return;
-      }
+    }
 
-      const novaTarefa = {
-        func: 'addTarefa',
-        Turma: selecionadas.join(', '),
+    const dados = {
+        action: "criarTarefa",
+        Turmas: turmasSelecionadas, // Envia como array
         Tema: document.getElementById('tema').value,
         Parte1: document.getElementById('parte1').value,
         Parte2: document.getElementById('parte2').value,
         Parte3: document.getElementById('parte3').value,
         Parte4: document.getElementById('parte4').value,
         DataAula: document.getElementById('dataAula').value
-      };
+    };
 
-      await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify(novaTarefa),
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      alert("Tarefa criada com sucesso!");
-      atualizarListaTarefas();
-    }
-
-    async function atualizarListaTarefas() {
-      const resp = await fetch(`${API_URL}?func=getTarefas`);
-      const data = await resp.json();
-      const tarefas = data.tarefas;
-      const div = document.getElementById("listaTarefas");
-      div.innerHTML = "";
-
-      tarefas.forEach(t => {
-        const box = document.createElement("div");
-        box.className = "task-card";
-        box.innerHTML = `<strong>${t.Tema}</strong><br>Turmas: ${t.Turma}<br>Data: ${t.DataAula}
-                         <button onclick="excluirTarefa('${t.ID}')">🗑️ Excluir</button>`;
-        div.appendChild(box);
-      });
-    }
-
-    async function excluirTarefa(id) {
-      if (!confirm("Deseja realmente excluir esta tarefa?")) return;
-      await fetch(`${API_URL}?func=deleteTarefa&id=${id}`);
-      alert("Tarefa excluída!");
-      atualizarListaTarefas();
-    }
-
-    async function mostrarPainelAluno() {
-      document.getElementById('alunoContainer').style.display = 'block';
-      const tarefas = dadosTarefas.filter(t => t.Turma.includes(usuarioAtual.Turma));
-      const div = document.getElementById("tarefasAluno");
-      div.innerHTML = "";
-
-      tarefas.forEach(t => {
-        const dataAula = new Date(t.DataAula);
-        const hoje = new Date();
-        const diff = (dataAula - hoje) / (1000 * 60 * 60 * 24);
-        const prazo = diff < 0 ? "Encerrado" : `${Math.floor(diff)} dias restantes`;
-
-        const box = document.createElement("div");
-        box.className = "task-card";
-        box.innerHTML = `
-          <strong>${t.Tema}</strong><br>
-          <small>${prazo}</small><br><br>
-          <label>Parte 1:</label><input type="url" id="p1-${t.ID}" placeholder="Link 1"><button onclick="enviarLink('${t.ID}',1)">Salvar</button><br>
-          <label>Parte 2:</label><input type="url" id="p2-${t.ID}" placeholder="Link 2"><button onclick="enviarLink('${t.ID}',2)">Salvar</button><br>
-          <label>Parte 3:</label><input type="url" id="p3-${t.ID}" placeholder="Link 3"><button onclick="enviarLink('${t.ID}',3)">Salvar</button><br>
-          <label>Parte 4:</label><input type="url" id="p4-${t.ID}" placeholder="Link 4"><button onclick="enviarLink('${t.ID}',4)">Salvar</button>
-        `;
-        div.appendChild(box);
-      });
-    }
-
-    async function enviarLink(idTarefa, parte) {
-      const link = document.getElementById(`p${parte}-${idTarefa}`).value;
-      if (!link) {
-        alert("Insira o link antes de salvar!");
+    if (!dados.Tema || !dados.DataAula) {
+        showModal('Erro', 'Tema e Data da Aula são obrigatórios.');
         return;
-      }
-
-      const entrega = {
-        func: 'addEntrega',
-        RA: usuarioAtual.RA,
-        NomeCompleto: usuarioAtual.NomeCompleto,
-        Turma: usuarioAtual.Turma,
-        ID_Tarefa: idTarefa,
-        Parte: parte,
-        Link: link
-      };
-
-      await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify(entrega),
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      alert(`Link ${parte} enviado com sucesso!`);
     }
-  </script>
+
+    toggleLoading(true);
+    // Usa a lógica POST (doPost) do seu Apps Script
+    const res = await fetch(API_URL, { 
+        method: 'POST', 
+        body: JSON.stringify(dados), 
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' }
+    });
+    toggleLoading(false);
+    
+    if (!res.ok) {
+         showModal('Erro ao Criar Tarefa', 'Falha ao salvar a tarefa (Erro de CORS/Rede no POST). Verifique a função doOptions no Apps Script.');
+         return;
+    }
+
+    showModal('Sucesso', 'Tarefa criada com sucesso!');
+    limparFormulario();
+    await atualizarListaTarefas(); // Recarrega a tabela
+}
+
+async function excluirTarefa(ID) {
+    if (!confirm("Deseja realmente excluir esta tarefa?")) return;
+    
+    toggleLoading(true);
+    await fetch(API_URL, { 
+        method: 'POST', 
+        body: JSON.stringify({ action: 'excluirTarefa', ID }), 
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' }
+    });
+    toggleLoading(false);
+    
+    showModal('Sucesso', 'Tarefa excluída.');
+    await atualizarListaTarefas(); // Recarrega a tabela
+}
+
+function preencherFormularioParaEditar(ID) {
+    const t = tarefas.find(x => String(x.ID) === String(ID));
+    if (!t) return showModal("Erro", "Tarefa não encontrada");
+
+    document.getElementById('tarefaId').value = t.ID;
+    document.getElementById('tema').value = t.Tema;
+    document.getElementById('parte1').value = t.Parte1;
+    document.getElementById('parte2').value = t.Parte2;
+    document.getElementById('parte3').value = t.Parte3;
+    document.getElementById('parte4').value = t.Parte4;
+    document.getElementById('dataAula').value = t.DataAula;
+    
+    // Limpa checkboxes
+    document.querySelectorAll('#turmasCheckboxes input:checked').forEach(c => c.checked = false);
+    // Marca a turma da tarefa
+    const turmaCheckbox = document.querySelector(`#turmasCheckboxes input[value="${t.Turma}"]`);
+    if (turmaCheckbox) turmaCheckbox.checked = true;
+
+    window.scrollTo(0, 0);
+    const btnSalvar = document.getElementById('btnSalvar');
+    btnSalvar.innerHTML = '<i data-lucide="check-circle" class="mr-2"></i> Salvar Edição';
+    renderIcons();
+}
+
+async function editarTarefa(ID) {
+    const dados = {
+        action: 'editarTarefa',
+        ID: ID,
+        Tema: document.getElementById('tema').value,
+        Parte1: document.getElementById('parte1').value,
+        Parte2: document.getElementById('parte2').value,
+        Parte3: document.getElementById('parte3').value,
+        Parte4: document.getElementById('parte4').value,
+        DataAula: document.getElementById('dataAula').value
+    };
+
+    toggleLoading(true);
+    await fetch(API_URL, { 
+        method: 'POST', 
+        body: JSON.stringify(dados), 
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' }
+    });
+    toggleLoading(false);
+    
+    showModal("Sucesso", "Tarefa atualizada!");
+    limparFormulario();
+    await atualizarListaTarefas(); // Recarrega a tabela
+}
+
+function limparFormulario() {
+    document.getElementById('tarefaId').value = '';
+    document.getElementById('tema').value = '';
+    document.getElementById('parte1').value = '';
+    document.getElementById('parte2').value = '';
+    document.getElementById('parte3').value = '';
+    document.getElementById('parte4').value = '';
+    document.getElementById('dataAula').value = '';
+    document.querySelectorAll('#turmasCheckboxes input:checked').forEach(c => c.checked = false);
+    
+    const btnSalvar = document.getElementById('btnSalvar');
+    btnSalvar.innerHTML = '<i data-lucide="check-circle" class="mr-2"></i> Salvar Tarefa';
+    renderIcons();
+}
+
+// --- ANEXA FUNÇÕES AO ESCOPO GLOBAL (window) ---
+// (Necessário para que os 'onclick' no HTML funcionem)
+window.login = login;
+window.logout = logout;
+window.mostrarPainelProfessor = mostrarPainelProfessor;
+window.renderizarTabela = renderizarTabela;
+window.salvarTarefa = salvarTarefa;
+window.criarTarefa = criarTarefa;
+window.excluirTarefa = excluirTarefa;
+window.preencherFormularioParaEditar = preencherFormularioParaEditar;
+window.editarTarefa = editarTarefa;
+window.limparFormulario = limparFormulario;
+// (Funções do Aluno precisam ser anexadas aqui quando implementadas)
+
+// --- INICIALIZAÇÃO DA APLICAÇÃO ---
+carregarDadosIniciais();
+
+</script>
 </body>
 </html>
