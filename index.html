@@ -1,59 +1,70 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Gestão de Tarefas</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #fff;
-      color: #000;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background-color: #000;
-      color: #fff;
-      padding: 10px;
-      text-align: center;
-      font-size: 1.5em;
-      border-bottom: 4px solid red;
-    }
-    .login-container, .dashboard {
-      max-width: 600px;
-      margin: 40px auto;
-      padding: 20px;
-      background-color: #f9f9f9;
-      border-radius: 10px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.2);
-    }
-    input, button, select {
-      width: 100%;
-      margin: 10px 0;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background-color: red;
-      color: #fff;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    button:hover { background-color: #b30000; }
-    footer {
-      text-align: center;
-      margin: 40px 0 20px 0;
-      font-size: 0.9em;
-      color: #555;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Gestão de Tarefas</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #fff;
+    color: #000;
+    margin: 0; padding: 0;
+  }
+  header {
+    background-color: #000;
+    color: #fff;
+    padding: 15px;
+    text-align: center;
+    border-bottom: 4px solid red;
+  }
+  .container {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  }
+  input, button, select, textarea {
+    width: 100%;
+    margin: 8px 0;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+  }
+  button {
+    background-color: red;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  button:hover { background-color: #b30000; }
+  footer {
+    text-align: center;
+    color: #555;
+    margin: 40px 0 10px;
+  }
+  .hidden { display: none; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 6px;
+  }
+  th {
+    background-color: red;
+    color: #fff;
+  }
+</style>
 </head>
 <body>
   <header>Gestão de Tarefas</header>
 
-  <div id="login" class="login-container">
+  <!-- LOGIN -->
+  <div id="login" class="container">
     <h2>Login</h2>
     <input type="email" id="email" placeholder="E-mail">
     <input type="text" id="ra" placeholder="RA">
@@ -61,40 +72,146 @@
     <p id="loginErro" style="color:red;display:none;">Usuário ou RA incorretos!</p>
   </div>
 
-  <div id="dashboard" class="dashboard" style="display:none;">
-    <h2 id="saudacao"></h2>
-    <div id="conteudo"></div>
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="container hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2 id="saudacao"></h2>
+      <button onclick="logout()">Sair</button>
+    </div>
+    <div id="painelAluno" class="hidden">
+      <p>Bem-vindo! Suas tarefas aparecerão aqui futuramente.</p>
+    </div>
+
+    <div id="painelProfessor" class="hidden">
+      <h3>Criar Nova Tarefa</h3>
+      <label>Turmas (separe por vírgulas):</label>
+      <input type="text" id="turmas" placeholder="Ex: 1A,1B,1C">
+      <input type="text" id="tema" placeholder="Tema">
+      <textarea id="parte1" placeholder="Parte 1"></textarea>
+      <textarea id="parte2" placeholder="Parte 2"></textarea>
+      <textarea id="parte3" placeholder="Parte 3"></textarea>
+      <textarea id="parte4" placeholder="Parte 4"></textarea>
+      <input type="date" id="dataAula">
+      <button onclick="criarTarefa()">Salvar Tarefa</button>
+
+      <h3>Lista de Tarefas</h3>
+      <table id="tabelaTarefas">
+        <thead><tr><th>ID</th><th>Turma</th><th>Tema</th><th>Data</th><th>Ações</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 
   <footer>Desenvolvido por Geovane Módena</footer>
 
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
-    let usuarioLogado = null;
-    let usuarios = [];
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
+let usuarios = [], usuarioLogado = null, tarefas = [];
 
-    async function carregarUsuarios() {
-      const res = await fetch(`${API_URL}?func=getUsers`);
-      usuarios = await res.json();
-    }
+async function carregarUsuarios() {
+  const res = await fetch(`${API_URL}?func=getUsers`);
+  usuarios = await res.json();
+}
 
-    async function login() {
-      const email = document.getElementById('email').value.trim();
-      const ra = document.getElementById('ra').value.trim();
+async function login() {
+  const email = document.getElementById('email').value.trim();
+  const ra = document.getElementById('ra').value.trim();
 
-      const user = usuarios.find(u => u.Email === email && String(u.RA) === ra);
-      if (!user) {
-        document.getElementById('loginErro').style.display = 'block';
-        return;
-      }
+  const user = usuarios.find(u => u.Email === email && String(u.RA) === ra);
+  if (!user) {
+    document.getElementById('loginErro').style.display = 'block';
+    return;
+  }
+  usuarioLogado = user;
+  document.getElementById('login').classList.add('hidden');
+  document.getElementById('dashboard').classList.remove('hidden');
+  document.getElementById('saudacao').innerText = `Olá, ${user.NomeCompleto}!`;
 
-      usuarioLogado = user;
-      document.getElementById('login').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'block';
-      document.getElementById('saudacao').innerText = `Olá, ${user.NomeCompleto}!`;
-    }
+  if (user.Turma.toLowerCase() === "professor" || (user.Email === "professorsesi176@gmail.com" && ra === "9999"))
+    mostrarPainelProfessor();
+  else
+    document.getElementById('painelAluno').classList.remove('hidden');
+}
 
-    carregarUsuarios();
-  </script>
+function logout() {
+  usuarioLogado = null;
+  document.getElementById('dashboard').classList.add('hidden');
+  document.getElementById('login').classList.remove('hidden');
+}
+
+async function mostrarPainelProfessor() {
+  document.getElementById('painelProfessor').classList.remove('hidden');
+  const res = await fetch(`${API_URL}?func=getTarefas`);
+  tarefas = await res.json();
+  renderizarTabela();
+}
+
+function renderizarTabela() {
+  const tbody = document.querySelector("#tabelaTarefas tbody");
+  tbody.innerHTML = "";
+  tarefas.forEach(t => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${t.ID}</td>
+      <td>${t.Turma}</td>
+      <td>${t.Tema}</td>
+      <td>${t.DataAula}</td>
+      <td>
+        <button onclick="editar(${t.ID})">✏️</button>
+        <button onclick="excluir(${t.ID})">🗑️</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+async function criarTarefa() {
+  const dados = {
+    action: "criarTarefa",
+    Turmas: document.getElementById('turmas').value.split(',').map(t => t.trim()),
+    Tema: document.getElementById('tema').value,
+    Parte1: document.getElementById('parte1').value,
+    Parte2: document.getElementById('parte2').value,
+    Parte3: document.getElementById('parte3').value,
+    Parte4: document.getElementById('parte4').value,
+    DataAula: document.getElementById('dataAula').value
+  };
+  await fetch(API_URL, { method: 'POST', body: JSON.stringify(dados) });
+  alert('Tarefa criada com sucesso!');
+  mostrarPainelProfessor();
+}
+
+async function excluir(ID) {
+  if (!confirm("Deseja realmente excluir esta tarefa?")) return;
+  await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'excluirTarefa', ID }) });
+  alert('Tarefa excluída.');
+  mostrarPainelProfessor();
+}
+
+async function editar(ID) {
+  const t = tarefas.find(x => x.ID == ID);
+  if (!t) return alert("Tarefa não encontrada");
+  document.getElementById('tema').value = t.Tema;
+  document.getElementById('parte1').value = t.Parte1;
+  document.getElementById('parte2').value = t.Parte2;
+  document.getElementById('parte3').value = t.Parte3;
+  document.getElementById('parte4').value = t.Parte4;
+  document.getElementById('dataAula').value = t.DataAula;
+  document.getElementById('turmas').value = t.Turma;
+
+  if (confirm("Salvar alterações nesta tarefa?")) {
+    const dados = {
+      action: 'editarTarefa',
+      ID, Tema: t.Tema,
+      Parte1: t.Parte1, Parte2: t.Parte2, Parte3: t.Parte3, Parte4: t.Parte4,
+      DataAula: t.DataAula
+    };
+    await fetch(API_URL, { method: 'POST', body: JSON.stringify(dados) });
+    alert("Tarefa atualizada!");
+    mostrarPainelProfessor();
+  }
+}
+
+carregarUsuarios();
+</script>
 </body>
 </html>
