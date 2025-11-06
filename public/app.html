@@ -8,16 +8,16 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .card { background-color: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); }
-        .btn-primary { background-color: #3b82f6; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; }
-        .btn-primary:hover { background-color: #2563eb; }
-        .btn-secondary { background-color: #d1d5db; color: #1f2937; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; }
+        .card { background-color: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.2); }
+        .btn-primary { background-color: #CC0000; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; }
+        .btn-primary:hover { background-color: #A00000; }
+        .btn-secondary { background-color: #d1d5db; color: #1e1e1e; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; }
         .btn-secondary:hover { background-color: #9ca3af; }
-        input[type="email"], input[type="text"], textarea, select {
+        input[type="email"], input[type="text"], input[type="url"], input[type="date"], textarea, select {
             border: 1px solid #d1d5db; padding: 10px; border-radius: 8px; width: 100%; box-sizing: border-box;
             transition: border-color 0.2s;
         }
-        input:focus, textarea:focus, select:focus { border-color: #3b82f6; outline: none; }
+        input:focus, textarea:focus, select:focus { border-color: #CC0000; outline: none; }
         .info-box { background-color: #eff6ff; color: #1e40af; border-left: 4px solid #3b82f6; padding: 12px; border-radius: 8px; margin-bottom: 20px; }
     </style>
 </head>
@@ -27,12 +27,12 @@
 
         <!-- Banner de Status de Persistência -->
         <div class="info-box bg-red-100 text-red-800 border-red-500">
-            <strong>ATENÇÃO:</strong> As ações de escrita (Criar Tarefa e Entregar Arquivo) são **temporárias** e só existem nesta sessão. Para persistência real dos dados, seria necessário usar o Google Apps Script para escrever na planilha.
+            <strong>PERSISTÊNCIA CRÍTICA:</strong> As ações de escrita (Criar Tarefa e Entregar Arquivo) são **temporárias** até você configurar o Apps Script. Por favor, cole o **URL do Web App** no código e finalize o *deploy*.
         </div>
 
         <!-- Tela de Login -->
         <div id="login-screen" class="card p-6 md:p-10 transition-opacity duration-300">
-            <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Acesso ao Sistema</h1>
+            <h1 class="text-3xl font-bold text-red-800 mb-6 text-center">Acesso ao Sistema de Tarefas</h1>
             <div id="loading-users" class="text-center text-gray-500 mb-4">Carregando lista de usuários da Planilha...</div>
             <div id="login-error" class="text-red-500 mb-4 hidden text-center"></div>
 
@@ -55,8 +55,9 @@
             </header>
 
             <div id="professor-view" class="hidden">
-                <div class="mb-8 p-6 card">
-                    <h3 class="text-2xl font-bold mb-4 text-gray-700">Criar Nova Tarefa</h3>
+                <!-- Seção Criar Nova Tarefa -->
+                <div class="mb-8 p-6 card border-t-4 border-red-500">
+                    <h3 class="text-2xl font-bold mb-4 text-red-700">Criar Nova Tarefa</h3>
                     <label for="task-title" class="block text-sm font-medium text-gray-700 mb-1">Título</label>
                     <input type="text" id="task-title" class="mb-3" placeholder="Ex: Relatório de Biologia">
 
@@ -110,6 +111,10 @@
         // ID da sua Planilha Google (extraído do link fornecido)
         const SPREADSHEET_ID = '1wgJgs3HcEVkB4_IF_bD83XcaRkw53j7z'; 
 
+        // URL de Deploy do Google Apps Script (Backend de Escrita)
+        // Por favor, substitua este placeholder pelo URL REAL obtido após a publicação do Apps Script.
+        const APPS_SCRIPT_URL = 'SEU_APPS_SCRIPT_WEB_APP_URL'; 
+
         // Nomes das abas (sheets) que o código espera encontrar na Planilha
         const SHEET_NAMES = {
             USERS: 'USERS',
@@ -117,56 +122,47 @@
             ENTREGAS: 'ENTREGAS'
         };
 
+        // Colunas na aba USERS (ORDEM CORRIGIDA para o seu Sheets)
+        // Nova ordem que você forneceu: NomeCompleto, Email, RA, Turma
+        const USER_COLUMNS = ['NomeCompleto', 'Email', 'RA', 'Turma', 'Perfil'];
+        
+        // Colunas nas abas de Escrita (para sincronizar com o Apps Script)
+        const TASK_HEADERS = ['ID', 'ProfessorEmail', 'Título', 'Descrição', 'Turma', 'Prazo', 'DataPublicacao'];
+        const SUBMISSION_HEADERS = ['ID', 'TarefaID', 'RAAluno', 'Link', 'DataEntrega', 'Status'];
+
+
         // --- VARIÁVEIS GLOBAIS DE ESTADO ---
         let currentUser = null;
         let allUsers = [];
         let allTasks = [];
-        let allSubmissions = []; // Simulação: armazena submissões na sessão
+        let allSubmissions = []; 
         
-        // Colunas esperadas na aba USERS:
-        const USER_COLUMNS = ['RA', 'Email', 'Nome', 'Perfil', 'Turma'];
+        let taskIdCounter = 1; 
+        let submissionIdCounter = 1; 
 
-        // Colunas esperadas na aba TAREFAS (ID, Professor, Título, Descrição, Turma, Prazo)
-        let taskIdCounter = 1; // Contador para novos IDs de tarefa (apenas na sessão)
-
-        // Colunas esperadas na aba ENTREGAS (TaskId, StudentRA, Link, DataEntrega, Status)
-        let submissionIdCounter = 1; // Contador para novos IDs de submissão (apenas na sessão)
 
         // --- FUNÇÕES DE UTILIDADE ---
 
-        /**
-         * Constrói a URL para leitura pública de dados no formato JSON.
-         * @param {string} sheetName - O nome da aba (sheet) a ser lida.
-         */
         function getSheetReadUrl(sheetName) {
             return `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
         }
 
-        /**
-         * Abre o modal com uma mensagem.
-         * @param {string} title - Título do modal.
-         * @param {string} body - Corpo da mensagem.
-         */
         function openModal(title, body) {
             document.getElementById('modal-title').textContent = title;
             document.getElementById('modal-body').textContent = body;
             document.getElementById('app-modal').classList.remove('hidden');
         }
 
-        /**
-         * Fecha o modal.
-         */
         function closeModal() {
             document.getElementById('app-modal').classList.add('hidden');
+            // Garante que o botão de fechar volte ao normal após submissão do formulário modal
+            document.querySelector('#app-modal button[onclick="closeModal()"]').classList.remove('hidden');
         }
 
         // --- FUNÇÕES DE LEITURA E PARSE DE DADOS (Google Sheets) ---
 
         /**
-         * Lê e parseia os dados de uma aba específica da Planilha.
-         * @param {string} sheetName - O nome da aba (sheet) a ser lida.
-         * @param {string[]} headers - Array com os nomes das colunas esperadas.
-         * @returns {Promise<Array>} - Promessa com os dados lidos.
+         * LÊ OS DADOS DA PLANILHA
          */
         async function fetchSheetData(sheetName, headers) {
             const url = getSheetReadUrl(sheetName);
@@ -174,7 +170,6 @@
                 const response = await fetch(url);
                 const text = await response.text();
                 
-                // O Sheets retorna um JSON encapsulado em uma função 'google.visualization.Query.setResponse'
                 const jsonStart = text.indexOf('{');
                 const jsonEnd = text.lastIndexOf('}');
                 if (jsonStart === -1 || jsonEnd === -1) {
@@ -187,29 +182,38 @@
                 const result = [];
 
                 rows.forEach((row, index) => {
-                    // Ignora a primeira linha se for o cabeçalho
+                    // Ignora a linha de cabeçalho
                     if (index === 0 && data.table.cols.length > 0 && data.table.cols[0].label) return; 
 
                     const item = {};
                     row.c.forEach((cell, cellIndex) => {
-                        if (headers[cellIndex] && cell && cell.v !== undefined) {
-                            item[headers[cellIndex]] = cell.v;
-                        } else if (headers[cellIndex] && cell && cell.f !== undefined) {
-                             // Usa o valor formatado se o 'v' for undefined (útil para datas)
-                            item[headers[cellIndex]] = cell.f; 
+                        const headerName = headers[cellIndex];
+                        if (headerName && cell && cell.v !== undefined) {
+                            item[headerName] = cell.v;
+                        } else if (headerName && cell && cell.f !== undefined) {
+                            item[headerName] = cell.f; 
                         }
                     });
                     
-                    // Adiciona um ID para tarefas e submissões lidas inicialmente
-                    if (sheetName === SHEET_NAMES.TAREFAS && !item.ID) {
-                        item.ID = taskIdCounter++;
-                    }
-                    if (sheetName === SHEET_NAMES.ENTREGAS && !item.ID) {
-                        item.ID = submissionIdCounter++;
-                    }
-                    
                     if (Object.keys(item).length > 0) {
-                        result.push(item);
+                        // Mapeamento interno para o código JS:
+                        const mappedItem = {
+                            Nome: item.NomeCompleto || item.Nome, // Usa NomeCompleto
+                            Email: item.Email,
+                            // FIX: Verifica se item.RA existe antes de chamar toString()
+                            RA: item.RA ? item.RA.toString() : '', 
+                            // Lógica de Perfil: Se Turma existir, é ALUNO, senão é PROFESSOR.
+                            Perfil: (item.Perfil || (item.Turma ? 'ALUNO' : 'PROFESSOR')).toUpperCase(), 
+                            Turma: item.Turma,
+                            // FIX: Verifica se item.ID existe antes de chamar toString()
+                            ID: item.ID ? item.ID.toString() : '', 
+                            ProfessorEmail: item.ProfessorEmail || item.Professor,
+                            Título: item.Título || item.Title,
+                            Descrição: item.Descrição || item.Description,
+                            Prazo: item.Prazo,
+                            DataPublicacao: item.DataPublicacao || item.Data
+                        };
+                        result.push(mappedItem);
                     }
                 });
 
@@ -222,30 +226,49 @@
         }
 
         /**
+         * Chama a API do Apps Script para operações de escrita.
+         */
+        async function callAppsScript(action, payload) {
+            if (APPS_SCRIPT_URL === 'SEU_APPS_SCRIPT_WEB_APP_URL') {
+                 throw new Error("URL do Apps Script não configurada! A escrita será perdida.");
+            }
+            
+            const response = await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action, payload })
+            });
+            const data = await response.json();
+            
+            if (data.status === 'error') {
+                throw new Error(data.message);
+            }
+            return data.data;
+        }
+
+
+        /**
          * Carrega todos os dados necessários para a aplicação.
          */
         async function loadInitialData() {
             const loadingElement = document.getElementById('loading-users');
             const loginButton = document.getElementById('login-button');
             try {
+                // Usuários
                 loadingElement.textContent = "Carregando usuários...";
                 allUsers = await fetchSheetData(SHEET_NAMES.USERS, USER_COLUMNS);
                 
-                // Hardcode as colunas de TAREFAS e ENTREGAS se não conseguirmos ler
-                const taskHeaders = ['ID', 'ProfessorEmail', 'Título', 'Descrição', 'Turma', 'Prazo'];
-                const submissionHeaders = ['ID', 'TarefaID', 'RAAluno', 'Link', 'DataEntrega', 'Status'];
-
+                // Tarefas
                 loadingElement.textContent = "Carregando tarefas existentes...";
-                allTasks = await fetchSheetData(SHEET_NAMES.TAREFAS, taskHeaders);
-                // Ajusta o contador de ID para novas tarefas
+                allTasks = await fetchSheetData(SHEET_NAMES.TAREFAS, TASK_HEADERS);
                 if (allTasks.length > 0) {
                     const maxId = allTasks.reduce((max, task) => Math.max(max, parseInt(task.ID) || 0), 0);
                     taskIdCounter = maxId + 1;
                 }
                 
+                // Entregas
                 loadingElement.textContent = "Carregando entregas existentes...";
-                allSubmissions = await fetchSheetData(SHEET_NAMES.ENTREGAS, submissionHeaders);
-                // Ajusta o contador de ID para novas submissões
+                allSubmissions = await fetchSheetData(SHEET_NAMES.ENTREGAS, SUBMISSION_HEADERS);
                 if (allSubmissions.length > 0) {
                     const maxId = allSubmissions.reduce((max, sub) => Math.max(max, parseInt(sub.ID) || 0), 0);
                     submissionIdCounter = maxId + 1;
@@ -253,9 +276,8 @@
 
                 loadingElement.textContent = "Dados carregados com sucesso. Pronto para o login.";
                 loginButton.disabled = false;
-                
-                // Carrega as turmas no seletor de criação de tarefas
                 populateTaskClasses();
+                checkAuthStatus(); // Verifica se há sessão após o carregamento
 
             } catch (error) {
                 document.getElementById('login-error').textContent = `Erro Fatal: ${error.message}`;
@@ -265,10 +287,6 @@
         }
 
         // --- FUNÇÕES DE AUTENTICAÇÃO (SIMULADA) ---
-
-        /**
-         * Lida com o processo de login usando o email e RA.
-         */
         function handleLogin() {
             const email = document.getElementById('email').value.trim().toLowerCase();
             const ra = document.getElementById('ra').value.trim();
@@ -283,13 +301,12 @@
             if (user) {
                 currentUser = {
                     ...user,
-                    RA: user.RA.toString(), // Garante que RA é string
-                    Perfil: user.Perfil.toUpperCase() // Garante maiúsculas para comparação
+                    RA: user.RA.toString(),
+                    Perfil: user.Perfil.toUpperCase(),
+                    Nome: user.NomeCompleto || user.Nome 
                 };
                 
-                // Armazena dados do usuário na sessão (simulação)
                 sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-                
                 showDashboard();
             } else {
                 loginError.textContent = "E-mail ou RA incorretos. Tente novamente.";
@@ -297,9 +314,6 @@
             }
         }
 
-        /**
-         * Exibe o dashboard apropriado (Professor ou Aluno).
-         */
         function showDashboard() {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('dashboard').classList.remove('hidden');
@@ -315,15 +329,11 @@
                 document.getElementById('student-view').classList.remove('hidden');
                 renderStudentView();
             } else {
-                // Caso de perfil desconhecido
                 openModal("Erro de Perfil", "Seu perfil de usuário é desconhecido. Entre em contato com o administrador.");
                 logout();
             }
         }
 
-        /**
-         * Faz logout do usuário.
-         */
         function logout() {
             currentUser = null;
             sessionStorage.removeItem('currentUser');
@@ -335,14 +345,10 @@
             document.getElementById('login-screen').classList.remove('hidden');
         }
 
-        /**
-         * Verifica o estado de autenticação ao carregar a página.
-         */
         function checkAuthStatus() {
             const storedUser = sessionStorage.getItem('currentUser');
             if (storedUser) {
                 currentUser = JSON.parse(storedUser);
-                // Certifica-se de que o Perfil está em maiúsculas
                 currentUser.Perfil = currentUser.Perfil.toUpperCase(); 
                 showDashboard();
             }
@@ -350,15 +356,10 @@
 
         // --- FUNÇÕES DA VISÃO DO PROFESSOR ---
 
-        /**
-         * Preenche o seletor de turmas.
-         */
         function populateTaskClasses() {
             const classSelect = document.getElementById('task-class');
-            // Limpa as opções atuais
             classSelect.innerHTML = '<option value="Todos">Todas as Turmas</option>'; 
             
-            // Pega todas as turmas únicas dos alunos
             const classes = new Set(allUsers
                 .filter(u => u.Perfil === 'ALUNO' && u.Turma)
                 .map(u => u.Turma)
@@ -373,9 +374,9 @@
         }
 
         /**
-         * Cria uma nova tarefa (simulação de escrita na aba TAREFAS).
+         * Cria uma nova tarefa (Escreve via Apps Script).
          */
-        function createTask() {
+        async function createTask() {
             const title = document.getElementById('task-title').value.trim();
             const description = document.getElementById('task-description').value.trim();
             const taskClass = document.getElementById('task-class').value;
@@ -387,8 +388,7 @@
                 return;
             }
 
-            const newTask = {
-                ID: taskIdCounter++,
+            const payload = {
                 ProfessorEmail: currentUser.Email,
                 Título: title,
                 Descrição: description,
@@ -396,21 +396,26 @@
                 Prazo: deadline,
                 DataPublicacao: new Date().toLocaleDateString('pt-BR')
             };
-
-            // SIMULAÇÃO: Adiciona à lista em memória (NÃO É PERSISTENTE)
-            allTasks.push(newTask);
             
-            // Limpa os campos
-            document.getElementById('task-title').value = '';
-            document.getElementById('task-description').value = '';
-            document.getElementById('task-deadline').value = '';
-            
-            // Mensagem de sucesso temporária
-            messageElement.textContent = `Tarefa "${title}" publicada com sucesso (ID: ${newTask.ID}). Lembre-se, este dado só é persistente se for adicionado à sua aba TAREFAS na Planilha.`;
-            messageElement.classList.remove('hidden');
-            setTimeout(() => messageElement.classList.add('hidden'), 8000);
+            try {
+                // Chama Apps Script para persistência
+                const result = await callAppsScript('CREATE_TASK', payload);
+                
+                // Simulação: Adiciona à lista em memória (Para o professor ver imediatamente, mas exige refresh para persistir)
+                allTasks.push({ ...payload, ID: result.newId.toString() }); 
 
-            renderProfessorView();
+                document.getElementById('task-title').value = '';
+                document.getElementById('task-description').value = '';
+                document.getElementById('task-deadline').value = '';
+                
+                messageElement.textContent = `Tarefa "${title}" publicada com sucesso (ID: ${result.newId}). Atualize a página para ver a persistência.`;
+                messageElement.classList.remove('hidden');
+                setTimeout(() => messageElement.classList.add('hidden'), 8000);
+
+                renderProfessorView();
+            } catch (error) {
+                openModal("Erro de Persistência", `Falha ao salvar a tarefa. Detalhe: ${error.message}. Verifique se o Apps Script está publicado e a URL configurada.`);
+            }
         }
 
         /**
@@ -433,7 +438,7 @@
                 const taskElement = document.createElement('div');
                 taskElement.className = 'border p-4 rounded-lg bg-white mb-4';
                 taskElement.innerHTML = `
-                    <h4 class="text-lg font-bold text-blue-600">${task.Título} (Turma: ${task.Turma})</h4>
+                    <h4 class="text-lg font-bold text-red-600">${task.Título} (Turma: ${task.Turma})</h4>
                     <p class="text-sm text-gray-500 mb-2">Prazo: ${task.Prazo}</p>
                     <p class="mb-3">${task.Descrição}</p>
                     
@@ -444,7 +449,7 @@
                             : taskSubmissions.map(sub => `
                                 <div class="p-2 border rounded-md bg-gray-50 flex justify-between items-center">
                                     <span class="text-sm font-medium">RA: ${sub.RAAluno}</span>
-                                    <a href="${sub.Link}" target="_blank" class="text-blue-500 hover:underline text-sm">Ver Arquivo</a>
+                                    <a href="${sub.Link}" target="_blank" class="text-red-500 hover:underline text-sm">Ver Arquivo</a>
                                 </div>
                             `).join('')
                         }
@@ -463,10 +468,9 @@
             const container = document.getElementById('student-tasks-list');
             container.innerHTML = '';
 
-            // Filtra tarefas para a turma do aluno ou para 'Todos'
             const studentTasks = allTasks.filter(t => 
                 t.Turma === 'Todos' || t.Turma === currentUser.Turma
-            ).sort((a, b) => new Date(a.Prazo) - new Date(b.Prazo)); // Ordena por prazo
+            ).sort((a, b) => new Date(a.Prazo) - new Date(b.Prazo));
 
             if (studentTasks.length === 0) {
                 container.innerHTML = '<p class="text-gray-500">Nenhuma tarefa disponível para sua turma no momento.</p>';
@@ -488,7 +492,7 @@
                     <div class="flex-grow mb-3 md:mb-0">
                         <h4 class="text-lg font-bold text-gray-800">${task.Título}</h4>
                         <p class="text-sm text-gray-600 mb-2">${task.Descrição}</p>
-                        <p class="text-xs font-medium ${isLate ? 'text-red-500' : 'text-blue-500'}">
+                        <p class="text-xs font-medium ${isLate ? 'text-red-500' : 'text-gray-500'}">
                             Prazo: ${task.Prazo} ${isLate ? ' (ATRASADO)' : ''}
                         </p>
                     </div>
@@ -503,11 +507,6 @@
             });
         }
 
-        /**
-         * Exibe o formulário de submissão dentro de um modal.
-         * @param {number} taskId - ID da tarefa.
-         * @param {string} taskTitle - Título da tarefa.
-         */
         function showSubmissionForm(taskId, taskTitle) {
             const bodyContent = `
                 <p class="mb-4">Insira o link para o seu arquivo PDF ou DOC (Ex: Google Drive, Dropbox).</p>
@@ -520,15 +519,13 @@
             document.getElementById('modal-body').innerHTML = bodyContent;
             document.getElementById('app-modal').classList.remove('hidden');
             
-            // Remove o botão de fechar para forçar a interação com o formulário
             document.querySelector('#app-modal button[onclick="closeModal()"]').classList.add('hidden');
         }
 
         /**
-         * Envia a tarefa (simulação de escrita na aba ENTREGAS).
-         * @param {number} taskId - ID da tarefa.
+         * Envia a tarefa (Escreve via Apps Script).
          */
-        function submitTask(taskId) {
+        async function submitTask(taskId) {
             const link = document.getElementById('submission-link').value.trim();
             const messageElement = document.getElementById('submission-message');
             messageElement.classList.add('hidden');
@@ -539,33 +536,36 @@
                 return;
             }
 
-            const newSubmission = {
-                ID: submissionIdCounter++,
+            const payload = {
                 TarefaID: taskId.toString(),
                 RAAluno: currentUser.RA,
                 Link: link,
                 DataEntrega: new Date().toLocaleDateString('pt-BR'),
                 Status: 'Entregue'
             };
-
-            // SIMULAÇÃO: Adiciona à lista em memória (NÃO É PERSISTENTE)
-            allSubmissions.push(newSubmission);
             
-            // Fecha o modal e exibe mensagem de sucesso
-            document.querySelector('#app-modal button[onclick="closeModal()"]').classList.remove('hidden');
-            closeModal();
-            openModal("Sucesso!", `Tarefa entregue! Lembre-se, para persistir esta entrega, ela precisa ser adicionada à sua aba ENTREGAS na Planilha.`);
+            try {
+                // Chama Apps Script para persistência
+                const result = await callAppsScript('SUBMIT_DELIVERY', payload);
+                
+                // Adiciona à lista em memória para ver imediatamente (mas requer refresh para persistir)
+                allSubmissions.push({ ...payload, ID: result.newId.toString() }); 
 
-            // Re-renderiza a visão do aluno
-            renderStudentView();
+                // Mensagem de sucesso
+                document.querySelector('#app-modal button[onclick="closeModal()"]').classList.remove('hidden');
+                closeModal();
+                openModal("Sucesso!", `Entrega registrada! Atualize a página para confirmar a persistência na Planilha.`);
+
+                renderStudentView(); // Atualiza o dashboard do aluno
+            } catch (error) {
+                document.querySelector('#app-modal button[onclick="closeModal()"]').classList.remove('hidden');
+                openModal("Erro de Entrega", `Falha ao registrar entrega. Detalhe: ${error.message}`);
+            }
         }
 
         // --- INICIALIZAÇÃO ---
 
-        // 1. Carrega os dados da Planilha e habilita o login
         loadInitialData();
-
-        // 2. Verifica se já há um usuário logado na sessão
         checkAuthStatus();
     </script>
 </body>
