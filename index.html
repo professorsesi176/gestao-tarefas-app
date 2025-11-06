@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Tarefas Escolar</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca de Ícones Lucide (Carregamento Robusto) -->
+    
+    <!-- FIX 1 (Ícones): Carregando a biblioteca Lucide completa de forma robusta -->
+    <!-- Isto substitui o <script type="module"> que estava a falhar -->
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
     
     <!-- FIX: Carrega a base de dados de utilizadores localmente -->
@@ -78,7 +80,7 @@
     </div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 1.9
+        Desenvolvido por Geovane Modena | Versão 2.1
     </footer>
 </div>
 
@@ -95,8 +97,12 @@
 
 <script type="module">
 // --- CONFIGURAÇÃO ---
-// URL do Backend (Apps Script) - Usando a URL que você forneceu
-const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
+// ID da sua Planilha Google
+const SPREADSHEET_ID = '1EXQmylx6j8knDMYUty3u2x6dM5exR4GjVlJknxAAp7c'; 
+
+// URL de Deploy do Google Apps Script (Backend de Escrita)
+// CORRIGIDO: Este é o URL mais recente que você forneceu.
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-fN6XILK9JAImyPSc5DPfR7ypybflrLybvFYT81M-Nx2TOPkz9bcVnwHW6sQg6ANglg/exec'; 
 
 // --- ESTADO DA APLICAÇÃO ---
 // FIX: 'usuarios' agora é carregado do 'users.js' (via window)
@@ -105,8 +111,6 @@ let usuarioLogado = null;
 let tarefas = [];
 
 // --- ELEMENTOS DOM ---
-const loginDiv = document.getElementById('login'); // Este elemento não existe mais, será renderizado
-const dashboardDiv = document.getElementById('dashboard'); // Este também não
 const contentArea = document.getElementById('content-area');
 const userInfoDisplay = document.getElementById('user-info');
 const logoutBtn = document.getElementById('logoutBtn');
@@ -214,14 +218,13 @@ async function login(event) {
     usuarioLogado = user;
     loginErro.style.display = 'none';
     
-    // O loginDiv não existe mais, limpamos a contentArea
     contentArea.innerHTML = '<div class="text-center text-gray-500 mb-4">Carregando painel...</div>';
     
     logoutBtn.classList.remove('hidden');
-    saudacao.innerText = `Olá, ${user.NomeCompleto}!`;
+    userInfoDisplay.innerHTML = `Logado como: <span class="font-semibold text-red-700">${user.NomeCompleto} (${user.Perfil})</span> | Turma: ${user.Turma || 'N/A'} <button onclick="logout()" class="ml-4 text-xs text-gray-500 hover:text-red-600 transition">Sair</button>`;
 
     // Lógica de perfil baseada no seu código original
-    if (user.Perfil === "Professor" || (user.Email === "professorsesi176@gmail.com" && ra === "9999")) {
+    if (user.Perfil === "Professor") {
         await mostrarPainelProfessor();
     } else {
         await mostrarPainelAluno(); // (Implementação futura)
@@ -233,7 +236,7 @@ async function login(event) {
 function logout() {
     usuarioLogado = null;
     logoutBtn.classList.add('hidden');
-    saudacao.innerText = '';
+    userInfoDisplay.innerHTML = '';
     // Chama renderLogin para recriar a tela de login (e re-anexar o listener)
     renderLogin(); 
 }
@@ -521,7 +524,6 @@ window.limparFormulario = limparFormulario;
 // (Funções do Aluno precisam ser anexadas aqui quando implementadas)
 
 // --- INICIALIZAÇÃO DA APLICAÇÃO ---
-// FIX: O nome da função de inicialização é 'init'
 init();
 
 </script>
