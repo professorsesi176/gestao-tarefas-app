@@ -8,6 +8,10 @@
     <!-- Biblioteca de Ícones Lucide (Carregamento Robusto) -->
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
     
+    <!-- FIX: Carrega a base de dados de utilizadores localmente -->
+    <!-- (Certifique-se de que o ficheiro 'users.js' está no seu repositório) -->
+    <script src="users.js"></script> 
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
@@ -98,7 +102,7 @@
             <div id="painelAluno" class="hidden card p-6">
                 <h3 class="text-xl font-semibold text-red-700 mb-4">Minhas Tarefas</h3>
                 <div id="tarefasAluno">
-                    <!-- O seu código de lógica de entrega (Link1-4, Nota) precisa ser adicionado aqui -->
+                    <!-- A sua lógica de entrega (Link1-4, Nota) será implementada aqui -->
                 </div>
             </div>
 
@@ -188,7 +192,8 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
 
 // --- ESTADO DA APLICAÇÃO ---
-let usuarios = [];
+// FIX: 'usuarios' agora é carregado do 'users.js' (via window)
+let usuarios = window.listaDeUsuarios || []; 
 let usuarioLogado = null;
 let tarefas = [];
 
@@ -241,31 +246,15 @@ const toggleLoading = (isLoading) => {
 
 // Função de inicialização
 async function init() {
-    try {
-        loadingMessage.textContent = "Carregando usuários...";
-        // Usa a lógica GET (doGet) do seu Apps Script
-        const res = await fetch(`${API_URL}?func=getUsers`, { mode: 'cors' });
-        
-        if (!res.ok) {
-            // Se o fetch falhar (CORS ou rede), lança um erro
-            throw new Error(`Falha ao buscar usuários (Status: ${res.status}). Verifique o console para detalhes de CORS.`);
-        }
-        
-        usuarios = await res.json();
-        
+    // FIX: A leitura de usuários (getUsers) foi removida do carregamento inicial.
+    // Os usuários são carregados instantaneamente do users.js
+    
+    if (usuarios.length > 0) {
         loadingMessage.textContent = "Pronto para o login.";
         loginButton.disabled = false;
-        
-    } catch (error) {
-        console.error("Erro ao carregar usuários:", error);
-        loadingMessage.textContent = "Erro ao carregar dados.";
-        showModal('Erro Crítico de Carga (Failed to fetch)', 
-                  'Não foi possível conectar ao Google Apps Script. \n\n' +
-                  'Solução: \n' +
-                  '1. Verifique se o URL no código `index.html` está correto. \n' +
-                  '2. Verifique se o `Codigo.gs` (Apps Script) contém a função `doOptions(e)`. \n' +
-                  '3. RE-PUBLIQUE o Apps Script (Deploy -> Manage -> Edit -> New Version -> Deploy). \n' +
-                  '\nDetalhe do Erro: ' + error.message);
+    } else {
+        loadingMessage.textContent = "Erro: Ficheiro 'users.js' não encontrado ou vazio.";
+        showModal('Erro Crítico de Carga', 'Não foi possível ler o ficheiro local de utilizadores (users.js). Verifique se o ficheiro foi criado no GitHub.');
     }
     
     // Renderiza ícones da tela de login
@@ -279,6 +268,7 @@ async function login(event) {
     const email = document.getElementById('email').value.trim();
     const ra = document.getElementById('ra').value.trim();
 
+    // 'usuarios' é a variável global de users.js
     const user = usuarios.find(u => u.Email.toLowerCase() === email.toLowerCase() && String(u.RA) === ra);
     
     if (!user) {
@@ -340,7 +330,8 @@ async function atualizarListaTarefas() {
         tarefas = await res.json();
         renderizarTabela();
     } catch (error) {
-        showModal('Erro ao Carregar Tarefas', error.message);
+        console.error("Erro ao carregar tarefas:", error);
+        showModal('Erro ao Carregar Tarefas', 'Não foi possível carregar a lista de tarefas. Verifique se o Apps Script (Codigo.gs) está publicado com a função "doOptions" e "doGet". Detalhe: ' + error.message);
     } finally {
         toggleLoading(false);
         renderIcons(); // Renderiza ícones da tabela
@@ -522,7 +513,7 @@ window.limparFormulario = limparFormulario;
 // (Funções do Aluno precisam ser anexadas aqui quando implementadas)
 
 // --- INICIALIZAÇÃO DA APLICAÇÃO ---
-carregarDadosIniciais();
+init();
 
 </script>
 </body>
