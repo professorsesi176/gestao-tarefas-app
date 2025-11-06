@@ -61,12 +61,12 @@
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
 
 <div id="app-container" class="w-full max-w-4xl bg-white shadow-xl rounded-2xl p-6 sm:p-10 transition-all duration-300">
-    <header class="mb-8 border-b pb-4 flex justify-between items-center">
-        <h1 class="text-3xl font-extrabold text-red-700 flex items-center">
-            <svg class="w-8 h-8 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    <!-- FIX v1.8: Cabeçalho centralizado e botão posicionado -->
+    <header class="mb-8 border-b pb-4 relative">
+        <h1 class="text-3xl font-extrabold text-red-700 text-center">
             Gestão de Tarefas
         </h1>
-        <button onclick="logout()" id="logoutBtn" class="btn-secondary hidden">Sair</button>
+        <button onclick="logout()" id="logoutBtn" class="btn-secondary hidden absolute top-0 right-0">Sair</button>
     </header>
 
     <!-- Conteúdo da Aplicação -->
@@ -170,7 +170,7 @@
     </div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 1.7
+        Desenvolvido por Geovane Modena | Versão 1.8
     </footer>
 </div>
 
