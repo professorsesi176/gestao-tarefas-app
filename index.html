@@ -1,170 +1,184 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestão de Tarefas - SESI</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #fff;
-      margin: 0;
-      padding: 0;
-      color: #000;
-    }
-    header {
-      background-color: #cc0000;
-      color: white;
-      padding: 15px;
-      text-align: center;
-    }
-    main {
-      padding: 20px;
-      max-width: 700px;
-      margin: auto;
-    }
-    input, select, button {
-      display: block;
-      width: 100%;
-      margin-top: 10px;
-      padding: 10px;
-      font-size: 16px;
-    }
-    button {
-      background-color: #000;
-      color: white;
-      border: none;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    button:hover {
-      background-color: #cc0000;
-    }
-    .hidden {
-      display: none;
-    }
-    .erro {
-      color: red;
-      font-weight: bold;
-    }
-    .sucesso {
-      color: green;
-      font-weight: bold;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gestão de Tarefas</title>
+<style>
+  body {
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(135deg, #ececec, #f9f9f9);
+    margin: 0; padding: 0;
+  }
+  header {
+    background: linear-gradient(90deg, #b71c1c, #d32f2f);
+    color: #fff; text-align: center; padding: 1.2rem;
+    font-size: 1.6rem; letter-spacing: 0.5px; font-weight: bold;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  .container {
+    max-width: 700px; margin: 2rem auto;
+    background: #fff; padding: 2rem; border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+  }
+  input, select, textarea, button {
+    width: 100%; margin-top: 8px; margin-bottom: 15px;
+    padding: 10px 12px; border-radius: 8px; border: 1px solid #ccc;
+    font-size: 1rem; font-family: "Poppins", sans-serif;
+  }
+  button {
+    background: linear-gradient(90deg, #d32f2f, #b71c1c);
+    color: white; border: none; cursor: pointer; font-weight: bold;
+    transition: transform 0.1s, box-shadow 0.2s;
+  }
+  button:hover {
+    transform: scale(1.03);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  }
+  h2, h3 { color: #b71c1c; text-align: center; }
+  .tarefa {
+    border: 1px solid #ddd; border-radius: 10px; padding: 12px;
+    margin-bottom: 10px; background: #fafafa;
+  }
+  .nota {
+    text-align: center; background: #e0e0e0; border-radius: 8px;
+    padding: 10px; margin-top: 10px; font-weight: bold;
+  }
+  .footer {
+    text-align: center; color: #888; margin-top: 40px;
+    font-size: 0.9rem;
+  }
+  .footer span { color: #b71c1c; font-weight: bold; }
+</style>
 </head>
 <body>
+<header>Gestão de Tarefas</header>
 
-  <header>
-    <h1>Gestão de Tarefas SESI</h1>
-  </header>
+<div class="container" id="login-section">
+  <h2>Login</h2>
+  <input type="email" id="email" placeholder="E-mail institucional">
+  <input type="text" id="ra" placeholder="RA do aluno">
+  <button onclick="login()">Entrar</button>
+</div>
 
-  <main id="app">
-    <section id="login">
-      <h2>Login</h2>
-      <label for="email">E-mail:</label>
-      <input type="email" id="email" placeholder="Digite seu e-mail">
-      <label for="ra">RA:</label>
-      <input type="text" id="ra" placeholder="Digite seu RA">
-      <button id="btnLogin">Entrar</button>
-      <p id="loginMsg"></p>
-    </section>
+<div class="container" id="main-section" style="display:none;">
+  <h2 id="welcome"></h2>
+  <div id="tarefas"></div>
 
-    <section id="painel" class="hidden">
-      <h2 id="boasVindas"></h2>
-      <button id="btnSair">Sair</button>
-      <div id="tarefas"></div>
-    </section>
-  </main>
+  <div id="painel-professor" style="display:none;">
+    <hr><h3>Nova Tarefa</h3>
+    <select id="turma">
+      <option value="">Selecione a turma</option>
+      <option>1A</option><option>1B</option>
+      <option>2A</option><option>2B</option>
+      <option>3A</option><option>3B</option>
+    </select>
+    <input type="text" id="tema" placeholder="Tema da Aula">
+    <textarea id="descricao" placeholder="Descrição" rows="3"></textarea>
+    <input type="date" id="dataAula">
+    <button onclick="criarTarefa()">Salvar Tarefa</button>
+  </div>
+</div>
 
-  <script>
-    // ✅ NOVO LINK DO APP SCRIPT
-    const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
+<div class="footer">Desenvolvido por <span>Geovane Módena</span></div>
 
-    let USERS = [];
-    let TAREFAS = [];
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
+  let users = [], tarefas = [], entregas = [], user = null;
 
-    async function carregarUsuarios() {
-      try {
-        const resp = await fetch(`${API_URL}?func=getUsers`);
-        const dados = await resp.json();
-        if (dados.error) throw new Error(dados.message);
-        USERS = dados.users;
-        console.log("Usuários carregados:", USERS);
-      } catch (e) {
-        document.getElementById("loginMsg").innerHTML =
-          `<span class="erro">Erro Crítico de Dados:<br>${e.message}<br><br>Verifique o link do Apps Script e se ele está publicado como <b>Acessível a qualquer pessoa</b>.</span>`;
-        throw e;
-      }
-    }
+  async function carregarTudo() {
+    const [u, t, e] = await Promise.all([
+      fetch(API_URL + "?func=getUsers").then(r=>r.json()),
+      fetch(API_URL + "?func=getTarefas").then(r=>r.json()),
+      fetch(API_URL + "?func=getEntregas").then(r=>r.json())
+    ]);
+    users = u.users || [];
+    tarefas = t.tarefas || [];
+    entregas = e.entregas || [];
+  }
 
-    async function carregarTarefas() {
-      try {
-        const resp = await fetch(`${API_URL}?func=getTarefas`);
-        const dados = await resp.json();
-        if (dados.error) throw new Error(dados.message);
-        TAREFAS = dados.tarefas;
-        console.log("Tarefas carregadas:", TAREFAS);
-      } catch (e) {
-        console.error("Erro ao carregar tarefas:", e);
-      }
-    }
+  async function login() {
+    const email = document.getElementById("email").value.trim().toLowerCase();
+    const ra = document.getElementById("ra").value.trim();
+    if (!email || !ra) return alert("Preencha todos os campos.");
+    if (users.length === 0) await carregarTudo();
 
-    async function init() {
-      await carregarUsuarios();
-      await carregarTarefas();
-    }
+    user = users.find(u => (u.Email || '').toLowerCase() === email && String(u.RA) === ra);
+    if (!user && email === "professorsesi176@gmail.com" && ra === "9999")
+      user = { NomeCompleto: "Professor SESI", Turma: "professor" };
 
-    document.getElementById("btnLogin").addEventListener("click", () => {
-      const email = document.getElementById("email").value.trim();
-      const ra = document.getElementById("ra").value.trim();
-      const msg = document.getElementById("loginMsg");
+    if (!user) return alert("Usuário não encontrado.");
 
-      const user = USERS.find(u => u.Email === email && u.RA == ra);
+    document.getElementById("login-section").style.display = "none";
+    document.getElementById("main-section").style.display = "block";
+    document.getElementById("welcome").innerText = `Olá, ${user.NomeCompleto}!`;
 
-      if (!user) {
-        msg.innerHTML = '<span class="erro">Usuário não encontrado. Verifique seu e-mail e RA.</span>';
-        return;
-      }
+    if (user.Turma.toLowerCase() === "professor")
+      document.getElementById("painel-professor").style.display = "block";
+    else mostrarTarefasAluno();
+  }
 
-      msg.innerHTML = '<span class="sucesso">Login realizado com sucesso!</span>';
-      document.getElementById("login").classList.add("hidden");
-      document.getElementById("painel").classList.remove("hidden");
-      document.getElementById("boasVindas").innerText = `Olá, ${user.Nome}!`;
+  function mostrarTarefasAluno() {
+    const div = document.getElementById("tarefas");
+    const lista = tarefas.filter(t => (t.Turma || "").toLowerCase() === user.Turma.toLowerCase());
+    div.innerHTML = "<h3>Tarefas Disponíveis</h3>";
 
-      mostrarTarefas(user.Turma);
+    lista.forEach(t => {
+      const entrega = entregas.find(e => e.RA == user.RA && e.Tema == t.Tema) || {};
+      div.innerHTML += `
+        <div class="tarefa">
+          <strong>${t.Tema}</strong><br>
+          <small>Data Aula: ${t.DataAula}</small>
+          <p>${t.Descricao}</p>
+          ${["Semana0", "Semana1", "Semana2", "Semana4"].map(s => `
+            <input type="url" id="${t.Tema}_${s}" placeholder="Link ${s}" value="${entrega["Link"+s]||""}">
+          `).join('')}
+          <button onclick="salvarEntrega('${t.Tema}')">Salvar Entrega</button>
+          <div class="nota">Nota: ${entrega.Nota || "0,0"}</div>
+        </div>`;
     });
+  }
 
-    function mostrarTarefas(turma) {
-      const container = document.getElementById("tarefas");
-      const tarefasTurma = TAREFAS.filter(t => t.Turma === turma);
-      if (tarefasTurma.length === 0) {
-        container.innerHTML = "<p>Nenhuma tarefa disponível no momento.</p>";
-        return;
-      }
+  async function salvarEntrega(tema) {
+    const data = {
+      action: "salvarEntrega",
+      RA: user.RA,
+      NomeCompleto: user.NomeCompleto,
+      Turma: user.Turma,
+      Tema: tema,
+      LinkSemana0: document.getElementById(`${tema}_Semana0`).value,
+      LinkSemana1: document.getElementById(`${tema}_Semana1`).value,
+      LinkSemana2: document.getElementById(`${tema}_Semana2`).value,
+      LinkSemana4: document.getElementById(`${tema}_Semana4`).value
+    };
+    const resp = await fetch(API_URL, { method: "POST", body: JSON.stringify(data) });
+    const res = await resp.json();
+    alert(res.message);
+    carregarTudo().then(mostrarTarefasAluno);
+  }
 
-      container.innerHTML = "<h3>Tarefas da sua turma:</h3>";
-      tarefasTurma.forEach(t => {
-        const div = document.createElement("div");
-        div.style.border = "1px solid #ccc";
-        div.style.padding = "10px";
-        div.style.marginBottom = "10px";
-        div.style.borderRadius = "8px";
-        div.innerHTML = `
-          <strong>${t.Título}</strong><br>
-          <em>Prazo:</em> ${t.Prazo}<br>
-          <p>${t.Descrição}</p>
-        `;
-        container.appendChild(div);
-      });
-    }
+  async function criarTarefa() {
+    const turma = document.getElementById("turma").value;
+    const tema = document.getElementById("tema").value;
+    const descricao = document.getElementById("descricao").value;
+    const dataAula = document.getElementById("dataAula").value;
+    if (!turma || !tema || !dataAula) return alert("Preencha os campos obrigatórios.");
 
-    document.getElementById("btnSair").addEventListener("click", () => {
-      document.getElementById("painel").classList.add("hidden");
-      document.getElementById("login").classList.remove("hidden");
-    });
+    const dataBase = new Date(dataAula);
+    const addDias = d => new Date(dataBase.getTime() + d*24*60*60*1000).toISOString().split("T")[0];
+    const payload = {
+      action: "addTarefa",
+      Turma: turma, Tema: tema, Descricao: descricao, DataAula: dataAula,
+      Semana0_Prazo: addDias(0), Semana1_Prazo: addDias(7),
+      Semana2_Prazo: addDias(14), Semana4_Prazo: addDias(28)
+    };
+    const resp = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+    const res = await resp.json();
+    alert(res.message);
+  }
 
-    init();
-  </script>
+  carregarTudo();
+</script>
 </body>
 </html>
