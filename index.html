@@ -9,7 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
     
     <!-- FIX: Carrega a base de dados de utilizadores localmente -->
-    <!-- (Certifique-se de que o ficheiro 'users.js' está no seu repositório) -->
     <script src="users.js"></script> 
     
     <style>
@@ -171,7 +170,7 @@
     </div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 1.2
+        Desenvolvido por Geovane Modena | Versão 1.7
     </footer>
 </div>
 
@@ -200,7 +199,7 @@ let tarefas = [];
 // --- ELEMENTOS DOM ---
 const loginDiv = document.getElementById('login');
 const dashboardDiv = document.getElementById('dashboard');
-const loginForm = document.getElementById('login-form');
+// const loginForm = document.getElementById('login-form'); // Removido - Causa do Bug
 const loginButton = document.getElementById('login-button');
 const loadingMessage = document.getElementById('loading-message');
 const loginErro = document.getElementById('loginErro');
@@ -257,16 +256,47 @@ async function init() {
         showModal('Erro Crítico de Carga', 'Não foi possível ler o ficheiro local de utilizadores (users.js). Verifique se o ficheiro foi criado no GitHub.');
     }
     
-    // Renderiza ícones da tela de login
-    renderIcons();
+    // Renderiza a tela de login (que agora anexa o listener)
+    renderLogin();
 }
 
 // --- FUNÇÕES DE AUTENTICAÇÃO ---
+
+// FIX: A renderLogin agora anexa o evento 'submit'
+const renderLogin = () => {
+    contentArea.innerHTML = `
+        <div id="login" class="max-w-md mx-auto p-6">
+            <h2 class="text-2xl font-bold text-center text-red-700 mb-6">Login</h2>
+            <div id="loading-message" class="text-center text-gray-500 mb-4">${loadingMessage.textContent}</div>
+            <div id="loginErro" class="text-red-500 mb-4 hidden text-center font-semibold">Usuário ou RA incorretos!</div>
+
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
+                    <input type="email" id="email" name="email" required placeholder="seu.email@escola.com" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                </div>
+                <div>
+                    <label for="ra" class="block text-sm font-medium text-gray-700">RA (Registro Acadêmico)</label>
+                    <input type="text" id="ra" name="ra" required placeholder="Apenas números" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                </div>
+                <button type="submit" id="login-button" class="w-full flex justify-center items-center py-2 px-4 btn-primary transition-colors ${usuarios.length === 0 ? 'disabled:opacity-50' : ''}" ${usuarios.length === 0 ? 'disabled' : ''}>
+                    <i data-lucide="log-in" class="mr-2"></i> Entrar
+                </button>
+            </form>
+        </div>
+    `;
+
+    // FIX: Anexa o 'login' ao formulário DEPOIS que ele é renderizado
+    document.getElementById('login-form').addEventListener('submit', login);
+    renderIcons(); // Renderiza os ícones após o HTML
+};
+
 
 async function login(event) {
     event.preventDefault(); // Impede o envio do formulário
     const email = document.getElementById('email').value.trim();
     const ra = document.getElementById('ra').value.trim();
+    const loginErro = document.getElementById('loginErro'); // Pega o elemento de erro
 
     // 'usuarios' é a variável global de users.js
     const user = usuarios.find(u => u.Email.toLowerCase() === email.toLowerCase() && String(u.RA) === ra);
@@ -301,9 +331,8 @@ function logout() {
     dashboardDiv.classList.add('hidden');
     logoutBtn.classList.add('hidden');
     loginDiv.classList.remove('hidden');
-    document.getElementById('email').value = '';
-    document.getElementById('ra').value = '';
-    renderIcons(); // Renderiza ícones da tela de login
+    // Chama renderLogin para recriar a tela de login (e re-anexar o listener)
+    renderLogin(); 
 }
 
 
@@ -327,7 +356,7 @@ async function atualizarListaTarefas() {
         // Usa a lógica GET (doGet) do seu Apps Script
         const res = await fetch(`${API_URL}?func=getTarefas`, { mode: 'cors' });
         if (!res.ok) {
-            throw new Error(`Falha ao buscar tarefas (Status: ${res.status}). Verifique o console para detalhes de CORS.`);
+            throw new Error(`Falha ao buscar tarefas (Status: ${res.status}).`);
         }
         
         tarefas = await res.json();
@@ -520,7 +549,7 @@ window.limparFormulario = limparFormulario;
 init();
 
 // FIX: Anexa o 'login' ao formulário DEPOIS que a função init é definida
-loginForm.addEventListener('submit', login);
+// (Isto foi movido para dentro da função renderLogin() para evitar o erro)
 
 </script>
 </body>
