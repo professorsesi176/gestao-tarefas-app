@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- FIX 1 (Ícones): Carregando a biblioteca Lucide completa de forma robusta -->
-    <!-- Isto substitui o <script type="module"> que estava a falhar -->
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
     
     <style>
@@ -65,7 +64,7 @@
     <div class="bg-white rounded-lg p-6 max-w-sm w-full shadow-2xl">
         <h3 id="modal-title" class="text-xl font-bold mb-3 text-red-600"></h3>
         <p id="modal-message" class="text-gray-700 mb-4"></p>
-        <button onclick="document.getElementById('modal-overlay').classList.add('hidden')" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">
+        <button id="modal-close-button" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">
             OK
         </button>
     </div>
@@ -92,6 +91,7 @@ const loadingIndicator = document.getElementById('loading-indicator');
 const modalOverlay = document.getElementById('modal-overlay');
 const modalTitle = document.getElementById('modal-title');
 const modalMessage = document.getElementById('modal-message');
+const modalCloseButton = document.getElementById('modal-close-button');
 
 /**
  * Exibe um modal de mensagem personalizado.
@@ -104,6 +104,17 @@ const showModal = (title, message) => {
     modalOverlay.classList.remove('hidden');
     modalOverlay.classList.add('flex');
 };
+
+/**
+ * Fecha o modal.
+ */
+const closeModal = () => {
+    modalOverlay.classList.add('hidden');
+}
+// Anexa closeModal ao window para ser acessível pelo onclick do HTML
+window.closeModal = closeModal;
+modalCloseButton.onclick = closeModal;
+
 
 /**
  * Função utilitária para exibir o indicador de carregamento.
@@ -121,6 +132,7 @@ const toggleLoading = (show) => {
  * Renderiza os ícones Lucide após o HTML ser atualizado.
  */
 const renderIcons = () => {
+    // FIX: Garante que window.lucide exista antes de chamar createIcons
     if (window.lucide) {
         window.lucide.createIcons();
     }
@@ -286,7 +298,6 @@ const loadApp = async () => {
 
 // --- Renderização do Professor ---
 const renderProfessorDashboard = () => {
-    // ... (O resto do código do dashboard do Professor permanece inalterado) ...
     contentArea.innerHTML = `
         <h2 class="text-xl font-bold mb-6 text-red-700 flex items-center"><i data-lucide="list-todo" class="mr-2"></i> Painel do Professor</h2>
         
@@ -514,6 +525,7 @@ const renderAlunoTaskList = () => {
             <div class="p-4 border rounded-lg shadow-sm ${statusColor} flex flex-col sm:flex-row justify-between items-start sm:items-center">
                 <div class="mb-2 sm:mb-0">
                     <p class="font-bold text-base">${task.Título}</p>
+                    <!-- FIX: Alterado de calendar-days (que falha) para calendar -->
                     <p class="text-sm text-gray-600 flex items-center"><i data-lucide="calendar" class="w-4 h-4 mr-1"></i> Prazo: ${task.Prazo}</p>
                     <p class="text-sm mt-1 text-gray-700">${task.Descricao}</p>
                     <p class="text-xs text-gray-500 mt-1">Criada por: ${task.ProfessorNome}</p>
@@ -602,27 +614,18 @@ const init = async () => {
     renderLogin();
 };
 
-init();
-</script>
+// --- FIX 2 (Escopo/Race Condition) ---
+// Anexa as funções ao objeto global (window) para que o HTML (onclick) as encontre
+window.handleLogin = handleLogin;
+window.handleLogout = handleLogout;
+window.handleCreateTask = handleCreateTask;
+window.handleDeleteTask = handleDeleteTask;
+window.renderDeliveryForm = renderDeliveryForm;
+window.handleDeliverySubmit = handleDeliverySubmit;
 
-<!-- Script para desabilitar a mensagem crítica se o Apps Script estiver configurado -->
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const criticalMessage = document.getElementById('critical-message');
-        // Verifica se a URL foi alterada
-        if (criticalMessage && !APPS_SCRIPT_URL.includes('AKfycbwAjddew-CWm-RTsCY_ibuEqMWhJrldNja6FOooH8x6hm59AMzPd2ipeFOubYbBsISWCw')) {
-            // Se o URL NÃO for o placeholder, esconde a mensagem
-            criticalMessage.classList.add('hidden');
-        }
-        
-        // Atribui as funções ao objeto global (window) para que o HTML (onclick) as encontre
-        window.handleLogin = handleLogin;
-        window.handleLogout = handleLogout;
-        window.handleCreateTask = handleCreateTask;
-        window.handleDeleteTask = handleDeleteTask;
-        window.renderDeliveryForm = renderDeliveryForm;
-        window.handleDeliverySubmit = handleDeliverySubmit;
-    });
+// Inicia a aplicação
+init();
+
 </script>
 </body>
 </html>
