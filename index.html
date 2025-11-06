@@ -171,7 +171,7 @@
     </div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 1.0
+        Desenvolvido por Geovane Modena | Versão 1.2
     </footer>
 </div>
 
@@ -283,8 +283,9 @@ async function login(event) {
     logoutBtn.classList.remove('hidden');
     saudacao.innerText = `Olá, ${user.NomeCompleto}!`;
 
-    // Lógica de perfil baseada no seu código original
-    if (user.Perfil === "Professor" || (user.Email === "professorsesi176@gmail.com" && ra === "9999")) {
+    // FIX: Lógica de perfil simplificada.
+    // Verifica apenas o 'Perfil' (que vem de users.js)
+    if (user.Perfil === "Professor") {
         await mostrarPainelProfessor();
     } else {
         painelAluno.classList.remove('hidden');
@@ -519,7 +520,7 @@ window.limparFormulario = limparFormulario;
 init();
 
 // FIX: Anexa o 'login' ao formulário DEPOIS que a função init é definida
-document.getElementById('login-form').addEventListener('submit', login);
+loginForm.addEventListener('submit', login);
 
 </script>
 </body>
