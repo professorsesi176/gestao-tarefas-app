@@ -1,212 +1,100 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gestão de Tarefas</title>
-<style>
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #fff;
-    color: #111;
-    margin: 0;
-    text-align: center;
-  }
-  header {
-    background: #c00;
-    color: white;
-    padding: 10px 0;
-    font-size: 1.8em;
-    font-weight: bold;
-  }
-  .caixa {
-    background: #f9f9f9;
-    margin: 20px auto;
-    width: 80%;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 2px 10px #bbb;
-  }
-  input, select, textarea {
-    width: 95%;
-    padding: 10px;
-    margin: 5px 0 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-  }
-  button {
-    background: #c00;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.2s;
-  }
-  button:hover {
-    background: #900;
-  }
-  footer {
-    margin-top: 40px;
-    color: #666;
-  }
-  .professor, .aluno { display: none; }
-  .tarefa {
-    border: 2px solid #c00;
-    border-radius: 10px;
-    padding: 10px;
-    margin: 10px auto;
-    background: #fff;
-  }
-</style>
+  <meta charset="UTF-8">
+  <title>Gestão de Tarefas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fff;
+      color: #000;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #000;
+      color: #fff;
+      padding: 10px;
+      text-align: center;
+      font-size: 1.5em;
+      border-bottom: 4px solid red;
+    }
+    .login-container, .dashboard {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.2);
+    }
+    input, button, select {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: red;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover { background-color: #b30000; }
+    footer {
+      text-align: center;
+      margin: 40px 0 20px 0;
+      font-size: 0.9em;
+      color: #555;
+    }
+  </style>
 </head>
-
 <body>
-<header>Gestão de Tarefas</header>
+  <header>Gestão de Tarefas</header>
 
-<div class="caixa" id="loginBox">
-  <h2>Login</h2>
-  <input type="email" id="email" placeholder="E-mail">
-  <input type="text" id="ra" placeholder="RA">
-  <button onclick="login()">Entrar</button>
-</div>
-
-<div id="professor" class="professor caixa">
-  <h2>Bem-vindo, <span id="profName"></span></h2>
-  <button onclick="mostrarCriar()">+ Criar nova tarefa</button>
-  <div id="formCriar" style="display:none; margin-top:20px;">
-    <input type="text" id="tema" placeholder="Tema">
-    <label>Turmas:</label>
-    <select id="turmas" multiple></select>
-    <textarea id="parte1" placeholder="Parte 1"></textarea>
-    <textarea id="parte2" placeholder="Parte 2"></textarea>
-    <textarea id="parte3" placeholder="Parte 3"></textarea>
-    <textarea id="parte4" placeholder="Parte 4"></textarea>
-    <input type="date" id="dataAula">
-    <button onclick="salvarTarefa()">Salvar</button>
+  <div id="login" class="login-container">
+    <h2>Login</h2>
+    <input type="email" id="email" placeholder="E-mail">
+    <input type="text" id="ra" placeholder="RA">
+    <button onclick="login()">Entrar</button>
+    <p id="loginErro" style="color:red;display:none;">Usuário ou RA incorretos!</p>
   </div>
-  <h3>Tarefas Criadas</h3>
-  <div id="tarefasProf"></div>
-</div>
 
-<div id="aluno" class="aluno caixa">
-  <h2>Olá, <span id="alunoName"></span></h2>
-  <div id="tarefasAluno"></div>
-</div>
+  <div id="dashboard" class="dashboard" style="display:none;">
+    <h2 id="saudacao"></h2>
+    <div id="conteudo"></div>
+  </div>
 
-<footer>Desenvolvido por <b>Geovane Módena</b></footer>
+  <footer>Desenvolvido por Geovane Módena</footer>
 
-<script>
-const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
-let usuario = null;
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
+    let usuarioLogado = null;
+    let usuarios = [];
 
-async function login() {
-  const email = document.getElementById('email').value.trim();
-  const ra = document.getElementById('ra').value.trim();
-  const res = await fetch(`${API_URL}?func=getUsers`);
-  const dados = await res.json();
-  const u = dados.users.find(x => x.Email === email && String(x.RA) === ra);
-  if (!u) return alert("Usuário não encontrado!");
-  usuario = u;
+    async function carregarUsuarios() {
+      const res = await fetch(`${API_URL}?func=getUsers`);
+      usuarios = await res.json();
+    }
 
-  document.getElementById('loginBox').style.display = 'none';
-  if (u.Turma.toLowerCase() === 'professor' || ra === '9999') {
-    document.getElementById('professor').style.display = 'block';
-    document.getElementById('profName').innerText = u.NomeCompleto;
-    carregarTarefasProfessor();
-    carregarTurmas();
-  } else {
-    document.getElementById('aluno').style.display = 'block';
-    document.getElementById('alunoName').innerText = u.NomeCompleto;
-    carregarTarefasAluno();
-  }
-}
+    async function login() {
+      const email = document.getElementById('email').value.trim();
+      const ra = document.getElementById('ra').value.trim();
 
-async function carregarTurmas() {
-  const res = await fetch(`${API_URL}?func=getUsers`);
-  const dados = await res.json();
-  const turmas = [...new Set(dados.users.map(u => u.Turma).filter(t => t.toLowerCase() !== 'professor'))];
-  const sel = document.getElementById('turmas');
-  sel.innerHTML = '';
-  turmas.forEach(t => {
-    const opt = document.createElement('option');
-    opt.value = t; opt.innerText = t;
-    sel.appendChild(opt);
-  });
-}
+      const user = usuarios.find(u => u.Email === email && String(u.RA) === ra);
+      if (!user) {
+        document.getElementById('loginErro').style.display = 'block';
+        return;
+      }
 
-async function carregarTarefasProfessor() {
-  const res = await fetch(`${API_URL}?func=getTarefas`);
-  const dados = await res.json();
-  const div = document.getElementById('tarefasProf');
-  div.innerHTML = '';
-  dados.tarefas.forEach(t => {
-    const d = document.createElement('div');
-    d.className = 'tarefa';
-    d.innerHTML = `<b>${t.Tema}</b><br>Turma: ${t.Turma}<br>Data: ${t.DataAula}<br>
-    <button onclick="editar(${t.ID})">✏️ Editar</button>
-    <button onclick="excluir(${t.ID})">🗑️ Excluir</button>`;
-    div.appendChild(d);
-  });
-}
+      usuarioLogado = user;
+      document.getElementById('login').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      document.getElementById('saudacao').innerText = `Olá, ${user.NomeCompleto}!`;
+    }
 
-async function carregarTarefasAluno() {
-  const res = await fetch(`${API_URL}?func=getTarefas`);
-  const dados = await res.json();
-  const div = document.getElementById('tarefasAluno');
-  div.innerHTML = '';
-  dados.tarefas
-    .filter(t => t.Turma.includes(usuario.Turma))
-    .forEach(t => {
-      const d = document.createElement('div');
-      d.className = 'tarefa';
-      d.innerHTML = `<b>${t.Tema}</b><br>${t.Parte1}<br>${t.Parte2}<br>${t.Parte3}<br>${t.Parte4}<br>
-      <input placeholder='Link 1' id='l1_${t.ID}'><br>
-      <input placeholder='Link 2' id='l2_${t.ID}'><br>
-      <input placeholder='Link 3' id='l3_${t.ID}'><br>
-      <input placeholder='Link 4' id='l4_${t.ID}'><br>
-      <button onclick="enviarEntrega('${t.ID}')">Enviar</button>`;
-      div.appendChild(d);
-    });
-}
-
-async function salvarTarefa() {
-  const d = {
-    action: 'novaTarefa',
-    tema: document.getElementById('tema').value,
-    turmas: [...document.getElementById('turmas').selectedOptions].map(o => o.value),
-    parte1: document.getElementById('parte1').value,
-    parte2: document.getElementById('parte2').value,
-    parte3: document.getElementById('parte3').value,
-    parte4: document.getElementById('parte4').value,
-    dataAula: document.getElementById('dataAula').value
-  };
-  await fetch(API_URL, { method: 'POST', body: JSON.stringify(d) });
-  alert('Tarefa criada!');
-  carregarTarefasProfessor();
-}
-
-async function enviarEntrega(id) {
-  const d = {
-    action: 'novaEntrega',
-    ID_Tarefa: id,
-    RA: usuario.RA,
-    NomeCompleto: usuario.NomeCompleto,
-    Turma: usuario.Turma,
-    Link1: document.getElementById(`l1_${id}`).value,
-    Link2: document.getElementById(`l2_${id}`).value,
-    Link3: document.getElementById(`l3_${id}`).value,
-    Link4: document.getElementById(`l4_${id}`).value,
-  };
-  const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify(d) });
-  const j = await r.json();
-  alert(j.message);
-}
-
-function mostrarCriar() {
-  const f = document.getElementById('formCriar');
-  f.style.display = f.style.display === 'none' ? 'block' : 'none';
-}
-</script>
+    carregarUsuarios();
+  </script>
 </body>
 </html>
