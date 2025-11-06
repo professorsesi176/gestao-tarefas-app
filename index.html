@@ -7,12 +7,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Icons from Lucide for web apps -->
     <script type="module">
-        // FIX APLICADO: Mudando de volta para 'Calendar' (nome mais antigo/compatível) para resolver o SyntaxError persistente.
-        import { createIcons, LogIn, FileText, Send, CheckCircle, ListTodo, Users, User, XCircle, Trash2, Edit, Calendar } from 'https://unpkg.com/lucide@latest/dist/umd/lucide.js';
+        // CORRIGIDO: O nome correto do ícone é CalendarDays
+        import { createIcons, LogIn, FileText, Send, CheckCircle, ListTodo, Users, User, XCircle, Trash2, Edit, CalendarDays } from 'https://unpkg.com/lucide@latest/dist/umd/lucide.js';
         document.addEventListener('DOMContentLoaded', () => {
             createIcons({
                 // Ícones referenciados no HTML
-                icons: { LogIn, FileText, Send, CheckCircle, ListTodo, Users, User, XCircle, Trash2, Edit, Calendar }, 
+                icons: { LogIn, FileText, Send, CheckCircle, ListTodo, Users, User, XCircle, Trash2, Edit, CalendarDays }, 
                 attrs: { width: 24, height: 24, class: 'inline-block' }
             });
         });
