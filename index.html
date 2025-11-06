@@ -1,223 +1,619 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gestão de Tarefas</title>
-<style>
-body {
-  background-color: #fff;
-  font-family: 'Segoe UI', sans-serif;
-  margin: 0;
-  padding: 0;
-}
-header {
-  background: #b30000;
-  color: white;
-  text-align: center;
-  padding: 1rem;
-  font-size: 2rem;
-  font-weight: bold;
-}
-.login-box {
-  width: 340px;
-  margin: 5rem auto;
-  background: #f5f5f5;
-  padding: 2rem;
-  border-radius: 15px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
-input {
-  width: 100%;
-  margin-bottom: 1rem;
-  padding: 0.6rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-}
-button {
-  background: #b30000;
-  color: white;
-  border: none;
-  padding: 0.8rem 1.2rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1rem;
-}
-button:hover {
-  background: #e60000;
-}
-#logoutBtn {
-  background: black;
-  color: white;
-  padding: 0.5rem 1rem;
-  font-size: 0.8rem;
-  float: right;
-  margin: 0.5rem;
-  border-radius: 8px;
-}
-.container {
-  padding: 2rem;
-}
-footer {
-  text-align: center;
-  margin-top: 2rem;
-  color: gray;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Tarefas Escolar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca de Ícones Lucide (Carregamento Robusto) -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
+        .card { background-color: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.2); }
+        /* Design Primário: Vermelho SESI */
+        .btn-primary { background-color: #CC0000; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; }
+        .btn-primary:hover { background-color: #A00000; }
+        .btn-secondary { background-color: #d1d5db; color: #1e1e1e; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; }
+        .btn-secondary:hover { background-color: #9ca3af; }
+        input[type="email"], input[type="text"], input[type="url"], input[type="date"], textarea, select {
+            border: 1px solid #d1d5db; padding: 10px; border-radius: 8px; width: 100%; box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        input:focus, textarea:focus, select:focus { border-color: #CC0000; outline: none; }
+        [data-lucide] {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+        }
+    </style>
 </head>
-<body>
-<header>
-  Gestão de Tarefas
-  <button id="logoutBtn" onclick="logout()">Sair</button>
-</header>
+<body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
 
-<div id="login" class="login-box">
-  <h2>Entrar</h2>
-  <input id="email" placeholder="E-mail" type="email">
-  <input id="ra" placeholder="RA" type="text">
-  <button onclick="login()">Entrar</button>
+<div id="app-container" class="w-full max-w-4xl bg-white shadow-xl rounded-2xl p-6 sm:p-10 transition-all duration-300">
+    <header class="mb-8 border-b pb-4">
+        <h1 class="text-3xl font-extrabold text-red-700 flex items-center">
+            <svg class="w-8 h-8 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Sistema de Gestão de Tarefas
+        </h1>
+        <p id="user-info" class="text-sm text-gray-600 mt-1"></p>
+    </header>
+
+    <!-- Conteúdo da Aplicação -->
+    <div id="content-area">
+        <!-- Tela de Login (Estado Inicial) -->
+        <div id="login-screen" class="max-w-md mx-auto p-6">
+            <h2 class="text-2xl font-bold text-center text-red-700 mb-6">Acesso ao Sistema</h2>
+            <div id="loading-message" class="text-center text-gray-500 mb-4">Carregando dados da planilha...</div>
+            <div id="login-error" class="text-red-500 mb-4 hidden text-center"></div>
+
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
+                    <input type="email" id="email" name="email" required placeholder="seu.email@escola.com" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                </div>
+                <div>
+                    <label for="ra" class="block text-sm font-medium text-gray-700">RA (Registro Acadêmico)</label>
+                    <input type="text" id="ra" name="ra" required placeholder="Apenas números" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                </div>
+                <button type="submit" id="login-button" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors disabled:opacity-50" disabled>
+                    <i data-lucide="log-in" class="mr-2"></i> Entrar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
+        App Script controla a persistência de dados.
+        <div id="loading-indicator" class="mt-2 hidden text-red-600 font-semibold">Aguarde... Processando no Apps Script.</div>
+    </footer>
 </div>
 
-<div id="app" class="container" style="display:none;">
-  <h2 id="saudacao"></h2>
-  <div id="conteudo"></div>
+<!-- Modal Customizado para Avisos -->
+<div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg p-6 max-w-sm w-full shadow-2xl">
+        <h3 id="modal-title" class="text-xl font-bold mb-3 text-red-600"></h3>
+        <p id="modal-message" class="text-gray-700 mb-4"></p>
+        <button id="modal-close-button" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">
+            OK
+        </button>
+    </div>
 </div>
 
-<footer>Desenvolvido por Geovane Módena</footer>
+<script type="module">
+// --- CONFIGURAÇÃO DA PLANILHA ---
+// ID da sua Planilha Google
+const SPREADSHEET_ID = '1EXQmylx6j8knDMYUty3u2x6dM5exR4GjVlJknxAAp7c'; 
 
-<script>
-const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
-let usuarioAtual = null;
+// URL de Deploy do Google Apps Script (Backend de Escrita)
+// CORRIGIDO: Este é o URL mais recente que você forneceu.
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw5XR0CRt9P0JHY_QqlJKD6SNIgyDRhd5jaj7zER9d6hy1421X0wsyRthvCpTPWdgMpkQ/exec'; 
 
-async function login() {
-  const email = document.getElementById("email").value.trim();
-  const ra = document.getElementById("ra").value.trim();
+// Variáveis de Estado
+let currentUser = null;
+let allTasks = [];
+let allUsers = [];
+let allSubmissions = [];
 
-  const resp = await fetch(`${API_URL}?func=getUsers`);
-  const data = await resp.json();
-  const users = data.users;
+// Elementos DOM
+const contentArea = document.getElementById('content-area');
+const userInfoDisplay = document.getElementById('user-info');
+const loadingIndicator = document.getElementById('loading-indicator');
+const modalOverlay = document.getElementById('modal-overlay');
+const modalTitle = document.getElementById('modal-title');
+const modalMessage = document.getElementById('modal-message');
+const modalCloseButton = document.getElementById('modal-close-button');
 
-  const user = users.find(u => u.Email == email && String(u.RA) == ra);
-  if (!user) {
-    alert("Usuário não encontrado!");
-    return;
-  }
+/**
+ * Exibe um modal de mensagem personalizado.
+ * @param {string} title - Título do modal.
+ * @param {string} message - Mensagem principal.
+ */
+const showModal = (title, message) => {
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    modalOverlay.classList.remove('hidden');
+    modalOverlay.classList.add('flex');
+};
 
-  usuarioAtual = user;
-  document.getElementById("login").style.display = "none";
-  document.getElementById("app").style.display = "block";
-  document.getElementById("saudacao").innerText = `Olá, ${user.NomeCompleto}!`;
+/**
+ * Fecha o modal.
+ */
+const closeModal = () => {
+    modalOverlay.classList.add('hidden');
+}
+window.closeModal = closeModal;
+modalCloseButton.onclick = closeModal;
 
-  if (user.Turma.toLowerCase() === "professor" || (user.Email === "professorsesi176@gmail.com" && ra === "9999")) {
-    carregarTelaProfessor();
-  } else {
-    carregarTelaAluno();
-  }
+
+/**
+ * Função utilitária para exibir o indicador de carregamento.
+ * @param {boolean} show - Se deve mostrar ou ocultar.
+ */
+const toggleLoading = (show) => {
+    if (show) {
+        loadingIndicator.classList.remove('hidden');
+    } else {
+        loadingIndicator.classList.add('hidden');
+    }
 }
 
-function logout() {
-  location.reload();
+/**
+ * Renderiza os ícones Lucide após o HTML ser atualizado.
+ */
+const renderIcons = () => {
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
 }
 
-/** TELA PROFESSOR **/
-async function carregarTelaProfessor() {
-  const c = document.getElementById("conteudo");
-  c.innerHTML = `
-    <h3>Gerenciar Tarefas</h3>
-    <button onclick="mostrarNovaTarefa()">➕ Nova Tarefa</button>
-    <div id="listaTarefas"></div>
-  `;
-  listarTarefas();
-}
+// --- Funções de Comunicação com Apps Script (Backend) ---
 
-async function listarTarefas() {
-  const c = document.getElementById("listaTarefas");
-  const resp = await fetch(`${API_URL}?func=getTarefas`);
-  const data = await resp.json();
-  const tarefas = data.tarefas;
-  c.innerHTML = tarefas.map(t => `
-    <div style="border:1px solid #ccc; padding:10px; margin:10px; border-radius:10px;">
-      <b>${t.Tema}</b> - ${t.Turma}<br>
-      <button onclick="editarTarefa(${t.ID})">💾 Editar</button>
-      <button onclick="excluirTarefa(${t.ID})" style="background:black;">🗑 Excluir</button>
-    </div>
-  `).join("");
-}
+/**
+ * Envia uma requisição POST para o Apps Script (Leitura e Escrita).
+ * @param {string} action - Ação a ser executada ('readData', 'submitDelivery').
+ * @param {object} data - Dados a serem enviados.
+ * @returns {Promise<object>} - A resposta do Apps Script.
+ */
+const postToAppsScript = async (action, data) => {
+    toggleLoading(true);
+    try {
+        const payload = { action, ...data };
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
 
-function mostrarNovaTarefa() {
-  const c = document.getElementById("conteudo");
-  c.innerHTML = `
-    <h3>Criar Nova Tarefa</h3>
-    <label>Turmas:</label><br>
-    <input type="checkbox" value="1A">1A 
-    <input type="checkbox" value="1B">1B 
-    <input type="checkbox" value="2A">2A 
-    <input type="checkbox" value="2B">2B 
-    <input type="checkbox" value="3A">3A 
-    <input type="checkbox" value="3B">3B <br><br>
-    <input id="tema" placeholder="Tema"><br>
-    <textarea id="parte1" placeholder="Parte 1"></textarea><br>
-    <textarea id="parte2" placeholder="Parte 2"></textarea><br>
-    <textarea id="parte3" placeholder="Parte 3"></textarea><br>
-    <textarea id="parte4" placeholder="Parte 4"></textarea><br>
-    <input id="dataaula" type="date"><br><br>
-    <button onclick="salvarTarefa()">💾 Salvar</button>
-  `;
-}
+        if (!response.ok) {
+            throw new Error(`Erro de rede ou servidor: ${response.statusText}`);
+        }
 
-async function salvarTarefa() {
-  const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
-  const Turmas = Array.from(checkboxes).map(cb => cb.value);
-  const Tema = document.getElementById("tema").value;
-  const DataAula = document.getElementById("dataaula").value;
-  const Parte1 = document.getElementById("parte1").value;
-  const Parte2 = document.getElementById("parte2").value;
-  const Parte3 = document.getElementById("parte3").value;
-  const Parte4 = document.getElementById("parte4").value;
+        const result = await response.json();
 
-  const resp = await fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify({ action: "novaTarefa", Turmas, Tema, Parte1, Parte2, Parte3, Parte4, DataAula })
-  });
-  alert("Tarefa salva!");
-  carregarTelaProfessor();
-}
+        if (result.status === 'error') {
+            showModal('Erro na Operação', result.message || 'Ocorreu um erro desconhecido no servidor.');
+            return null;
+        }
 
-/** TELA ALUNO **/
-async function carregarTelaAluno() {
-  const c = document.getElementById("conteudo");
-  const resp = await fetch(`${API_URL}?func=getTarefas`);
-  const data = await resp.json();
-  const tarefas = data.tarefas.filter(t => t.Turma == usuarioAtual.Turma);
+        return result;
 
-  c.innerHTML = "<h3>Suas Tarefas</h3>" + tarefas.map(t => `
-    <div style="border:1px solid #ccc; padding:10px; margin:10px; border-radius:10px;">
-      <b>${t.Tema}</b> - Data da aula: ${t.DataAula}<br>
-      <input id="link1_${t.ID}" placeholder="Link 1">
-      <input id="link2_${t.ID}" placeholder="Link 2">
-      <input id="link3_${t.ID}" placeholder="Link 3">
-      <input id="link4_${t.ID}" placeholder="Link 4"><br>
-      <button onclick="enviarLinks(${t.ID})">💾 Enviar</button>
-    </div>
-  `).join("");
-}
+    } catch (error) {
+        console.error('Erro na comunicação com Apps Script:', error);
+        showModal('Erro de Conexão Crítico', 'Falha ao conectar com o Apps Script. Verifique se as permissões de acesso ao App Script estão definidas para "Qualquer pessoa" e se o URL está correto. Detalhe: ' + error.message);
+        return null;
+    } finally {
+        toggleLoading(false);
+    }
+};
 
-async function enviarLinks(id) {
-  const RA = usuarioAtual.RA;
-  const NomeCompleto = usuarioAtual.NomeCompleto;
-  const Turma = usuarioAtual.Turma;
-  const Link1 = document.getElementById(`link1_${id}`).value;
-  const Link2 = document.getElementById(`link2_${id}`).value;
-  const Link3 = document.getElementById(`link3_${id}`).value;
-  const Link4 = document.getElementById(`link4_${id}`).value;
 
-  const resp = await fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify({ action: "enviarEntrega", RA, NomeCompleto, Turma, ID_Tarefa: id, Link1, Link2, Link3, Link4 })
-  });
-  alert("Entrega enviada com sucesso!");
-}
+/**
+ * Função de leitura de dados da Planilha via Apps Script (método seguro).
+ * @param {string} sheetName - Nome da aba da planilha (e.g., 'USERS').
+ * @returns {Promise<Array<object>>} - Dados convertidos para objetos.
+ */
+const readDataFromSheet = async (sheetName) => {
+    const result = await postToAppsScript('readData', { sheetName }); 
+    if (result && result.data) {
+        return result.data;
+    }
+    return [];
+};
+
+// --- Funções de Roteamento e Inicialização ---
+
+const renderLogin = () => {
+    contentArea.innerHTML = `
+        <div class="max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg border border-red-100">
+            <h2 class="text-2xl font-bold text-center text-red-700 mb-6">Acesso ao Sistema</h2>
+            <div id="loading-message" class="text-center text-gray-500 mb-4">Carregando dados da planilha...</div>
+            <div id="login-error" class="text-red-500 mb-4 hidden text-center"></div>
+
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
+                    <input type="email" id="email" name="email" required placeholder="seu.email@escola.com" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                </div>
+                <div>
+                    <label for="ra" class="block text-sm font-medium text-gray-700">RA (Registro Acadêmico)</label>
+                    <input type="text" id="ra" name="ra" required placeholder="Apenas números" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                </div>
+                <button type="submit" id="login-button" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors disabled:opacity-50" disabled>
+                    <i data-lucide="log-in" class="mr-2"></i> Entrar
+                </button>
+            </form>
+        </div>
+    `;
+
+    document.getElementById('login-form').addEventListener('submit', handleLogin);
+    renderIcons(); // Renderiza os ícones após o HTML
+};
+
+const handleLogin = async (event) => {
+    event.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const ra = document.getElementById('ra').value.trim();
+
+    if (allUsers.length === 0) {
+        showModal('Erro de Dados', 'Não foi possível carregar a lista de usuários da Planilha. Verifique a conexão e as regras de segurança.');
+        return;
+    }
+
+    const user = allUsers.find(u => u.Email.toLowerCase() === email.toLowerCase() && u.RA === ra);
+
+    if (user) {
+        currentUser = user;
+        // O Perfil (Aluno/Professor) é derivado no backend (Apps Script)
+        userInfoDisplay.innerHTML = `Logado como: <span class="font-semibold text-red-700">${currentUser.NomeCompleto} (${currentUser.Perfil})</span> | Turma: ${currentUser.Turma || 'N/A'} <button onclick="handleLogout()" class="ml-4 text-xs text-gray-500 hover:text-red-600 transition">Sair</button>`;
+        await loadApp();
+    } else {
+        showModal('Falha no Login', 'E-mail ou RA inválidos. Verifique as credenciais.');
+    }
+};
+
+const handleLogout = () => {
+    currentUser = null;
+    userInfoDisplay.textContent = '';
+    renderLogin();
+};
+
+const loadApp = async () => {
+    // Recarrega todos os dados
+    allTasks = await readDataFromSheet('TAREFAS');
+    allSubmissions = await readDataFromSheet('ENTREGAS');
+    
+    if (currentUser.Perfil === 'Professor') {
+        renderProfessorDashboard();
+    } else if (currentUser.Perfil === 'Aluno') {
+        renderAlunoDashboard();
+    } else {
+        showModal('Erro de Perfil', 'Tipo de usuário desconhecido.');
+        handleLogout();
+    }
+};
+
+// --- Renderização do Professor ---
+// (Professor agora pode Criar, Excluir e Ver Relatório)
+const renderProfessorDashboard = () => {
+    // Filtra as turmas únicas dos usuários alunos
+    const turmas = [...new Set(allUsers.filter(u => u.Perfil === 'Aluno' && u.Turma).map(u => u.Turma))];
+
+    contentArea.innerHTML = `
+        <h2 class="text-xl font-bold mb-6 text-red-700 flex items-center"><i data-lucide="briefcase" class="mr-2"></i> Painel do Professor</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Coluna 1: Criar Nova Tarefa -->
+            <div class="bg-red-50 p-6 rounded-xl shadow-md border border-red-200">
+                <h3 class="text-lg font-semibold mb-4 text-red-700 flex items-center"><i data-lucide="plus-circle" class="w-5 h-5 mr-2"></i> Criar Nova Tarefa</h3>
+                <form id="create-task-form" class="space-y-3">
+                    <div>
+                        <label for="tema" class="block text-sm font-medium text-gray-700">Tema da Tarefa</label>
+                        <input type="text" id="tema" required class="w-full p-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div>
+                        <label for="turma" class="block text-sm font-medium text-gray-700">Turma Alvo</label>
+                        <select id="turma" required class="w-full p-2 border border-gray-300 rounded-md">
+                            <option value="">Selecione a Turma</option>
+                            ${turmas.map(t => `<option value="${t}">${t}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="data-aula" class="block text-sm font-medium text-gray-700">Data da Aula (Prazo)</label>
+                        <input type="date" id="data-aula" required class="w-full p-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="parte1" placeholder="Instrução Parte 1" class="w-full p-2 border border-gray-300 rounded-md">
+                        <input type="text" id="parte2" placeholder="Instrução Parte 2" class="w-full p-2 border border-gray-300 rounded-md">
+                        <input type="text" id="parte3" placeholder="Instrução Parte 3" class="w-full p-2 border border-gray-300 rounded-md">
+                        <input type="text" id="parte4" placeholder="Instrução Parte 4" class="w-full p-2 border border-gray-300 rounded-md">
+                    </div>
+                    <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-md transition duration-150 flex items-center justify-center">
+                        <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i> Criar Tarefa
+                    </button>
+                </form>
+            </div>
+
+            <!-- Coluna 2: Lista de Tarefas Criadas -->
+            <div class="bg-white p-6 rounded-xl shadow-md border">
+                <h3 class="text-lg font-semibold mb-4 text-red-700 flex items-center"><i data-lucide="file-text" class="w-5 h-5 mr-2"></i> Tarefas Ativas</h3>
+                <div class="max-h-96 overflow-y-auto space-y-4" id="professor-tasks-list">
+                    ${renderProfessorTaskList()}
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 bg-white p-6 rounded-xl shadow-md border">
+            <h3 class="text-lg font-semibold mb-4 text-red-700 flex items-center"><i data-lucide="users" class="w-5 h-5 mr-2"></i> Relatório de Entregas</h3>
+            <div class="max-h-96 overflow-y-auto" id="relatorio-entregas">
+                ${renderDeliveryReport()}
+            </div>
+        </div>
+    `;
+    document.getElementById('create-task-form').addEventListener('submit', handleCreateTask);
+    renderIcons(); // Renderiza os ícones após o HTML
+};
+
+const renderProfessorTaskList = () => {
+    if (allTasks.length === 0) {
+        return '<p class="text-gray-500 italic">Nenhuma tarefa criada.</p>';
+    }
+
+    // Ordena as tarefas pela data da aula, mais recente primeiro
+    const sortedTasks = [...allTasks].sort((a, b) => new Date(b.DataAula) - new Date(a.DataAula));
+
+    return sortedTasks.map(task => {
+        const entregasCount = allSubmissions.filter(e => e.ID_Tarefa === task.ID).length;
+        
+        return `
+            <div class="p-3 border rounded-lg shadow-sm bg-gray-50 flex justify-between items-center">
+                <div>
+                    <p class="font-bold text-base">${task.Tema} (Turma: ${task.Turma})</p>
+                    <p class="text-xs text-gray-600">Prazo (Data Aula): ${task.DataAula}</p>
+                    <p class="text-sm">Entregues: <span class="font-bold ${entregasCount > 0 ? 'text-green-600' : 'text-red-600'}">${entregasCount}</span></p>
+                </div>
+                <button onclick="handleDeleteTask('${task.ID}')" class="text-red-500 hover:text-red-700 transition" title="Excluir Tarefa e Entregas">
+                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                </button>
+            </div>
+        `;
+    }).join('');
+};
+
+const renderDeliveryReport = () => {
+    if (allSubmissions.length === 0) {
+        return '<p class="text-gray-500 italic">Nenhuma entrega de aluno encontrada.</p>';
+    }
+
+    // Agrupa por Turma
+    const entregasPorTurma = {};
+    allSubmissions.forEach(entrega => {
+        const turma = entrega.Turma || 'Sem Turma';
+        if (!entregasPorTurma[turma]) {
+            entregasPorTurma[turma] = [];
+        }
+        entregasPorTurma[turma].push(entrega);
+    });
+
+    let html = '';
+    for (const turma in entregasPorTurma) {
+        html += `<div class="mb-6 p-4 border rounded-lg bg-gray-50 shadow-sm">
+            <h4 class="font-bold text-lg text-red-600">${turma}</h4>
+            <ul class="text-sm mt-2 space-y-2 divide-y divide-gray-200">`;
+        
+        // Ordena por Nome dentro da turma
+        entregasPorTurma[turma].sort((a, b) => a.NomeCompleto.localeCompare(b.NomeCompleto));
+
+        entregasPorTurma[turma].forEach(entrega => {
+            const tarefa = allTasks.find(t => t.ID === entrega.ID_Tarefa);
+            
+            html += `
+                <li class="py-2">
+                    <p class="font-semibold">${entrega.NomeCompleto} (RA: ${entrega.RA})</p>
+                    <p class="text-xs text-gray-500">Tarefa: ${tarefa ? tarefa.Tema : `ID ${entrega.ID_Tarefa}`}</p>
+                    <p class="font-bold text-green-600 mt-1">Nota: ${entrega.Nota}</p>
+                    <div class="flex space-x-2 mt-1 text-xs">
+                        ${entrega.Link1 ? `<a href="${entrega.Link1}" target="_blank" class="text-blue-500 hover:underline">Link1</a>` : ''}
+                        ${entrega.Link2 ? `<a href="${entrega.Link2}" target="_blank" class="text-blue-500 hover:underline">Link2</a>` : ''}
+                        ${entrega.Link3 ? `<a href="${entrega.Link3}" target="_blank" class="text-blue-500 hover:underline">Link3</a>` : ''}
+                        ${entrega.Link4 ? `<a href="${entrega.Link4}" target="_blank" class="text-blue-500 hover:underline">Link4</a>` : ''}
+                    </div>
+                </li>
+            `;
+        });
+        html += `</ul></div>`;
+    }
+
+    return html;
+};
+
+
+const handleCreateTask = async (event) => {
+    event.preventDefault();
+    const payload = {
+        Turma: document.getElementById('turma').value,
+        Tema: document.getElementById('tema').value.trim(),
+        Parte1: document.getElementById('parte1').value.trim(),
+        Parte2: document.getElementById('parte2').value.trim(),
+        Parte3: document.getElementById('parte3').value.trim(),
+        Parte4: document.getElementById('parte4').value.trim(),
+        DataAula: document.getElementById('data-aula').value
+    };
+
+    if (!payload.Tema || !payload.Turma || !payload.DataAula) {
+        showModal('Campos Obrigatórios', 'Por favor, preencha o Tema, a Turma e a Data da Aula.');
+        return;
+    }
+
+    const result = await postToAppsScript('createTask', payload);
+
+    if (result) {
+        showModal('Sucesso', 'Tarefa criada e salva na Planilha!');
+        document.getElementById('create-task-form').reset();
+        await loadApp(); // Recarrega os dados
+    }
+};
+
+const handleDeleteTask = async (taskId) => {
+    if (!confirm('Tem certeza de que deseja deletar esta tarefa e todas as suas entregas? Esta ação é irreversível.')) return;
+
+    const result = await postToAppsScript('deleteTask', { ID_Tarefa: taskId });
+
+    if (result) {
+        showModal('Sucesso', 'Tarefa e entregas relacionadas foram excluídas.');
+        await loadApp(); // Recarrega os dados
+    }
+};
+
+
+// --- Renderização do Aluno ---
+const renderAlunoDashboard = () => {
+    contentArea.innerHTML = `
+        <h2 class="text-xl font-bold mb-6 text-red-700 flex items-center"><i data-lucide="user" class="mr-2"></i> Painel do Aluno (Turma: ${currentUser.Turma})</h2>
+        
+        <div class="bg-white p-6 rounded-xl shadow-lg border">
+            <h3 class="text-lg font-semibold mb-4 text-red-700 flex items-center"><i data-lucide="list-todo" class="w-5 h-5 mr-2"></i> Minhas Tarefas</h3>
+            <div class="space-y-4" id="aluno-tasks-list">
+                ${renderAlunoTaskList()}
+            </div>
+        </div>
+    `;
+    renderIcons(); // Renderiza os ícones após o HTML
+};
+
+const renderAlunoTaskList = () => {
+    // Filtra tarefas apenas para a turma do aluno
+    const tasksForStudent = allTasks.filter(t => t.Turma === currentUser.Turma);
+    
+    if (tasksForStudent.length === 0) {
+        return '<p class="text-gray-500 italic">Nenhuma tarefa encontrada para a sua turma.</p>';
+    }
+    
+    // Ordena as tarefas pela data da aula
+    tasksForStudent.sort((a, b) => new Date(b.DataAula) - new Date(a.DataAula));
+
+    return tasksForStudent.map(task => {
+        // Verifica se já existe uma entrega para esta tarefa deste aluno
+        const entrega = allSubmissions.find(e => e.ID_Tarefa === task.ID && e.RA === currentUser.RA);
+        
+        let statusHtml = '';
+        let formHtml = '';
+
+        if (entrega) {
+            // Se já entregou, mostra os dados e a nota
+            statusHtml = `
+                <p class="font-bold text-green-600 mt-2">Status: Entregue (Nota: ${entrega.Nota})</p>
+                <div class="text-xs mt-2 space-y-1">
+                    <p>Link 1: ${entrega.Link1 ? `<a href="${entrega.Link1}" target="_blank" class="text-blue-500 hover:underline">Ver</a>` : 'N/A'}</p>
+                    <p>Link 2: ${entrega.Link2 ? `<a href="${entrega.Link2}" target="_blank" class="text-blue-500 hover:underline">Ver</a>` : 'N/A'}</p>
+                    <p>Link 3: ${entrega.Link3 ? `<a href="${entrega.Link3}" target="_blank" class="text-blue-500 hover:underline">Ver</a>` : 'N/A'}</p>
+                    <p>Link 4: ${entrega.Link4 ? `<a href="${entrega.Link4}" target="_blank" class="text-blue-500 hover:underline">Ver</a>` : 'N/A'}</p>
+                </div>`;
+        } else {
+            // Se não entregou, mostra o formulário
+            statusHtml = `<p class="font-bold text-red-600 mt-2">Status: Pendente</p>`;
+            formHtml = `
+                <form onsubmit="handleDeliverySubmit(event, '${task.ID}')" class="mt-4 space-y-3 bg-red-50 p-4 rounded-lg">
+                    <p class="text-sm font-semibold text-gray-700">Enviar Links (A nota é 2.5 por link):</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs font-medium">${task.Parte1 || 'Link 1'}</label>
+                            <input type="url" name="link1" placeholder="http://..." class="w-full p-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium">${task.Parte2 || 'Link 2'}</label>
+                            <input type="url" name="link2" placeholder="http://..." class="w-full p-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium">${task.Parte3 || 'Link 3'}</label>
+                            <input type="url" name="link3" placeholder="http://..." class="w-full p-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium">${task.Parte4 || 'Link 4'}</label>
+                            <input type="url" name="link4" placeholder="http://..." class="w-full p-2 border border-gray-300 rounded-md">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-md transition duration-150 flex items-center justify-center">
+                        <i data-lucide="send" class="w-5 h-5 mr-2"></i> Enviar Entrega
+                    </button>
+                </form>
+            `;
+        }
+
+        return `
+            <div class="p-4 border rounded-lg shadow-sm bg-white">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="font-bold text-lg text-red-700">${task.Tema}</p>
+                        <!-- FIX: Ícone corrigido para 'calendar' -->
+                        <p class="text-sm text-gray-600 flex items-center"><i data-lucide="calendar" class="w-4 h-4 mr-1"></i> Data da Aula (Prazo): ${task.DataAula}</p>
+                    </div>
+                    <div>
+                        ${statusHtml}
+                    </div>
+                </div>
+                <!-- Instruções (Partes) -->
+                <div class="mt-4 text-sm space-y-1 text-gray-800">
+                    ${task.Parte1 ? `<p><b>1:</b> ${task.Parte1}</p>` : ''}
+                    ${task.Parte2 ? `<p><b>2:</b> ${task.Parte2}</p>` : ''}
+                    ${task.Parte3 ? `<p><b>3:</b> ${task.Parte3}</p>` : ''}
+                    ${task.Parte4 ? `<p><b>4:</b> ${task.Parte4}</p>` : ''}
+                </div>
+                ${formHtml}
+            </div>
+        `;
+    }).join('');
+};
+
+
+const handleDeliverySubmit = async (event, taskId) => {
+    event.preventDefault();
+    const form = event.target;
+    
+    const payload = {
+        RA: currentUser.RA,
+        NomeCompleto: currentUser.NomeCompleto,
+        Turma: currentUser.Turma,
+        ID_Tarefa: taskId,
+        Link1: form.elements['link1'].value.trim(),
+        Link2: form.elements['link2'].value.trim(),
+        Link3: form.elements['link3'].value.trim(),
+        Link4: form.elements['link4'].value.trim()
+    };
+
+    const result = await postToAppsScript('submitDelivery', payload);
+
+    if (result) {
+        showModal('Sucesso!', `Entrega registrada com sucesso! Sua nota calculada é: ${result.data.nota}`);
+        await loadApp(); // Recarrega os dados para mostrar o status "Entregue"
+    }
+};
+
+// --- Inicialização ---
+const init = async () => {
+    const loadingMsg = document.getElementById('loading-message');
+    const loginButton = document.getElementById('login-button');
+    try {
+        // Tenta carregar os usuários no início
+        loadingMsg.textContent = "Carregando Usuários...";
+        allUsers = await readDataFromSheet('USERS');
+        loadingMsg.textContent = "Carregando Tarefas...";
+        allTasks = await readDataFromSheet('TAREFAS');
+        loadingMsg.textContent = "Carregando Entregas...";
+        allSubmissions = await readDataFromSheet('ENTREGAS');
+
+        if (allUsers.length === 0) {
+            showModal('Erro Crítico de Dados', 'Não foi possível ler a planilha "USERS". Verifique o SPREADSHEET_ID, o nome da aba e a publicação do Apps Script.');
+            loadingMsg.textContent = 'Erro ao carregar dados. Verifique o console.';
+        } else {
+             loadingMsg.textContent = 'Pronto para o login.';
+             loginButton.disabled = false;
+        }
+
+    } catch (e) {
+         showModal('Erro Crítico de Carga', e.message);
+         loadingMsg.textContent = 'Erro ao carregar. Verifique o console.';
+    }
+    
+    // Sempre começar na tela de login
+    renderLogin();
+};
+
+// --- FIX 2 (Escopo/Race Condition) ---
+// Anexa as funções ao objeto global (window) para que o HTML (onclick) as encontre
+window.handleLogin = handleLogin;
+window.handleLogout = handleLogout;
+window.handleCreateTask = handleCreateTask;
+window.handleDeleteTask = handleDeleteTask;
+window.handleDeliverySubmit = handleDeliverySubmit;
+
+// Inicia a aplicação
+init();
+
 </script>
 </body>
 </html>
