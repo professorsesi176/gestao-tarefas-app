@@ -78,7 +78,7 @@
     </div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 2.1
+        Desenvolvido por Geovane Modena | Versão 2.2
     </footer>
 </div>
 
@@ -93,7 +93,8 @@
     </div>
 </div>
 
-<script type="module">
+<!-- FIX v2.2: Removido 'type="module"' para que as funções onclick() sejam globais -->
+<script>
 // --- CONFIGURAÇÃO ---
 // URL do Backend (Apps Script) - Usando a URL que você forneceu
 const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
@@ -210,9 +211,7 @@ async function login(event) {
     
     contentArea.innerHTML = '<div class="text-center text-gray-500 mb-4">Carregando painel...</div>';
     
-    // FIX v2.1: Mostra o botão SAIR (logoutBtn) que está no HEADER
     logoutBtn.classList.remove('hidden');
-    // FIX v2.1: APENAS define o texto do 'user-info', não recria o botão
     userInfoDisplay.innerHTML = `Logado como: <span class="font-semibold text-red-700">${user.NomeCompleto} (${user.Perfil})</span> | Turma: ${user.Turma || 'N/A'}`;
 
     if (user.Perfil === "Professor") {
