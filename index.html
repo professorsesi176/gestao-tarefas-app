@@ -78,7 +78,7 @@ const SPREADSHEET_ID = '1wgJgs3HcEVkB4_IF_bD83XcaRkw53j7z';
 
 // URL de Deploy do Google Apps Script (Backend de Escrita)
 // ESTA É A URL FINAL DO SEU BACKEND
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwlqvoNkRQ7oD9PjiXYFHNBxCSMGCzlmsFh9G2iw9qyN1MzibavsVVOXhUzWKg0hKtSZw/exec'; 
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw5XR0CRt9P0JHY_QqlJKD6SNIgyDRhd5jaj7zER9d6hy1421X0wsyRthvCpTPWdgMpkQ/exec'; 
 
 // Variáveis de Estado
 let currentUser = null;
@@ -262,7 +262,7 @@ const handleLogout = () => {
 const loadApp = async () => {
     // Recarregar todas as tarefas e usuários para garantir dados frescos
     allTasks = await readDataFromSheet('Tarefas');
-    allUsers = await readDataFromSheet('Users'); 
+    allUsers = await readDataFromSheet('USERS'); // CORRIGIDO PARA USERS
     
     if (currentUser.Tipo === 'Professor') {
         renderProfessorDashboard();
@@ -577,7 +577,8 @@ const handleDeliverySubmit = async (event) => {
 // --- Inicialização ---
 const init = async () => {
     // Tenta carregar os usuários no início
-    allUsers = await readDataFromSheet('Users');
+    // CORRIGIDO: O nome da aba é 'USERS' (maiúsculas) para corresponder ao seu backend
+    allUsers = await readDataFromSheet('USERS');
 
     if (allUsers.length === 0) {
         // Se a leitura falhar, mostra um aviso crítico no login
