@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Tarefas Escolar</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- FIX 1 (Ícones): Carregando a biblioteca Lucide completa de forma robusta -->
-    <!-- Isto substitui o <script type="module"> que estava a falhar -->
+    <!-- Biblioteca de Ícones Lucide (Carregamento Robusto) -->
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
     
     <!-- FIX: Carrega a base de dados de utilizadores localmente -->
@@ -80,7 +78,7 @@
     </div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 2.1
+        Desenvolvido por Geovane Modena | Versão 2.0
     </footer>
 </div>
 
@@ -97,12 +95,8 @@
 
 <script type="module">
 // --- CONFIGURAÇÃO ---
-// ID da sua Planilha Google
-const SPREADSHEET_ID = '1EXQmylx6j8knDMYUty3u2x6dM5exR4GjVlJknxAAp7c'; 
-
-// URL de Deploy do Google Apps Script (Backend de Escrita)
-// CORRIGIDO: Este é o URL mais recente que você forneceu.
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-fN6XILK9JAImyPSc5DPfR7ypybflrLybvFYT81M-Nx2TOPkz9bcVnwHW6sQg6ANglg/exec'; 
+// URL do Backend (Apps Script) - Usando a URL que você forneceu
+const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
 
 // --- ESTADO DA APLICAÇÃO ---
 // FIX: 'usuarios' agora é carregado do 'users.js' (via window)
@@ -132,7 +126,7 @@ const showModal = (title, message) => {
 const closeModal = () => {
     modalOverlay.classList.add('hidden');
 }
-window.closeModal = closeModal;
+window.closeModal = closeModal; // Anexa ao window
 modalCloseButton.onclick = closeModal;
 
 const renderIcons = () => {
@@ -153,13 +147,11 @@ const toggleLoading = (isLoading) => {
 // Função de inicialização
 async function init() {
     // A inicialização agora SÓ renderiza o login.
-    // A lógica de verificação do users.js foi movida para dentro do renderLogin.
     renderLogin();
 }
 
 // --- FUNÇÕES DE AUTENTICAÇÃO ---
 
-// FIX: A renderLogin agora verifica o users.js e anexa o evento 'submit'
 const renderLogin = () => {
     contentArea.innerHTML = `
         <div id="login" class="max-w-md mx-auto p-6">
@@ -183,7 +175,6 @@ const renderLogin = () => {
         </div>
     `;
 
-    // FIX: A lógica de verificação foi movida para DEPOIS da renderização
     const loadingMessage = document.getElementById('loading-message');
     const loginButton = document.getElementById('login-button');
 
@@ -202,12 +193,11 @@ const renderLogin = () => {
 
 
 async function login(event) {
-    event.preventDefault(); // Impede o envio do formulário
+    event.preventDefault(); 
     const email = document.getElementById('email').value.trim();
     const ra = document.getElementById('ra').value.trim();
     const loginErro = document.getElementById('loginErro'); 
     
-    // 'usuarios' é a variável global de users.js
     const user = usuarios.find(u => u.Email.toLowerCase() === email.toLowerCase() && String(u.RA) === ra);
     
     if (!user) {
@@ -223,21 +213,19 @@ async function login(event) {
     logoutBtn.classList.remove('hidden');
     userInfoDisplay.innerHTML = `Logado como: <span class="font-semibold text-red-700">${user.NomeCompleto} (${user.Perfil})</span> | Turma: ${user.Turma || 'N/A'} <button onclick="logout()" class="ml-4 text-xs text-gray-500 hover:text-red-600 transition">Sair</button>`;
 
-    // Lógica de perfil baseada no seu código original
     if (user.Perfil === "Professor") {
         await mostrarPainelProfessor();
     } else {
-        await mostrarPainelAluno(); // (Implementação futura)
+        await mostrarPainelAluno(); 
     }
     
-    renderIcons(); // Renderiza ícones do dashboard
+    renderIcons(); 
 }
 
 function logout() {
     usuarioLogado = null;
     logoutBtn.classList.add('hidden');
     userInfoDisplay.innerHTML = '';
-    // Chama renderLogin para recriar a tela de login (e re-anexar o listener)
     renderLogin(); 
 }
 
