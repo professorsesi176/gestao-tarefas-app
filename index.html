@@ -1,184 +1,138 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
 <title>Gestão de Tarefas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  body {
-    font-family: "Poppins", sans-serif;
-    background: linear-gradient(135deg, #ececec, #f9f9f9);
-    margin: 0; padding: 0;
-  }
-  header {
-    background: linear-gradient(90deg, #b71c1c, #d32f2f);
-    color: #fff; text-align: center; padding: 1.2rem;
-    font-size: 1.6rem; letter-spacing: 0.5px; font-weight: bold;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  }
-  .container {
-    max-width: 700px; margin: 2rem auto;
-    background: #fff; padding: 2rem; border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    transition: all 0.3s ease;
-  }
-  input, select, textarea, button {
-    width: 100%; margin-top: 8px; margin-bottom: 15px;
-    padding: 10px 12px; border-radius: 8px; border: 1px solid #ccc;
-    font-size: 1rem; font-family: "Poppins", sans-serif;
-  }
-  button {
-    background: linear-gradient(90deg, #d32f2f, #b71c1c);
-    color: white; border: none; cursor: pointer; font-weight: bold;
-    transition: transform 0.1s, box-shadow 0.2s;
-  }
-  button:hover {
-    transform: scale(1.03);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-  }
-  h2, h3 { color: #b71c1c; text-align: center; }
-  .tarefa {
-    border: 1px solid #ddd; border-radius: 10px; padding: 12px;
-    margin-bottom: 10px; background: #fafafa;
-  }
-  .nota {
-    text-align: center; background: #e0e0e0; border-radius: 8px;
-    padding: 10px; margin-top: 10px; font-weight: bold;
-  }
-  .footer {
-    text-align: center; color: #888; margin-top: 40px;
-    font-size: 0.9rem;
-  }
-  .footer span { color: #b71c1c; font-weight: bold; }
+  body { font-family: 'Poppins', sans-serif; background:#f5f5f5; margin:0; padding:0; }
+  header { background:#1E88E5; color:white; text-align:center; padding:15px 0; font-size:1.5em; font-weight:600; }
+  footer { text-align:center; padding:15px; color:#666; font-size:0.9em; }
+  .card { background:white; margin:20px auto; padding:20px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.1); width:90%; max-width:600px; }
+  input, textarea, select, button { width:100%; padding:10px; margin:5px 0; border:1px solid #ccc; border-radius:6px; font-size:1em; }
+  button { background:#1E88E5; color:white; border:none; cursor:pointer; font-weight:600; }
+  button:hover { background:#1565C0; }
+  .hidden { display:none; }
+  .checkbox-group label { display:block; margin:5px 0; }
 </style>
 </head>
 <body>
 <header>Gestão de Tarefas</header>
 
-<div class="container" id="login-section">
-  <h2>Login</h2>
-  <input type="email" id="email" placeholder="E-mail institucional">
-  <input type="text" id="ra" placeholder="RA do aluno">
+<div class="card" id="loginCard">
+  <h3>Login</h3>
+  <input id="raInput" placeholder="Digite seu RA">
   <button onclick="login()">Entrar</button>
 </div>
 
-<div class="container" id="main-section" style="display:none;">
-  <h2 id="welcome"></h2>
-  <div id="tarefas"></div>
-
-  <div id="painel-professor" style="display:none;">
-    <hr><h3>Nova Tarefa</h3>
-    <select id="turma">
-      <option value="">Selecione a turma</option>
-      <option>1A</option><option>1B</option>
-      <option>2A</option><option>2B</option>
-      <option>3A</option><option>3B</option>
-    </select>
-    <input type="text" id="tema" placeholder="Tema da Aula">
-    <textarea id="descricao" placeholder="Descrição" rows="3"></textarea>
-    <input type="date" id="dataAula">
-    <button onclick="criarTarefa()">Salvar Tarefa</button>
-  </div>
+<div class="card hidden" id="profCard">
+  <h3>Criar Nova Tarefa</h3>
+  <label>Selecione as turmas:</label>
+  <div class="checkbox-group" id="turmasBox"></div>
+  <input id="tema" placeholder="Tema">
+  <textarea id="parte1" placeholder="Parte 1"></textarea>
+  <textarea id="parte2" placeholder="Parte 2"></textarea>
+  <textarea id="parte3" placeholder="Parte 3"></textarea>
+  <textarea id="parte4" placeholder="Parte 4"></textarea>
+  <input type="date" id="dataAula">
+  <button onclick="criarTarefa()">Salvar Tarefa</button>
 </div>
 
-<div class="footer">Desenvolvido por <span>Geovane Módena</span></div>
+<div class="card hidden" id="alunoCard">
+  <h3 id="saudacao"></h3>
+  <div id="tarefasContainer"></div>
+</div>
+
+<footer>Desenvolvido por Geovane Módena</footer>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
-  let users = [], tarefas = [], entregas = [], user = null;
+const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
+let usuarios = [], tarefas = [], userAtual = null;
 
-  async function carregarTudo() {
-    const [u, t, e] = await Promise.all([
-      fetch(API_URL + "?func=getUsers").then(r=>r.json()),
-      fetch(API_URL + "?func=getTarefas").then(r=>r.json()),
-      fetch(API_URL + "?func=getEntregas").then(r=>r.json())
-    ]);
-    users = u.users || [];
-    tarefas = t.tarefas || [];
-    entregas = e.entregas || [];
+async function login() {
+  const ra = document.getElementById("raInput").value.trim();
+  const res = await fetch(`${API_URL}?func=getUsers`);
+  const data = await res.json();
+  usuarios = data.users;
+
+  userAtual = usuarios.find(u => u.RA == ra);
+  if (!userAtual) return alert("RA não encontrado!");
+
+  document.getElementById("loginCard").classList.add("hidden");
+  if (userAtual.Turma.toLowerCase() === "professor") {
+    document.getElementById("profCard").classList.remove("hidden");
+    carregarTurmas();
+  } else {
+    document.getElementById("alunoCard").classList.remove("hidden");
+    document.getElementById("saudacao").innerText = `Olá, ${userAtual.NomeCompleto}!`;
+    carregarTarefas();
   }
+}
 
-  async function login() {
-    const email = document.getElementById("email").value.trim().toLowerCase();
-    const ra = document.getElementById("ra").value.trim();
-    if (!email || !ra) return alert("Preencha todos os campos.");
-    if (users.length === 0) await carregarTudo();
+async function carregarTurmas() {
+  const turmas = [...new Set(usuarios.map(u => u.Turma).filter(t => t.toLowerCase() !== "professor"))];
+  const box = document.getElementById("turmasBox");
+  box.innerHTML = turmas.map(t => `<label><input type="checkbox" value="${t}"> ${t}</label>`).join('');
+}
 
-    user = users.find(u => (u.Email || '').toLowerCase() === email && String(u.RA) === ra);
-    if (!user && email === "professorsesi176@gmail.com" && ra === "9999")
-      user = { NomeCompleto: "Professor SESI", Turma: "professor" };
+async function criarTarefa() {
+  const turmas = [...document.querySelectorAll('#turmasBox input:checked')].map(i => i.value);
+  const body = {
+    action: 'novaTarefa',
+    turmas,
+    tema: document.getElementById("tema").value,
+    parte1: document.getElementById("parte1").value,
+    parte2: document.getElementById("parte2").value,
+    parte3: document.getElementById("parte3").value,
+    parte4: document.getElementById("parte4").value,
+    dataAula: document.getElementById("dataAula").value
+  };
+  const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(body) });
+  const json = await res.json();
+  alert(json.message);
+}
 
-    if (!user) return alert("Usuário não encontrado.");
+async function carregarTarefas() {
+  const res = await fetch(`${API_URL}?func=getTarefas`);
+  const data = await res.json();
+  tarefas = data.tarefas.filter(t => t.Turmas.includes(userAtual.Turma));
 
-    document.getElementById("login-section").style.display = "none";
-    document.getElementById("main-section").style.display = "block";
-    document.getElementById("welcome").innerText = `Olá, ${user.NomeCompleto}!`;
+  const cont = document.getElementById("tarefasContainer");
+  cont.innerHTML = "";
+  tarefas.forEach(t => {
+    cont.innerHTML += `
+      <div style="border:1px solid #ddd;padding:10px;margin-bottom:10px;border-radius:6px;">
+        <b>${t.Tema}</b><br>
+        <small>${t.DataAula}</small>
+        <p>Parte 1: ${t.Parte1}</p>
+        <input id="link1-${t.ID}" placeholder="Link da Parte 1">
+        <p>Parte 2: ${t.Parte2}</p>
+        <input id="link2-${t.ID}" placeholder="Link da Parte 2">
+        <p>Parte 3: ${t.Parte3}</p>
+        <input id="link3-${t.ID}" placeholder="Link da Parte 3">
+        <p>Parte 4: ${t.Parte4}</p>
+        <input id="link4-${t.ID}" placeholder="Link da Parte 4">
+        <button onclick="enviarLinks(${t.ID})">Enviar</button>
+      </div>`;
+  });
+}
 
-    if (user.Turma.toLowerCase() === "professor")
-      document.getElementById("painel-professor").style.display = "block";
-    else mostrarTarefasAluno();
-  }
-
-  function mostrarTarefasAluno() {
-    const div = document.getElementById("tarefas");
-    const lista = tarefas.filter(t => (t.Turma || "").toLowerCase() === user.Turma.toLowerCase());
-    div.innerHTML = "<h3>Tarefas Disponíveis</h3>";
-
-    lista.forEach(t => {
-      const entrega = entregas.find(e => e.RA == user.RA && e.Tema == t.Tema) || {};
-      div.innerHTML += `
-        <div class="tarefa">
-          <strong>${t.Tema}</strong><br>
-          <small>Data Aula: ${t.DataAula}</small>
-          <p>${t.Descricao}</p>
-          ${["Semana0", "Semana1", "Semana2", "Semana4"].map(s => `
-            <input type="url" id="${t.Tema}_${s}" placeholder="Link ${s}" value="${entrega["Link"+s]||""}">
-          `).join('')}
-          <button onclick="salvarEntrega('${t.Tema}')">Salvar Entrega</button>
-          <div class="nota">Nota: ${entrega.Nota || "0,0"}</div>
-        </div>`;
-    });
-  }
-
-  async function salvarEntrega(tema) {
-    const data = {
-      action: "salvarEntrega",
-      RA: user.RA,
-      NomeCompleto: user.NomeCompleto,
-      Turma: user.Turma,
-      Tema: tema,
-      LinkSemana0: document.getElementById(`${tema}_Semana0`).value,
-      LinkSemana1: document.getElementById(`${tema}_Semana1`).value,
-      LinkSemana2: document.getElementById(`${tema}_Semana2`).value,
-      LinkSemana4: document.getElementById(`${tema}_Semana4`).value
-    };
-    const resp = await fetch(API_URL, { method: "POST", body: JSON.stringify(data) });
-    const res = await resp.json();
-    alert(res.message);
-    carregarTudo().then(mostrarTarefasAluno);
-  }
-
-  async function criarTarefa() {
-    const turma = document.getElementById("turma").value;
-    const tema = document.getElementById("tema").value;
-    const descricao = document.getElementById("descricao").value;
-    const dataAula = document.getElementById("dataAula").value;
-    if (!turma || !tema || !dataAula) return alert("Preencha os campos obrigatórios.");
-
-    const dataBase = new Date(dataAula);
-    const addDias = d => new Date(dataBase.getTime() + d*24*60*60*1000).toISOString().split("T")[0];
-    const payload = {
-      action: "addTarefa",
-      Turma: turma, Tema: tema, Descricao: descricao, DataAula: dataAula,
-      Semana0_Prazo: addDias(0), Semana1_Prazo: addDias(7),
-      Semana2_Prazo: addDias(14), Semana4_Prazo: addDias(28)
-    };
-    const resp = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
-    const res = await resp.json();
-    alert(res.message);
-  }
-
-  carregarTudo();
+async function enviarLinks(id) {
+  const body = {
+    action: 'novaEntrega',
+    RA: userAtual.RA,
+    NomeCompleto: userAtual.NomeCompleto,
+    Turma: userAtual.Turma,
+    ID_Tarefa: id,
+    Link1: document.getElementById(`link1-${id}`).value,
+    Link2: document.getElementById(`link2-${id}`).value,
+    Link3: document.getElementById(`link3-${id}`).value,
+    Link4: document.getElementById(`link4-${id}`).value
+  };
+  const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(body) });
+  const json = await res.json();
+  alert("Entrega salva! Nota atual: " + json.nota);
+}
 </script>
 </body>
 </html>
