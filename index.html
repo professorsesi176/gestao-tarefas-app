@@ -1,217 +1,497 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Gestão de Tarefas</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background-color: #fff;
-    color: #000;
-    margin: 0; padding: 0;
+  :root{
+    --sesi-red:#D50000;
+    --sesi-black:#000;
+    --bg:#ffffff;
+    --card:#fbfbfb;
+    --muted:#666;
   }
-  header {
-    background-color: #000;
-    color: #fff;
-    padding: 15px;
-    text-align: center;
-    border-bottom: 4px solid red;
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background:var(--bg); color:#111;
   }
-  .container {
-    max-width: 800px;
-    margin: 30px auto;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+
+  header{
+    background:var(--sesi-black); color:#fff; padding:18px 12px;
+    display:flex; align-items:center; justify-content:center; position:relative;
+    border-bottom:6px solid var(--sesi-red);
   }
-  input, button, select, textarea {
-    width: 100%;
-    margin: 8px 0;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
+  header h1{ margin:0; font-size:28px; letter-spacing:0.6px; font-weight:800; }
+  /* smaller logout button top-right */
+  #logoutBtn{
+    position:absolute; right:12px; top:10px; background:#fff; color:var(--sesi-black);
+    border-radius:6px; border:1px solid #ddd; padding:6px 8px; font-size:12px; cursor:pointer;
   }
-  button {
-    background-color: red;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.3s;
+
+  main{ max-width:1100px; margin:22px auto; padding:0 12px; display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start; }
+
+  .panel{ background:var(--card); border-radius:12px; padding:18px; box-shadow:0 6px 18px rgba(0,0,0,0.06); flex:1 1 420px; min-width:320px; }
+
+  .small{ font-size:13px; color:var(--muted); }
+
+  /* Login */
+  #loginPanel{ max-width:480px; margin:20px auto; }
+
+  input[type="text"], input[type="email"], input[type="date"], textarea, select {
+    width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ddd;
+    font-size:14px;
   }
-  button:hover { background-color: #b30000; }
-  footer {
-    text-align: center;
-    color: #555;
-    margin: 40px 0 10px;
+  textarea{ min-height:80px; resize:vertical; }
+
+  button.primary{
+    background:var(--sesi-red); color:#fff; border:none; padding:10px 14px; border-radius:8px; cursor:pointer;
+    font-weight:700;
   }
-  .hidden { display: none; }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  th, td {
-    border: 1px solid #ddd;
-    padding: 6px;
-  }
-  th {
-    background-color: red;
-    color: #fff;
+  button.ghost{ background:transparent; color:var(--sesi-black); border:1px solid #ddd; padding:8px 10px; border-radius:8px; cursor:pointer; }
+
+  .muted{ color:var(--muted); font-size:13px; }
+
+  .task-card{ border-left:5px solid var(--sesi-red); padding:12px; margin-bottom:12px; border-radius:8px; background:#fff; }
+
+  .flex{ display:flex; gap:12px; align-items:center; }
+  .space-between{ display:flex; justify-content:space-between; align-items:center; }
+
+  /* table simple */
+  table{ width:100%; border-collapse:collapse; margin-top:8px; font-size:14px; }
+  th,td{ padding:8px; border:1px solid #eee; text-align:left; }
+  th{ background:var(--sesi-red); color:#fff; font-weight:700; }
+
+  /* small icon-style buttons */
+  .iconBtn{ background:#000; color:#fff; border-radius:6px; padding:6px 8px; border:none; cursor:pointer; font-size:13px; }
+  .iconDanger{ background:#c62828; }
+
+  /* toast */
+  #toast{ position:fixed; right:20px; bottom:20px; background:rgba(0,0,0,0.85); color:#fff; padding:10px 14px; border-radius:8px; display:none; }
+
+  /* responsive */
+  @media (max-width:900px){
+    main{ padding:12px; flex-direction:column; }
+    header h1{ font-size:24px; }
   }
 </style>
 </head>
 <body>
-  <header>Gestão de Tarefas</header>
 
-  <!-- LOGIN -->
-  <div id="login" class="container">
-    <h2>Login</h2>
-    <input type="email" id="email" placeholder="E-mail">
-    <input type="text" id="ra" placeholder="RA">
-    <button onclick="login()">Entrar</button>
-    <p id="loginErro" style="color:red;display:none;">Usuário ou RA incorretos!</p>
-  </div>
+<header>
+  <h1>Gestão de Tarefas</h1>
+  <button id="logoutBtn" title="Sair" style="display:none" onclick="logout()">Sair</button>
+</header>
 
-  <!-- DASHBOARD -->
-  <div id="dashboard" class="container hidden">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <h2 id="saudacao"></h2>
-      <button onclick="logout()">Sair</button>
+<main>
+  <!-- LEFT: Professor panel OR login (shown conditionally) -->
+  <section id="left" class="panel" style="flex:1 1 520px;">
+    <!-- Login -->
+    <div id="loginPanel">
+      <h2 style="margin:0 0 8px 0">Acesse o sistema</h2>
+      <p class="small">Use e-mail e RA para entrar</p>
+      <input id="emailInput" type="email" placeholder="seu.nome@portalsesisp.org.br" />
+      <input id="raInput" type="text" placeholder="RA (ex: 1001)" />
+      <div class="flex" style="margin-top:6px">
+        <button class="primary" onclick="doLogin()">Entrar</button>
+        <button class="ghost" onclick="fillDemo()">Exemplo</button>
+      </div>
+      <p id="loginMsg" class="muted" style="margin-top:10px;"></p>
     </div>
-    <div id="painelAluno" class="hidden">
-      <p>Bem-vindo! Suas tarefas aparecerão aqui futuramente.</p>
+
+    <!-- Professor panel -->
+    <div id="profPanel" style="display:none">
+      <div class="space-between">
+        <h2 style="margin:0">Painel do Professor</h2>
+        <div class="small muted">Usuário: <span id="profEmail"></span></div>
+      </div>
+
+      <hr style="margin:12px 0 16px 0"/>
+
+      <!-- Criar / Editar -->
+      <div style="margin-bottom:12px">
+        <h3 style="margin:0 0 6px 0">Criar / Editar tarefa</h3>
+
+        <div style="margin:8px 0" class="small muted">Selecione turmas</div>
+        <div id="turmasCheckboxes" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+          <!-- checkboxes injected here -->
+        </div>
+
+        <input id="temaInput" type="text" placeholder="Tema (ex: Leis de Newton)" />
+        <textarea id="parte1Input" placeholder="Parte 1 - instrução (entrega até 18h do dia)"></textarea>
+        <textarea id="parte2Input" placeholder="Parte 2 - instrução (+7 dias)"></textarea>
+        <textarea id="parte3Input" placeholder="Parte 3 - instrução (+14 dias)"></textarea>
+        <textarea id="parte4Input" placeholder="Parte 4 - instrução (+28 dias)"></textarea>
+        <div style="display:flex;gap:8px">
+          <input id="dataAulaInput" type="date" style="flex:1" />
+          <button class="iconBtn" id="saveTaskBtn" title="Salvar">💾 Salvar</button>
+        </div>
+        <input id="editingId" type="hidden" />
+      </div>
+
+      <hr style="margin:12px 0"/>
+
+      <h3 style="margin:0 0 8px 0">Tarefas existentes</h3>
+      <div id="tasksList" style="max-height:420px; overflow:auto; padding-right:6px">
+        <!-- tarefa cards -->
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT: Aluno panel -->
+  <aside id="right" class="panel" style="flex:1 1 420px;">
+    <div id="studentPanel" style="display:none">
+      <div class="space-between">
+        <h2 style="margin:0">Painel do Aluno</h2>
+        <div class="small muted">Turma: <span id="studentTurma"></span></div>
+      </div>
+      <p class="small muted" id="studentHello" style="margin-top:6px"></p>
+
+      <hr style="margin:12px 0"/>
+
+      <div id="studentTasks">
+        <!-- tasks for student -->
+      </div>
     </div>
 
-    <div id="painelProfessor" class="hidden">
-      <h3>Criar Nova Tarefa</h3>
-      <label>Turmas (separe por vírgulas):</label>
-      <input type="text" id="turmas" placeholder="Ex: 1A,1B,1C">
-      <input type="text" id="tema" placeholder="Tema">
-      <textarea id="parte1" placeholder="Parte 1"></textarea>
-      <textarea id="parte2" placeholder="Parte 2"></textarea>
-      <textarea id="parte3" placeholder="Parte 3"></textarea>
-      <textarea id="parte4" placeholder="Parte 4"></textarea>
-      <input type="date" id="dataAula">
-      <button onclick="criarTarefa()">Salvar Tarefa</button>
-
-      <h3>Lista de Tarefas</h3>
-      <table id="tabelaTarefas">
-        <thead><tr><th>ID</th><th>Turma</th><th>Tema</th><th>Data</th><th>Ações</th></tr></thead>
-        <tbody></tbody>
-      </table>
+    <div id="infoBox" style="display:block">
+      <h3 style="margin-top:0">Ajuda rápida</h3>
+      <p class="small muted">Professores: selecione as turmas com checkboxes e preencha as 4 partes. Alunos: envie links por parte e pressione <b>Salvar</b>. A nota será calculada automaticamente.</p>
     </div>
-  </div>
+  </aside>
+</main>
 
-  <footer>Desenvolvido por Geovane Módena</footer>
+<footer style="text-align:center;padding:18px 8px;color:var(--muted)">Desenvolvido por <b>Geovane Módena</b></footer>
+
+<div id="toast"></div>
 
 <script>
+/* ================== CONFIGURAÇÕES ================== */
+// Substitua pela sua URL de deploy do Apps Script
 const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
-let usuarios = [], usuarioLogado = null, tarefas = [];
 
-async function carregarUsuarios() {
-  const res = await fetch(`${API_URL}?func=getUsers`);
-  usuarios = await res.json();
+/* turmas padrão (se preferir, sua planilha pode definir outras) */
+const ALL_TURMAS = ["1A","1B","2A","2B","3A","3B"];
+
+/* estado */
+let currentUser = null;
+let allTasks = [];
+
+/* util */
+function toast(msg, time=3000){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display='block';
+  setTimeout(()=> t.style.display='none', time);
 }
 
-async function login() {
-  const email = document.getElementById('email').value.trim();
-  const ra = document.getElementById('ra').value.trim();
+/* fill demo credentials for quick test */
+function fillDemo(){
+  document.getElementById('emailInput').value = "professorsesi176@gmail.com";
+  document.getElementById('raInput').value = "9999";
+}
 
-  const user = usuarios.find(u => u.Email === email && String(u.RA) === ra);
-  if (!user) {
-    document.getElementById('loginErro').style.display = 'block';
-    return;
+/* Logout */
+function logout(){
+  currentUser = null;
+  document.getElementById('logoutBtn').style.display='none';
+  document.getElementById('profPanel').style.display='none';
+  document.getElementById('studentPanel').style.display='none';
+  document.getElementById('loginPanel').style.display='block';
+  document.getElementById('infoBox').style.display='block';
+  document.getElementById('loginMsg').textContent='';
+  clearForm();
+}
+
+/* ========== LOGIN ========== */
+async function doLogin(){
+  const email = (document.getElementById('emailInput').value||"").trim();
+  const ra = (document.getElementById('raInput').value||"").trim();
+  if(!email || !ra){ document.getElementById('loginMsg').textContent='Informe e-mail e RA.'; return; }
+  try{
+    const url = `${API_URL}?func=login&email=${encodeURIComponent(email)}&ra=${encodeURIComponent(ra)}`;
+    const r = await fetch(url);
+    const data = await r.json();
+    if(!data.success){ document.getElementById('loginMsg').textContent = data.message || 'Login falhou.'; return; }
+
+    currentUser = data.user; // {nome,email,ra,turma}
+    document.getElementById('loginPanel').style.display='none';
+    document.getElementById('infoBox').style.display='none';
+    document.getElementById('logoutBtn').style.display='inline-block';
+    document.getElementById('logoutBtn').style.fontSize='12px';
+    document.getElementById('logoutBtn').style.padding='6px 8px';
+
+    if(data.tipo === 'professor'){
+      // show professor UI
+      document.getElementById('profPanel').style.display='block';
+      document.getElementById('profEmail').innerText = currentUser.email;
+      renderTurmasCheckboxes();
+      bindSaveButton();
+      await loadTasks();
+    } else {
+      // show student UI
+      document.getElementById('studentPanel').style.display='block';
+      document.getElementById('studentHello').innerText = `Olá, ${currentUser.nome}!`;
+      document.getElementById('studentTurma').innerText = currentUser.turma;
+      await loadTasks();
+      renderStudentTasks();
+    }
+  } catch(err){
+    console.error(err); toast('Erro de conexão: '+err.message);
   }
-  usuarioLogado = user;
-  document.getElementById('login').classList.add('hidden');
-  document.getElementById('dashboard').classList.remove('hidden');
-  document.getElementById('saudacao').innerText = `Olá, ${user.NomeCompleto}!`;
-
-  if (user.Turma.toLowerCase() === "professor" || (user.Email === "professorsesi176@gmail.com" && ra === "9999"))
-    mostrarPainelProfessor();
-  else
-    document.getElementById('painelAluno').classList.remove('hidden');
 }
 
-function logout() {
-  usuarioLogado = null;
-  document.getElementById('dashboard').classList.add('hidden');
-  document.getElementById('login').classList.remove('hidden');
-}
-
-async function mostrarPainelProfessor() {
-  document.getElementById('painelProfessor').classList.remove('hidden');
-  const res = await fetch(`${API_URL}?func=getTarefas`);
-  tarefas = await res.json();
-  renderizarTabela();
-}
-
-function renderizarTabela() {
-  const tbody = document.querySelector("#tabelaTarefas tbody");
-  tbody.innerHTML = "";
-  tarefas.forEach(t => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${t.ID}</td>
-      <td>${t.Turma}</td>
-      <td>${t.Tema}</td>
-      <td>${t.DataAula}</td>
-      <td>
-        <button onclick="editar(${t.ID})">✏️</button>
-        <button onclick="excluir(${t.ID})">🗑️</button>
-      </td>`;
-    tbody.appendChild(tr);
+/* ========== TAREFAS (professor) ========== */
+function renderTurmasCheckboxes(){
+  const cont = document.getElementById('turmasCheckboxes');
+  cont.innerHTML = '';
+  ALL_TURMAS.forEach(t => {
+    const id = 'chk_'+t;
+    const wrap = document.createElement('label');
+    wrap.style.display='inline-flex'; wrap.style.alignItems='center'; wrap.style.gap='8px';
+    wrap.innerHTML = `<input type="checkbox" id="${id}" value="${t}"> <span style="font-weight:600">${t}</span>`;
+    cont.appendChild(wrap);
   });
 }
 
-async function criarTarefa() {
-  const dados = {
-    action: "criarTarefa",
-    Turmas: document.getElementById('turmas').value.split(',').map(t => t.trim()),
-    Tema: document.getElementById('tema').value,
-    Parte1: document.getElementById('parte1').value,
-    Parte2: document.getElementById('parte2').value,
-    Parte3: document.getElementById('parte3').value,
-    Parte4: document.getElementById('parte4').value,
-    DataAula: document.getElementById('dataAula').value
+/* bind save: disquete icon text already on button */
+function bindSaveButton(){
+  document.getElementById('saveTaskBtn').onclick = async ()=>{
+    const selected = Array.from(document.querySelectorAll('#turmasCheckboxes input:checked')).map(i=>i.value);
+    if(selected.length===0){ toast('Selecione pelo menos uma turma.'); return; }
+    const tema = document.getElementById('temaInput').value.trim();
+    if(!tema){ toast('Preencha o tema.'); return; }
+    const p1 = document.getElementById('parte1Input').value;
+    const p2 = document.getElementById('parte2Input').value;
+    const p3 = document.getElementById('parte3Input').value;
+    const p4 = document.getElementById('parte4Input').value;
+    const dataAula = document.getElementById('dataAulaInput').value;
+    const editingId = document.getElementById('editingId').value;
+
+    // API expects params via GET: func=saveTarefa with turma, tema, parte1.. dataAula (turma as string)
+    try{
+      const params = new URLSearchParams();
+      params.set('func','saveTarefa');
+      if(editingId) params.set('id', editingId);
+      // join turmas into comma string (script expects 'turma' param)
+      params.set('turma', selected.join(','));
+      params.set('tema', tema);
+      params.set('parte1', p1);
+      params.set('parte2', p2);
+      params.set('parte3', p3);
+      params.set('parte4', p4);
+      params.set('dataAula', dataAula || '');
+      const url = `${API_URL}?${params.toString()}`;
+      const r = await fetch(url);
+      const res = await r.json();
+      if(res.success){ toast(res.message || 'Tarefa salva'); clearForm(); await loadTasks(); }
+      else toast(res.message || 'Erro ao salvar');
+    }catch(err){ console.error(err); toast('Erro: '+err.message); }
   };
-  await fetch(API_URL, { method: 'POST', body: JSON.stringify(dados) });
-  alert('Tarefa criada com sucesso!');
-  mostrarPainelProfessor();
 }
 
-async function excluir(ID) {
-  if (!confirm("Deseja realmente excluir esta tarefa?")) return;
-  await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'excluirTarefa', ID }) });
-  alert('Tarefa excluída.');
-  mostrarPainelProfessor();
+function clearForm(){
+  document.getElementById('temaInput').value='';
+  document.getElementById('parte1Input').value='';
+  document.getElementById('parte2Input').value='';
+  document.getElementById('parte3Input').value='';
+  document.getElementById('parte4Input').value='';
+  document.getElementById('dataAulaInput').value='';
+  document.getElementById('editingId').value='';
+  document.querySelectorAll('#turmasCheckboxes input').forEach(c=>c.checked=false);
 }
 
-async function editar(ID) {
-  const t = tarefas.find(x => x.ID == ID);
-  if (!t) return alert("Tarefa não encontrada");
-  document.getElementById('tema').value = t.Tema;
-  document.getElementById('parte1').value = t.Parte1;
-  document.getElementById('parte2').value = t.Parte2;
-  document.getElementById('parte3').value = t.Parte3;
-  document.getElementById('parte4').value = t.Parte4;
-  document.getElementById('dataAula').value = t.DataAula;
-  document.getElementById('turmas').value = t.Turma;
-
-  if (confirm("Salvar alterações nesta tarefa?")) {
-    const dados = {
-      action: 'editarTarefa',
-      ID, Tema: t.Tema,
-      Parte1: t.Parte1, Parte2: t.Parte2, Parte3: t.Parte3, Parte4: t.Parte4,
-      DataAula: t.DataAula
-    };
-    await fetch(API_URL, { method: 'POST', body: JSON.stringify(dados) });
-    alert("Tarefa atualizada!");
-    mostrarPainelProfessor();
-  }
+/* load tasks from Apps Script */
+async function loadTasks(){
+  try{
+    const r = await fetch(`${API_URL}?func=getTarefas`);
+    const j = await r.json();
+    if(j.success && j.tarefas) allTasks = j.tarefas;
+    else allTasks = j.tarefas || [];
+    renderTasksList();
+    if(currentUser && currentUser.turma) renderStudentTasks();
+  }catch(err){ console.error(err); toast('Erro ao carregar tarefas') }
 }
 
-carregarUsuarios();
+/* render tasks list for professor with edit/delete */
+function renderTasksList(){
+  const cont = document.getElementById('tasksList');
+  cont.innerHTML = '';
+  if(!allTasks || allTasks.length===0){ cont.innerHTML = '<p class="small muted">Nenhuma tarefa cadastrada.</p>'; return; }
+  // show newest first
+  allTasks.slice().reverse().forEach(t=>{
+    const div = document.createElement('div'); div.className='task-card';
+    const turma = t.Turma || t.Turma || (t.Turma ? t.Turma : '');
+    div.innerHTML = `
+      <div class="space-between">
+        <div><strong>${t.Tema}</strong> <span class="small muted">[${turma}]</span></div>
+        <div class="small muted">${t.DataAula || ''}</div>
+      </div>
+      <div style="margin-top:8px" class="small">
+        <div><strong>Parte1:</strong> ${escapeHtml(t.Parte1||'')}</div>
+        <div><strong>Parte2:</strong> ${escapeHtml(t.Parte2||'')}</div>
+        <div><strong>Parte3:</strong> ${escapeHtml(t.Parte3||'')}</div>
+        <div><strong>Parte4:</strong> ${escapeHtml(t.Parte4||'')}</div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="iconBtn" onclick="startEdit('${t.ID}')">💾</button>
+        <button class="iconBtn iconDanger" onclick="confirmDelete('${t.ID}')">🗑️</button>
+      </div>
+    `;
+    cont.appendChild(div);
+  });
+}
+
+/* helper escape */
+function escapeHtml(s){ return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* edit flow */
+function startEdit(id){
+  const t = allTasks.find(x=>String(x.ID)===String(id));
+  if(!t){ toast('Tarefa não encontrada'); return; }
+  // check turmas checkboxes that appear in t.Turma (comma-separated)
+  const turmas = (t.Turma||'').split(',').map(x=>x.trim());
+  document.querySelectorAll('#turmasCheckboxes input').forEach(ch=>{
+    ch.checked = turmas.includes(ch.value);
+  });
+  document.getElementById('temaInput').value = t.Tema||'';
+  document.getElementById('parte1Input').value = t.Parte1||'';
+  document.getElementById('parte2Input').value = t.Parte2||'';
+  document.getElementById('parte3Input').value = t.Parte3||'';
+  document.getElementById('parte4Input').value = t.Parte4||'';
+  document.getElementById('dataAulaInput').value = t.DataAula || '';
+  document.getElementById('editingId').value = t.ID;
+  toast('Modo edição ativo — aperte 💾 Salvar para gravar alterações.');
+}
+
+/* confirm delete */
+async function confirmDelete(id){
+  if(!confirm('Deseja excluir esta tarefa?')) return;
+  try{
+    const url = `${API_URL}?func=deleteTarefa&id=${encodeURIComponent(id)}`;
+    const r = await fetch(url);
+    const j = await r.json();
+    if(j.success){ toast('Tarefa excluída'); await loadTasks(); }
+    else toast(j.message || 'Erro ao excluir');
+  }catch(err){ console.error(err); toast('Erro: '+err.message); }
+}
+
+/* ========== STUDENT UI ========== */
+function renderStudentTasks(){
+  const cont = document.getElementById('studentTasks');
+  cont.innerHTML = '';
+  if(!allTasks || allTasks.length===0){ cont.innerHTML = '<p class="small muted">Nenhuma tarefa disponível.</p>'; return; }
+
+  // filter tasks by student's turma (t.Turma might be csv of many)
+  const tasksForStudent = allTasks.filter(t=>{
+    const list = (t.Turma||'').split(',').map(x=>x.trim());
+    return list.includes(currentUser.turma);
+  });
+
+  if(tasksForStudent.length===0){ cont.innerHTML = '<p class="small muted">Nenhuma tarefa para sua turma.</p>'; return; }
+
+  tasksForStudent.forEach(t=>{
+    const box = document.createElement('div'); box.className='task-card';
+    // compute deadlines
+    const dataAula = t.DataAula ? new Date(t.DataAula) : null;
+    const deadlines = computeDeadlines(dataAula);
+    box.innerHTML = `
+      <div class="space-between"><strong>${t.Tema}</strong><div class="small muted">Prazo Parte1: ${deadlines.p1Display}</div></div>
+      <div style="margin-top:8px" class="small">
+        <div><strong>Parte1:</strong> ${escapeHtml(t.Parte1||'')}</div>
+        <div><strong>Prazo:</strong> ${deadlines.p1Display} — <em>${deadlines.p1Remaining}</em></div>
+        <div style="margin-top:6px"><input id="link1_${t.ID}" placeholder="Link Parte 1 (PDF/Drive)"></div>
+
+        <hr style="margin:8px 0"/>
+
+        <div><strong>Parte2:</strong> ${escapeHtml(t.Parte2||'')}</div>
+        <div><strong>Prazo:</strong> ${deadlines.p2Display} — <em>${deadlines.p2Remaining}</em></div>
+        <div style="margin-top:6px"><input id="link2_${t.ID}" placeholder="Link Parte 2"></div>
+
+        <hr style="margin:8px 0"/>
+
+        <div><strong>Parte3:</strong> ${escapeHtml(t.Parte3||'')}</div>
+        <div><strong>Prazo:</strong> ${deadlines.p3Display} — <em>${deadlines.p3Remaining}</em></div>
+        <div style="margin-top:6px"><input id="link3_${t.ID}" placeholder="Link Parte 3"></div>
+
+        <hr style="margin:8px 0"/>
+
+        <div><strong>Parte4:</strong> ${escapeHtml(t.Parte4||'')}</div>
+        <div><strong>Prazo:</strong> ${deadlines.p4Display} — <em>${deadlines.p4Remaining}</em></div>
+        <div style="margin-top:6px"><input id="link4_${t.ID}" placeholder="Link Parte 4"></div>
+
+        <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end">
+          <button class="primary" onclick="saveStudentDelivery('${t.ID}')">Salvar</button>
+        </div>
+      </div>
+    `;
+    cont.appendChild(box);
+  });
+}
+
+/* compute deadlines and remaining time strings */
+function computeDeadlines(dataAula){
+  const now = new Date();
+  if(!dataAula || isNaN(dataAula)) dataAula = new Date();
+  // part1: same day until 18:00
+  const p1 = new Date(dataAula);
+  p1.setHours(18,0,0,0);
+  const p2 = new Date(p1); p2.setDate(p1.getDate()+7);
+  const p3 = new Date(p1); p3.setDate(p1.getDate()+14);
+  const p4 = new Date(p1); p4.setDate(p1.getDate()+28);
+  return {
+    p1Display: formatDate(p1), p2Display: formatDate(p2), p3Display: formatDate(p3), p4Display: formatDate(p4),
+    p1Remaining: remainingString(now,p1), p2Remaining: remainingString(now,p2), p3Remaining: remainingString(now,p3), p4Remaining: remainingString(now,p4)
+  };
+}
+function formatDate(d){
+  if(!d) return '-';
+  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+function remainingString(now, later){
+  const diff = later - now;
+  if(diff <= 0) return 'Expirado';
+  const days = Math.floor(diff / (1000*60*60*24));
+  if(days>0) return `${days} dia(s) restantes`;
+  const hours = Math.floor(diff / (1000*60*60));
+  if(hours>0) return `${hours} hora(s) restantes`;
+  const mins = Math.floor(diff / (1000*60));
+  return `${mins} min restantes`;
+}
+
+/* save student delivery (calls saveEntrega) */
+async function saveStudentDelivery(taskID){
+  try{
+    const l1 = document.getElementById(`link1_${taskID}`).value.trim();
+    const l2 = document.getElementById(`link2_${taskID}`).value.trim();
+    const l3 = document.getElementById(`link3_${taskID}`).value.trim();
+    const l4 = document.getElementById(`link4_${taskID}`).value.trim();
+
+    const params = new URLSearchParams();
+    params.set('func','saveEntrega');
+    params.set('ra', currentUser.ra);
+    params.set('nome', currentUser.nome);
+    params.set('turma', currentUser.turma);
+    params.set('idTarefa', taskID);
+    params.set('link1', l1);
+    params.set('link2', l2);
+    params.set('link3', l3);
+    params.set('link4', l4);
+
+    const url = `${API_URL}?${params.toString()}`;
+    const r = await fetch(url);
+    const j = await r.json();
+    if(j.success){
+      toast('Entrega salva. Nota: '+j.nota);
+    } else toast('Erro ao salvar entrega.');
+  }catch(err){ console.error(err); toast('Erro: '+err.message); }
+}
+
+/* initial */
+(async function init(){
+  // nothing until login
+  document.getElementById('logoutBtn').style.display='none';
+})();
 </script>
 </body>
 </html>
