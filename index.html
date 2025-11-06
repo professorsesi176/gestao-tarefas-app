@@ -325,7 +325,9 @@ async function atualizarListaTarefas() {
         toggleLoading(true);
         // Usa a lógica GET (doGet) do seu Apps Script
         const res = await fetch(`${API_URL}?func=getTarefas`, { mode: 'cors' });
-        if (!res.ok) throw new Error('Falha ao buscar tarefas.');
+        if (!res.ok) {
+            throw new Error(`Falha ao buscar tarefas (Status: ${res.status}). Verifique o console para detalhes de CORS.`);
+        }
         
         tarefas = await res.json();
         renderizarTabela();
@@ -513,6 +515,7 @@ window.limparFormulario = limparFormulario;
 // (Funções do Aluno precisam ser anexadas aqui quando implementadas)
 
 // --- INICIALIZAÇÃO DA APLICAÇÃO ---
+// FIX: O nome da função de inicialização é 'init'
 init();
 
 </script>
