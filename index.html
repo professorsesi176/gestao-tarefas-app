@@ -5,15 +5,98 @@
 <title>Gestão de Tarefas</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  body { font-family: 'Poppins', sans-serif; background:#f5f5f5; margin:0; padding:0; }
-  header { background:#1E88E5; color:white; text-align:center; padding:15px 0; font-size:1.5em; font-weight:600; }
-  footer { text-align:center; padding:15px; color:#666; font-size:0.9em; }
-  .card { background:white; margin:20px auto; padding:20px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.1); width:90%; max-width:600px; }
-  input, textarea, select, button { width:100%; padding:10px; margin:5px 0; border:1px solid #ccc; border-radius:6px; font-size:1em; }
-  button { background:#1E88E5; color:white; border:none; cursor:pointer; font-weight:600; }
-  button:hover { background:#1565C0; }
-  .hidden { display:none; }
-  .checkbox-group label { display:block; margin:5px 0; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: #ffffff;
+    margin: 0;
+    padding: 0;
+    color: #111;
+  }
+
+  header {
+    background: #000;
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+    font-size: 1.8em;
+    font-weight: 700;
+    border-bottom: 6px solid #D50000;
+  }
+
+  footer {
+    text-align: center;
+    padding: 15px;
+    color: #333;
+    font-size: 0.9em;
+    border-top: 2px solid #D50000;
+    margin-top: 30px;
+  }
+
+  .card {
+    background: #fff;
+    margin: 30px auto;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    width: 90%;
+    max-width: 550px;
+  }
+
+  input, textarea, select, button {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1em;
+  }
+
+  input:focus, textarea:focus {
+    border-color: #D50000;
+    outline: none;
+  }
+
+  button {
+    background: #D50000;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1em;
+    border-radius: 8px;
+    transition: 0.2s;
+  }
+
+  button:hover {
+    background: #b40000;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  h3 {
+    color: #000;
+    border-left: 5px solid #D50000;
+    padding-left: 10px;
+  }
+
+  .checkbox-group label {
+    display: block;
+    margin: 5px 0;
+  }
+
+  .tarefa {
+    border-left: 5px solid #D50000;
+    padding: 10px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    background: #f8f8f8;
+  }
+
+  .tarefa button {
+    background: #000;
+  }
 </style>
 </head>
 <body>
@@ -21,6 +104,7 @@
 
 <div class="card" id="loginCard">
   <h3>Login</h3>
+  <input id="emailInput" placeholder="Digite seu E-mail">
   <input id="raInput" placeholder="Digite seu RA">
   <button onclick="login()">Entrar</button>
 </div>
@@ -43,22 +127,32 @@
   <div id="tarefasContainer"></div>
 </div>
 
-<footer>Desenvolvido por Geovane Módena</footer>
+<footer>Desenvolvido por <b>Geovane Módena</b></footer>
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
 let usuarios = [], tarefas = [], userAtual = null;
 
 async function login() {
+  const email = document.getElementById("emailInput").value.trim().toLowerCase();
   const ra = document.getElementById("raInput").value.trim();
+  if (!email || !ra) return alert("Digite seu e-mail e RA!");
+
   const res = await fetch(`${API_URL}?func=getUsers`);
   const data = await res.json();
   usuarios = data.users;
 
-  userAtual = usuarios.find(u => u.RA == ra);
-  if (!userAtual) return alert("RA não encontrado!");
+  userAtual = usuarios.find(u =>
+    u.Email && u.Email.toLowerCase() === email && u.RA == ra
+  );
+
+  if (!userAtual) {
+    alert("Usuário não encontrado! Verifique os dados.");
+    return;
+  }
 
   document.getElementById("loginCard").classList.add("hidden");
+
   if (userAtual.Turma.toLowerCase() === "professor") {
     document.getElementById("profCard").classList.remove("hidden");
     carregarTurmas();
@@ -77,6 +171,8 @@ async function carregarTurmas() {
 
 async function criarTarefa() {
   const turmas = [...document.querySelectorAll('#turmasBox input:checked')].map(i => i.value);
+  if (turmas.length === 0) return alert("Selecione ao menos uma turma!");
+
   const body = {
     action: 'novaTarefa',
     turmas,
@@ -87,6 +183,7 @@ async function criarTarefa() {
     parte4: document.getElementById("parte4").value,
     dataAula: document.getElementById("dataAula").value
   };
+
   const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(body) });
   const json = await res.json();
   alert(json.message);
@@ -101,9 +198,9 @@ async function carregarTarefas() {
   cont.innerHTML = "";
   tarefas.forEach(t => {
     cont.innerHTML += `
-      <div style="border:1px solid #ddd;padding:10px;margin-bottom:10px;border-radius:6px;">
+      <div class="tarefa">
         <b>${t.Tema}</b><br>
-        <small>${t.DataAula}</small>
+        <small>Data da Aula: ${t.DataAula}</small>
         <p>Parte 1: ${t.Parte1}</p>
         <input id="link1-${t.ID}" placeholder="Link da Parte 1">
         <p>Parte 2: ${t.Parte2}</p>
