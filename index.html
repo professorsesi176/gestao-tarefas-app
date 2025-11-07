@@ -55,7 +55,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 3.6
+        Desenvolvido por Geovane Modena | Versão 3.7
     </footer>
 </div>
 
@@ -103,7 +103,7 @@ const formatarData = (dataISO) => {
     return new Date(dataISO).toLocaleDateString('pt-BR');
 };
 
-// --- API REQUEST SIMPLIFICADO ---
+// --- API REQUEST CORRIGIDO ---
 async function apiRequest(url, options = {}) {
     const config = {
         method: options.method || 'GET',
@@ -121,18 +121,22 @@ async function apiRequest(url, options = {}) {
         console.log('Fazendo requisição para:', url);
         const response = await fetch(url, config);
         
-        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
+        }
         
         const data = await response.json();
         console.log('Resposta recebida:', data);
         
-        if (data.status === 'error') throw new Error(data.message);
+        if (data.status === 'error') {
+            throw new Error(data.message);
+        }
         
         return data;
     } catch (error) {
         console.error('Erro na requisição:', error);
         showModal('Erro de Conexão', 
-            `Não foi possível conectar ao servidor.\n\nDetalhes: ${error.message}\n\nVerifique se o Apps Script está publicado corretamente.`);
+            `Não foi possível conectar ao servidor.\n\nDetalhes: ${error.message}\n\nTente recarregar a página ou verificar se o backend está funcionando.`);
         throw error;
     }
 }
@@ -147,7 +151,9 @@ const renderLogin = () => {
     contentArea.innerHTML = `
         <div id="login" class="max-w-md mx-auto p-6">
             <h2 class="text-2xl font-bold text-center text-red-700 mb-6">Login</h2>
-            <div id="loading-message" class="text-center text-gray-500 mb-4"></div>
+            <div id="loading-message" class="text-center text-gray-500 mb-4">
+                ${usuarios.length > 0 ? "Pronto para o login." : "Erro: users.js não carregado"}
+            </div>
             <div id="loginErro" class="text-red-500 mb-4 hidden text-center font-semibold">Usuário ou RA incorretos!</div>
 
             <form id="login-form" class="space-y-4">
@@ -159,20 +165,12 @@ const renderLogin = () => {
                     <label for="ra" class="block text-sm font-medium text-gray-700">RA (Registro Acadêmico)</label>
                     <input type="text" id="ra" name="ra" required placeholder="Apenas números" class="mt-1">
                 </div>
-                <button type="submit" id="login-button" class="w-full flex justify-center items-center py-2 px-4 btn-primary">
+                <button type="submit" class="w-full flex justify-center items-center py-2 px-4 btn-primary">
                     <i data-lucide="log-in" class="mr-2"></i> Entrar
                 </button>
             </form>
         </div>
     `;
-
-    const loadingMessage = document.getElementById('loading-message');
-    if (usuarios.length > 0) {
-        loadingMessage.textContent = "Pronto para o login.";
-    } else {
-        loadingMessage.textContent = "Erro: Ficheiro 'users.js' não encontrado.";
-        showModal('Erro', 'Não foi possível ler o ficheiro de utilizadores.');
-    }
 
     document.getElementById('login-form').addEventListener('submit', login);
     renderIcons();
@@ -196,7 +194,7 @@ async function login(event) {
     
     contentArea.innerHTML = `<div class="text-center text-gray-500 py-8">Carregando painel...</div>`;
     logoutBtn.classList.remove('hidden');
-    userInfoDisplay.innerHTML = `Logado como: <span class="font-semibold text-red-700">${user.NomeCompleto} (${user.Perfil})</span>`;
+    userInfoDisplay.innerHTML = `Logado como: <span class="font-semibold text-red-700">${user.NomeCompleto} (${user.Perfil})</span> | Turma: ${user.Turma || 'N/A'}`;
 
     if (user.Perfil === "Professor") {
         await mostrarPainelProfessor();
