@@ -55,7 +55,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 3.7
+        Desenvolvido por Geovane Modena | Versão 4.1
     </footer>
 </div>
 
@@ -103,42 +103,56 @@ const formatarData = (dataISO) => {
     return new Date(dataISO).toLocaleDateString('pt-BR');
 };
 
-// --- API REQUEST CORRIGIDO ---
+// --- API REQUEST ALTERNATIVO (SEM CORS) ---
 async function apiRequest(url, options = {}) {
-    const config = {
-        method: options.method || 'GET',
-        headers: { 'Content-Type': 'application/json' }
-    };
-
-    if (config.method === 'POST' && options.body) {
-        config.body = JSON.stringify({
-            ...options.body,
-            token: API_CONFIG.token
-        });
-    }
-
-    try {
-        console.log('Fazendo requisição para:', url);
-        const response = await fetch(url, config);
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
         
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
+        if (options.method === 'POST') {
+            xhr.open('POST', url, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            
+            const dados = {
+                ...options.body,
+                token: API_CONFIG.token
+            };
+            
+            xhr.send(JSON.stringify(dados));
+        } else {
+            // GET request
+            xhr.open('GET', url, true);
+            xhr.send();
         }
         
-        const data = await response.json();
-        console.log('Resposta recebida:', data);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        console.log('Resposta recebida:', data);
+                        
+                        if (data.status === 'error') {
+                            reject(new Error(data.message));
+                        } else {
+                            resolve(data);
+                        }
+                    } catch (error) {
+                        reject(new Error('Resposta inválida do servidor'));
+                    }
+                } else {
+                    reject(new Error(`Erro HTTP: ${xhr.status}`));
+                }
+            }
+        };
         
-        if (data.status === 'error') {
-            throw new Error(data.message);
-        }
+        xhr.onerror = function() {
+            reject(new Error('Falha na conexão com o servidor'));
+        };
         
-        return data;
-    } catch (error) {
-        console.error('Erro na requisição:', error);
-        showModal('Erro de Conexão', 
-            `Não foi possível conectar ao servidor.\n\nDetalhes: ${error.message}\n\nTente recarregar a página ou verificar se o backend está funcionando.`);
-        throw error;
-    }
+        xhr.ontimeout = function() {
+            reject(new Error('Tempo limite da requisição excedido'));
+        };
+    });
 }
 
 // --- INICIALIZAÇÃO ---
@@ -282,8 +296,9 @@ async function carregarTarefasProfessor() {
         tarefas = data.data || [];
         renderizarTabelaTarefas();
     } catch (error) {
+        console.error('Erro ao carregar tarefas:', error);
         document.getElementById('tabelaTarefasBody').innerHTML = 
-            `<tr><td colspan="4" class="text-center py-4 text-red-500">Erro ao carregar tarefas</td></tr>`;
+            `<tr><td colspan="4" class="text-center py-4 text-red-500">Erro ao carregar tarefas: ${error.message}</td></tr>`;
     }
 }
 
@@ -354,7 +369,7 @@ async function salvarTarefa() {
         limparFormulario();
         await carregarTarefasProfessor();
     } catch (error) {
-        // Erro já tratado
+        showModal('Erro', `Erro ao criar tarefa: ${error.message}`);
     }
 }
 
@@ -373,7 +388,7 @@ async function excluirTarefa(idTarefa) {
         showModal('Sucesso', 'Tarefa excluída com sucesso.');
         await carregarTarefasProfessor();
     } catch (error) {
-        // Erro já tratado
+        showModal('Erro', `Erro ao excluir tarefa: ${error.message}`);
     }
 }
 
@@ -430,8 +445,9 @@ async function carregarTarefasAluno() {
         
         renderIcons();
     } catch (error) {
+        console.error('Erro ao carregar tarefas:', error);
         document.getElementById('tarefas-aluno-container').innerHTML = 
-            '<div class="text-center text-red-500 py-8">Erro ao carregar tarefas.</div>';
+            `<div class="text-center text-red-500 py-8">Erro ao carregar tarefas: ${error.message}</div>`;
     }
 }
 
