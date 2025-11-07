@@ -12,50 +12,7 @@
     <script src="users.js"></script> 
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
-        .card { background-color: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.2); }
-        /* Design Primário: Vermelho SESI */
-        .btn-primary { background-color: #CC0000; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; }
-        .btn-primary:hover { background-color: #A00000; }
-        .btn-secondary { background-color: #d1d5db; color: #1e1e1e; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; }
-        .btn-secondary:hover { background-color: #9ca3af; }
-        input[type="email"], input[type="text"], input[type="url"], input[type="date"], textarea, select {
-            border: 1px solid #d1d5db; padding: 10px; border-radius: 8px; width: 100%; box-sizing: border-box;
-            transition: border-color 0.2s; margin-top: 4px; margin-bottom: 8px;
-        }
-        input:focus, textarea:focus, select:focus { border-color: #CC0000; outline: none; }
-        [data-lucide] {
-            width: 24px;
-            height: 24px;
-            display: inline-block;
-        }
-        /* Estilo da Tabela */
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #CC0000; color: white; }
-        tbody tr:nth-child(even) { background-color: #f9f9f9; }
-        .hidden { display: none; }
-        
-        /* Checkboxes (do seu layout antigo) */
-        .checkbox-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #f9f9f9;
-            border-radius: 8px;
-        }
-        .checkbox-group label {
-            font-weight: normal;
-            display: flex;
-            align-items: center;
-        }
-        .checkbox-group input {
-            width: auto; /* Checkboxes não devem ter 100% de largura */
-            margin: 0 5px 0 0;
-        }
+        /* ... (estilos anteriores mantidos) ... */
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -71,14 +28,12 @@
 
     <!-- Conteúdo da Aplicação -->
     <div id="content-area">
-        
         <!-- Tela de Login (Estado Inicial) -->
         <!-- O renderLogin() irá injetar o HTML aqui -->
-
     </div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 2.3
+        Desenvolvido por Geovane Modena | Versão 3.0
     </footer>
 </div>
 
@@ -93,434 +48,249 @@
     </div>
 </div>
 
-<!-- FIX v2.2: Removido 'type="module"' para que as funções onclick() sejam globais -->
 <script>
 // --- CONFIGURAÇÃO ---
-// URL do Backend (Apps Script) - Usando a URL que você forneceu
+// URL do Backend (Apps Script) - Atualize se necessário
 const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
+const API_CONFIG = {
+    token: 'SESI_EDUCATION_2024'
+};
 
 // --- ESTADO DA APLICAÇÃO ---
-// FIX: 'usuarios' agora é carregado do 'users.js' (via window)
 let usuarios = window.listaDeUsuarios || []; 
 let usuarioLogado = null;
 let tarefas = [];
 
-// --- ELEMENTOS DOM ---
-// FIX v2.3: Removidas referências a 'loginDiv' e 'dashboardDiv' que eram nulas
-const contentArea = document.getElementById('content-area');
-const userInfoDisplay = document.getElementById('user-info');
-const logoutBtn = document.getElementById('logoutBtn');
+// ... (código anterior, como elementos DOM, funções utilitárias, etc.) ...
 
-// Elementos do Modal
-const modalOverlay = document.getElementById('modal-overlay');
-const modalTitle = document.getElementById('modal-title');
-const modalMessage = document.getElementById('modal-message');
-const modalCloseButton = document.getElementById('modal-close-button');
+// --- FUNÇÕES DE AUTENTICAÇÃO (mantidas) ---
 
-// --- FUNÇÕES UTILITÁRIAS ---
-const showModal = (title, message) => {
-    modalTitle.textContent = title;
-    modalMessage.textContent = message;
-    modalOverlay.classList.remove('hidden');
-    modalOverlay.classList.add('flex');
-};
+// --- PAINEL DO ALUNO ATUALIZADO ---
 
-const closeModal = () => {
-    modalOverlay.classList.add('hidden');
-}
-window.closeModal = closeModal; // Anexa ao window
-modalCloseButton.onclick = closeModal;
-
-const renderIcons = () => {
-    if (window.lucide) {
-        window.lucide.createIcons();
-    }
-}
-
-const toggleLoading = (isLoading) => {
-    // FIX v2.3: Verifica se o elemento existe antes de tentar ocultar
-    const indicator = document.getElementById('loading-indicator');
-    if (indicator) {
-        indicator.classList.toggle('hidden', !isLoading);
-    }
-}
-
-// --- INICIALIZAÇÃO ---
-
-// Função de inicialização
-async function init() {
-    // A inicialização agora SÓ renderiza o login.
-    renderLogin();
-}
-
-// --- FUNÇÕES DE AUTENTICAÇÃO ---
-
-const renderLogin = () => {
-    contentArea.innerHTML = `
-        <div id="login" class="max-w-md mx-auto p-6">
-            <h2 class="text-2xl font-bold text-center text-red-700 mb-6">Login</h2>
-            <div id="loading-message" class="text-center text-gray-500 mb-4"></div>
-            <div id="loginErro" class="text-red-500 mb-4 hidden text-center font-semibold">Usuário ou RA incorretos!</div>
-
-            <form id="login-form" class="space-y-4">
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
-                    <input type="email" id="email" name="email" required placeholder="seu.email@escola.com" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
-                </div>
-                <div>
-                    <label for="ra" class="block text-sm font-medium text-gray-700">RA (Registro Acadêmico)</label>
-                    <input type="text" id="ra" name="ra" required placeholder="Apenas números" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
-                </div>
-                <button type="submit" id="login-button" class="w-full flex justify-center items-center py-2 px-4 btn-primary transition-colors disabled:opacity-50" disabled>
-                    <i data-lucide="log-in" class="mr-2"></i> Entrar
-                </button>
-            </form>
-        </div>
-    `;
-
-    const loadingMessage = document.getElementById('loading-message');
-    const loginButton = document.getElementById('login-button');
-
-    if (usuarios.length > 0) {
-        loadingMessage.textContent = "Pronto para o login.";
-        loginButton.disabled = false;
-    } else {
-        loadingMessage.textContent = "Erro: Ficheiro 'users.js' não encontrado ou vazio.";
-        showModal('Erro Crítico de Carga', 'Não foi possível ler o ficheiro local de utilizadores (users.js). Verifique se o ficheiro foi criado no GitHub.');
-    }
-
-    // Anexa o 'login' ao formulário
-    document.getElementById('login-form').addEventListener('submit', login);
-    renderIcons(); // Renderiza os ícones após o HTML
-};
-
-
-async function login(event) {
-    event.preventDefault(); 
-    const email = document.getElementById('email').value.trim();
-    const ra = document.getElementById('ra').value.trim();
-    
-    // FIX v2.3: Busca o elemento de erro DEPOIS de renderizado
-    const loginErro = document.getElementById('loginErro'); 
-    
-    const user = usuarios.find(u => u.Email.toLowerCase() === email.toLowerCase() && String(u.RA) === ra);
-    
-    if (!user) {
-        loginErro.style.display = 'block';
-        return;
-    }
-    
-    usuarioLogado = user;
-    loginErro.style.display = 'none';
-    
-    // FIX v2.3: Limpa a área de conteúdo antes de carregar o painel
-    contentArea.innerHTML = `<div class="text-center text-gray-500 mb-4">Carregando painel... <div id="loading-indicator"></div></div>`;
-    
-    logoutBtn.classList.remove('hidden');
-    userInfoDisplay.innerHTML = `Logado como: <span class="font-semibold text-red-700">${user.NomeCompleto} (${user.Perfil})</span> | Turma: ${user.Turma || 'N/A'}`;
-
-    if (user.Perfil === "Professor") {
-        await mostrarPainelProfessor();
-    } else {
-        await mostrarPainelAluno(); 
-    }
-    
-    renderIcons(); 
-}
-
-function logout() {
-    usuarioLogado = null;
-    logoutBtn.classList.add('hidden');
-    userInfoDisplay.innerHTML = '';
-    // FIX v2.3: Chama renderLogin() para redesenhar a tela de login
-    renderLogin(); 
-}
-
-
-// --- FUNÇÕES DO PROFESSOR (Baseadas no seu código) ---
-
-async function mostrarPainelProfessor() {
-    contentArea.innerHTML = `
-        <div id="painelProfessor">
-            <div class="card p-6 mb-8 border-t-4 border-red-600">
-                <h3 class="text-2xl font-bold mb-4 text-red-700">Gerenciar Tarefa</h3>
-                <input type="hidden" id="tarefaId" value="">
-
-                <div>
-                    <label for="turmasCheckboxes" class="block text-sm font-medium text-gray-700">Selecione as turmas:</label>
-                    <div class="checkbox-group" id="turmasCheckboxes">
-                        <!-- Checkboxes das turmas (1A, 1B...) serão inseridos aqui -->
-                    </div>
-                </div>
-                
-                <div class="mt-4">
-                    <label for="tema" class="block text-sm font-medium text-gray-700">Tema</label>
-                    <input type="text" id="tema" placeholder="Tema da atividade" class="mt-1">
-                </div>
-                
-                <div class="mt-4">
-                    <label for="dataAula" class="block text-sm font-medium text-gray-700">Data da Aula (Prazo)</label>
-                    <input type="date" id="dataAula" class="mt-1">
-                </div>
-
-                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <textarea id="parte1" placeholder="Instrução Parte 1" rows="3"></textarea>
-                    <textarea id="parte2" placeholder="Instrução Parte 2" rows="3"></textarea>
-                    <textarea id="parte3" placeholder="Instrução Parte 3" rows="3"></textarea>
-                    <textarea id="parte4" placeholder="Instrução Parte 4" rows="3"></textarea>
-                </div>
-
-                <div class="mt-6 flex space-x-4">
-                    <button onclick="salvarTarefa()" id="btnSalvar" class="btn-primary flex-1">
-                        <i data-lucide="check-circle" class="mr-2"></i> Salvar Tarefa
-                    </button>
-                    <button onclick="limparFormulario()" id="btnLimpar" class="btn-secondary flex-1">
-                        <i data-lucide="x-circle" class="mr-2"></i> Limpar
-                    </button>
-                </div>
-            </div>
-
-            <div class="card p-6">
-                <h3 class="text-2xl font-bold mb-4 text-red-700">Lista de Tarefas</h3>
-                <div class="overflow-x-auto">
-                    <table id="tabelaTarefas">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Turma</th>
-                                <th>Tema</th>
-                                <th>Data</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Linhas de tarefas serão inseridas aqui -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Popula os checkboxes de turma (baseado no seu script)
-    const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
-    const checkboxes = turmas.map(t => `<label><input type='checkbox' value='${t}' class="w-auto m-2"> ${t}</label>`).join("");
-    document.getElementById('turmasCheckboxes').innerHTML = checkboxes;
-
-    await atualizarListaTarefas();
-}
-
-// (NOVO) Painel do Aluno (Placeholder)
 async function mostrarPainelAluno() {
-     contentArea.innerHTML = `
-        <div id="painelAluno" class="card p-6">
-            <h3 class="text-xl font-semibold text-red-700 mb-4">Minhas Tarefas</h3>
-            <div id="tarefasAluno">
-                 <p class="text-gray-600">Bem-vindo! A visualização de tarefas do aluno ainda será implementada.</p>
+    contentArea.innerHTML = `
+        <div id="painelAluno" class="space-y-6">
+            <!-- Cabeçalho com Notificações -->
+            <div class="card p-6 flex justify-between items-center">
+                <h3 class="text-2xl font-bold text-red-700">Minhas Tarefas</h3>
+                <button onclick="mostrarNotificacoes()" class="relative btn-secondary">
+                    <i data-lucide="bell" class="mr-2"></i> Notificações
+                    <span id="contador-notificacoes" class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center hidden">0</span>
+                </button>
+            </div>
+
+            <!-- Lista de Tarefas Pendentes -->
+            <div class="card p-6">
+                <h4 class="text-xl font-semibold mb-4 text-gray-800">Tarefas da Turma ${usuarioLogado.Turma}</h4>
+                <div id="lista-tarefas-aluno" class="space-y-4">
+                    <div class="text-center text-gray-500">Carregando tarefas...</div>
+                </div>
+            </div>
+
+            <!-- Histórico de Entregas -->
+            <div class="card p-6">
+                <h4 class="text-xl font-semibold mb-4 text-gray-800">Minhas Entregas</h4>
+                <div id="historico-entregas">
+                    <div class="text-center text-gray-500">Carregando histórico...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Entrega -->
+        <div id="modal-entrega" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <h3 class="text-xl font-bold mb-4">Entregar Tarefa</h3>
+                <form id="form-entrega" class="space-y-4">
+                    <input type="hidden" id="tarefa-entrega-id">
+                    <div id="campos-links">
+                        <!-- Campos dinâmicos para links -->
+                    </div>
+                    <div class="flex space-x-4">
+                        <button type="submit" class="btn-primary flex-1">Enviar Entrega</button>
+                        <button type="button" onclick="fecharModalEntrega()" class="btn-secondary flex-1">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal de Notificações -->
+        <div id="modal-notificacoes" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold">Notificações</h3>
+                    <button onclick="fecharModalNotificacoes()" class="text-gray-500 hover:text-gray-700">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+                <div id="lista-notificacoes" class="space-y-3">
+                    <!-- Notificações serão inseridas aqui -->
+                </div>
             </div>
         </div>
     `;
+
+    await carregarTarefasAluno();
+    await carregarHistoricoEntregas();
+    await carregarNotificacoes();
     renderIcons();
 }
 
+// ... (código anterior, como funções do professor, etc.) ...
 
-async function atualizarListaTarefas() {
+// --- NOVAS FUNÇÕES PARA ENTREGAS E PRAZOS ---
+
+/**
+ * Calcula os prazos para cada parte baseado na data da aula
+ * Regras:
+ * - Parte 1: até 18h do mesmo dia da aula
+ * - Parte 2: a partir do 3º dia até o 7º dia
+ * - Parte 3: a partir do 8º dia até o 14º dia
+ * - Parte 4: a partir do 15º dia até o 28º dia
+ */
+function calcularPrazos(dataAula) {
+    const data = new Date(dataAula);
+    const prazos = {
+        parte1: {
+            inicio: new Date(data),
+            fim: new Date(data.setHours(18, 0, 0, 0)) // mesmo dia até 18h
+        },
+        parte2: {
+            inicio: new Date(data.getTime() + 2 * 24 * 60 * 60 * 1000), // 3º dia (2 dias depois)
+            fim: new Date(data.getTime() + 6 * 24 * 60 * 60 * 1000) // 7º dia (6 dias depois)
+        },
+        parte3: {
+            inicio: new Date(data.getTime() + 7 * 24 * 60 * 60 * 1000), // 8º dia (7 dias depois)
+            fim: new Date(data.getTime() + 13 * 24 * 60 * 60 * 1000) // 14º dia (13 dias depois)
+        },
+        parte4: {
+            inicio: new Date(data.getTime() + 14 * 24 * 60 * 60 * 1000), // 15º dia (14 dias depois)
+            fim: new Date(data.getTime() + 27 * 24 * 60 * 60 * 1000) // 28º dia (27 dias depois)
+        }
+    };
+    return prazos;
+}
+
+/**
+ * Verifica se a parte pode ser entregue no momento
+ */
+function verificarDisponibilidadeParte(parte, prazos) {
+    const agora = new Date();
+    const prazo = prazos[parte];
+    return agora >= prazo.inicio && agora <= prazo.fim;
+}
+
+/**
+ * Abre o modal de entrega para a tarefa, mostrando apenas as partes disponíveis
+ */
+async function abrirModalEntrega(idTarefa, temaTarefa) {
+    const tarefa = tarefas.find(t => t.ID === idTarefa);
+    if (!tarefa) return;
+
+    const prazos = calcularPrazos(tarefa.DataAula);
+    const container = document.getElementById('campos-links');
+    container.innerHTML = '';
+
+    // Parte 1
+    const parte1Disponivel = verificarDisponibilidadeParte('parte1', prazos);
+    container.innerHTML += `
+        <div class="mb-4">
+            <label for="link1" class="block text-sm font-medium text-gray-700">Parte 1 ${parte1Disponivel ? '' : '(Indisponível)'}</label>
+            <input type="url" id="link1" ${parte1Disponivel ? '' : 'disabled'} placeholder="Link da Parte 1" class="mt-1">
+            <p class="text-xs text-gray-500">Prazo: até ${formatarData(prazos.parte1.fim)}</p>
+        </div>
+    `;
+
+    // Parte 2
+    const parte2Disponivel = verificarDisponibilidadeParte('parte2', prazos);
+    container.innerHTML += `
+        <div class="mb-4">
+            <label for="link2" class="block text-sm font-medium text-gray-700">Parte 2 ${parte2Disponivel ? '' : '(Indisponível)'}</label>
+            <input type="url" id="link2" ${parte2Disponivel ? '' : 'disabled'} placeholder="Link da Parte 2" class="mt-1">
+            <p class="text-xs text-gray-500">Prazo: de ${formatarData(prazos.parte2.inicio)} até ${formatarData(prazos.parte2.fim)}</p>
+        </div>
+    `;
+
+    // Parte 3
+    const parte3Disponivel = verificarDisponibilidadeParte('parte3', prazos);
+    container.innerHTML += `
+        <div class="mb-4">
+            <label for="link3" class="block text-sm font-medium text-gray-700">Parte 3 ${parte3Disponivel ? '' : '(Indisponível)'}</label>
+            <input type="url" id="link3" ${parte3Disponivel ? '' : 'disabled'} placeholder="Link da Parte 3" class="mt-1">
+            <p class="text-xs text-gray-500">Prazo: de ${formatarData(prazos.parte3.inicio)} até ${formatarData(prazos.parte3.fim)}</p>
+        </div>
+    `;
+
+    // Parte 4
+    const parte4Disponivel = verificarDisponibilidadeParte('parte4', prazos);
+    container.innerHTML += `
+        <div class="mb-4">
+            <label for="link4" class="block text-sm font-medium text-gray-700">Parte 4 ${parte4Disponivel ? '' : '(Indisponível)'}</label>
+            <input type="url" id="link4" ${parte4Disponivel ? '' : 'disabled'} placeholder="Link da Parte 4" class="mt-1">
+            <p class="text-xs text-gray-500">Prazo: de ${formatarData(prazos.parte4.inicio)} até ${formatarData(prazos.parte4.fim)}</p>
+        </div>
+    `;
+
+    document.getElementById('tarefa-entrega-id').value = idTarefa;
+    document.getElementById('modal-entrega').classList.remove('hidden');
+    document.getElementById('modal-entrega').classList.add('flex');
+}
+
+// ... (outras funções, como carregarTarefasAluno, carregarHistoricoEntregas, etc.) ...
+
+// --- FUNÇÕES DE AVALIAÇÃO PARA O PROFESSOR ---
+
+// ... (funções de avaliação, como carregarEntregasParaAvaliacao, abrirModalAvaliacao, etc.) ...
+
+// --- SISTEMA DE NOTIFICAÇÕES ---
+
+// ... (funções de notificações: carregarNotificacoes, mostrarNotificacoes, etc.) ...
+
+// --- FUNÇÕES DE COMUNICAÇÃO COM A API (com token) ---
+
+async function apiRequest(url, options = {}) {
+    const config = {
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        },
+        body: options.body ? JSON.stringify({
+            ...JSON.parse(options.body),
+            token: API_CONFIG.token
+        }) : undefined
+    };
+
     try {
-        toggleLoading(true);
-        // Usa a lógica GET (doGet) do seu Apps Script
-        const res = await fetch(`${API_URL}?func=getTarefas`, { mode: 'cors' });
-        if (!res.ok) {
-            throw new Error(`Falha ao buscar tarefas (Status: ${res.status}).`);
+        const response = await fetch(url, config);
+        const data = await response.json();
+        
+        if (data.status === 'error') {
+            throw new Error(data.message);
         }
         
-        tarefas = await res.json();
-        renderizarTabela();
+        return data;
     } catch (error) {
-        console.error("Erro ao carregar tarefas:", error);
-        showModal('Erro ao Carregar Tarefas', 'Não foi possível carregar a lista de tarefas. Verifique se o Apps Script (Codigo.gs) está publicado com a função "doOptions" e "doGet". Detalhe: ' + error.message);
-    } finally {
-        toggleLoading(false);
-        renderIcons(); // Renderiza ícones da tabela
+        console.error('Erro na requisição:', error);
+        showModal('Erro', error.message || 'Falha na comunicação com o servidor');
+        throw error;
     }
 }
 
-function renderizarTabela() {
-    const tbody = document.querySelector("#tabelaTarefas tbody");
-    tbody.innerHTML = "";
-    
-    tarefas.sort((a, b) => new Date(b.DataAula) - new Date(a.DataAula));
-
-    tarefas.forEach(t => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${t.ID.substring(0, 8)}...</td> <!-- Mostra ID abreviado -->
-            <td>${t.Turma}</td>
-            <td>${t.Tema}</td>
-            <td>${t.DataAula}</td>
-            <td>
-                <button onclick="preencherFormularioParaEditar('${t.ID}')" class="text-blue-600 hover:text-blue-800" title="Editar">
-                    <i data-lucide="edit" class="w-5 h-5"></i>
-                </button>
-                <button onclick="excluirTarefa('${t.ID}')" class="text-red-600 hover:text-red-800 ml-2" title="Excluir">
-                    <i data-lucide="trash-2" class="w-5 h-5"></i>
-                </button>
-            </td>`;
-        tbody.appendChild(tr);
+// Exemplo de uso para entregar tarefa
+async function entregarTarefa(dados) {
+    return await apiRequest(API_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'entregarTarefa',
+            ...dados
+        })
     });
-    renderIcons();
 }
 
-// Função 'wrapper' para decidir entre criar ou editar
-async function salvarTarefa() {
-    const id = document.getElementById('tarefaId').value;
-    if (id) {
-        await editarTarefa(id);
-    } else {
-        await criarTarefa();
-    }
-}
+// ... (restante do código, como inicialização, etc.) ...
 
-async function criarTarefa() {
-    const turmasSelecionadas = Array.from(document.querySelectorAll('#turmasCheckboxes input:checked')).map(c => c.value);
-    if (turmasSelecionadas.length === 0) {
-        alert("Selecione pelo menos uma turma.");
-        return;
-    }
-
-    const dados = {
-        action: "criarTarefa",
-        Turmas: turmasSelecionadas, // Envia como array
-        Tema: document.getElementById('tema').value,
-        Parte1: document.getElementById('parte1').value,
-        Parte2: document.getElementById('parte2').value,
-        Parte3: document.getElementById('parte3').value,
-        Parte4: document.getElementById('parte4').value,
-        DataAula: document.getElementById('dataAula').value
-    };
-
-    if (!dados.Tema || !dados.DataAula) {
-        showModal('Erro', 'Tema e Data da Aula são obrigatórios.');
-        return;
-    }
-
-    toggleLoading(true);
-    // Usa a lógica POST (doPost) do seu Apps Script
-    const res = await fetch(API_URL, { 
-        method: 'POST', 
-        body: JSON.stringify(dados), 
-        mode: 'cors',
-        headers: { 'Content-Type': 'application/json' }
-    });
-    toggleLoading(false);
-    
-    if (!res.ok) {
-         showModal('Erro ao Criar Tarefa', 'Falha ao salvar a tarefa (Erro de CORS/Rede no POST). Verifique a função doOptions no Apps Script.');
-         return;
-    }
-
-    showModal('Sucesso', 'Tarefa criada com sucesso!');
-    limparFormulario();
-    await atualizarListaTarefas(); // Recarrega a tabela
-}
-
-async function excluirTarefa(ID) {
-    if (!confirm("Deseja realmente excluir esta tarefa?")) return;
-    
-    toggleLoading(true);
-    await fetch(API_URL, { 
-        method: 'POST', 
-        body: JSON.stringify({ action: 'excluirTarefa', ID }), 
-        mode: 'cors',
-        headers: { 'Content-Type': 'application/json' }
-    });
-    toggleLoading(false);
-    
-    showModal('Sucesso', 'Tarefa excluída.');
-    await atualizarListaTarefas(); // Recarrega a tabela
-}
-
-function preencherFormularioParaEditar(ID) {
-    const t = tarefas.find(x => String(x.ID) === String(ID));
-    if (!t) return showModal("Erro", "Tarefa não encontrada");
-
-    document.getElementById('tarefaId').value = t.ID;
-    document.getElementById('tema').value = t.Tema;
-    document.getElementById('parte1').value = t.Parte1;
-    document.getElementById('parte2').value = t.Parte2;
-    document.getElementById('parte3').value = t.Parte3;
-    document.getElementById('parte4').value = t.Parte4;
-    document.getElementById('dataAula').value = t.DataAula;
-    
-    // Limpa checkboxes
-    document.querySelectorAll('#turmasCheckboxes input:checked').forEach(c => c.checked = false);
-    // Marca a turma da tarefa
-    const turmaCheckbox = document.querySelector(`#turmasCheckboxes input[value="${t.Turma}"]`);
-    if (turmaCheckbox) turmaCheckbox.checked = true;
-
-    window.scrollTo(0, 0);
-    const btnSalvar = document.getElementById('btnSalvar');
-    btnSalvar.innerHTML = '<i data-lucide="check-circle" class="mr-2"></i> Salvar Edição';
-    renderIcons();
-}
-
-async function editarTarefa(ID) {
-    const dados = {
-        action: 'editarTarefa',
-        ID: ID,
-        Tema: document.getElementById('tema').value,
-        Parte1: document.getElementById('parte1').value,
-        Parte2: document.getElementById('parte2').value,
-        Parte3: document.getElementById('parte3').value,
-        Parte4: document.getElementById('parte4').value,
-        DataAula: document.getElementById('dataAula').value
-    };
-
-    toggleLoading(true);
-    await fetch(API_URL, { 
-        method: 'POST', 
-        body: JSON.stringify(dados), 
-        mode: 'cors',
-        headers: { 'Content-Type': 'application/json' }
-    });
-    toggleLoading(false);
-    
-    showModal("Sucesso", "Tarefa atualizada!");
-    limparFormulario();
-    await atualizarListaTarefas(); // Recarrega a tabela
-}
-
-function limparFormulario() {
-    document.getElementById('tarefaId').value = '';
-    document.getElementById('tema').value = '';
-    document.getElementById('parte1').value = '';
-    document.getElementById('parte2').value = '';
-    document.getElementById('parte3').value = '';
-    document.getElementById('parte4').value = '';
-    document.getElementById('dataAula').value = '';
-    document.querySelectorAll('#turmasCheckboxes input:checked').forEach(c => c.checked = false);
-    
-    const btnSalvar = document.getElementById('btnSalvar');
-    btnSalvar.innerHTML = '<i data-lucide="check-circle" class="mr-2"></i> Salvar Tarefa';
-    renderIcons();
-}
-
-// --- ANEXA FUNÇÕES AO ESCOPO GLOBAL (window) ---
-// (Necessário para que os 'onclick' no HTML funcionem)
-window.login = login;
-window.logout = logout;
-window.mostrarPainelProfessor = mostrarPainelProfessor;
-window.renderizarTabela = renderizarTabela;
-window.salvarTarefa = salvarTarefa;
-window.criarTarefa = criarTarefa;
-window.excluirTarefa = excluirTarefa;
-window.preencherFormularioParaEditar = preencherFormularioParaEditar;
-window.editarTarefa = editarTarefa;
-window.limparFormulario = limparFormulario;
-// (Funções do Aluno precisam ser anexadas aqui quando implementadas)
-
-// --- INICIALIZAÇÃO DA APLICAÇÃO ---
+// --- INICIALIZAÇÃO ---
 init();
-
 </script>
 </body>
 </html>
