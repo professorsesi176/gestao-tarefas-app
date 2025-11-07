@@ -61,7 +61,7 @@
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
 
 <div id="app-container" class="w-full max-w-4xl bg-white shadow-xl rounded-2xl p-6 sm:p-10 transition-all duration-300">
-    <!-- FIX v1.8: Cabeçalho centralizado e botão posicionado -->
+    <!-- Cabeçalho centralizado e botão posicionado -->
     <header class="mb-8 border-b pb-4 relative">
         <h1 class="text-3xl font-extrabold text-red-700 text-center">
             Gestão de Tarefas
@@ -78,7 +78,7 @@
     </div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 2.2
+        Desenvolvido por Geovane Modena | Versão 2.3
     </footer>
 </div>
 
@@ -137,6 +137,7 @@ const renderIcons = () => {
 }
 
 const toggleLoading = (isLoading) => {
+    // FIX v2.3: Verifica se o elemento existe antes de tentar ocultar
     const indicator = document.getElementById('loading-indicator');
     if (indicator) {
         indicator.classList.toggle('hidden', !isLoading);
@@ -197,6 +198,8 @@ async function login(event) {
     event.preventDefault(); 
     const email = document.getElementById('email').value.trim();
     const ra = document.getElementById('ra').value.trim();
+    
+    // FIX v2.3: Busca o elemento de erro DEPOIS de renderizado
     const loginErro = document.getElementById('loginErro'); 
     
     const user = usuarios.find(u => u.Email.toLowerCase() === email.toLowerCase() && String(u.RA) === ra);
@@ -209,7 +212,8 @@ async function login(event) {
     usuarioLogado = user;
     loginErro.style.display = 'none';
     
-    contentArea.innerHTML = '<div class="text-center text-gray-500 mb-4">Carregando painel...</div>';
+    // FIX v2.3: Limpa a área de conteúdo antes de carregar o painel
+    contentArea.innerHTML = `<div class="text-center text-gray-500 mb-4">Carregando painel... <div id="loading-indicator"></div></div>`;
     
     logoutBtn.classList.remove('hidden');
     userInfoDisplay.innerHTML = `Logado como: <span class="font-semibold text-red-700">${user.NomeCompleto} (${user.Perfil})</span> | Turma: ${user.Turma || 'N/A'}`;
@@ -227,6 +231,7 @@ function logout() {
     usuarioLogado = null;
     logoutBtn.classList.add('hidden');
     userInfoDisplay.innerHTML = '';
+    // FIX v2.3: Chama renderLogin() para redesenhar a tela de login
     renderLogin(); 
 }
 
