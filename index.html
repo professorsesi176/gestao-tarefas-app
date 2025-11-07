@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Tarefas Escolar</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca de Ícones Lucide -->
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
     
     <!-- Base de dados de utilizadores -->
@@ -30,14 +29,12 @@
             height: 24px;
             display: inline-block;
         }
-        /* Estilo da Tabela */
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
         th { background-color: #CC0000; color: white; }
         tbody tr:nth-child(even) { background-color: #f9f9f9; }
         .hidden { display: none; }
         
-        /* Checkboxes */
         .checkbox-group {
             display: flex;
             flex-wrap: wrap;
@@ -57,7 +54,6 @@
             margin: 0 5px 0 0;
         }
         
-        /* Status badges */
         .status-entregue { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
         .status-pendente { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
         .status-atrasada { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
@@ -67,7 +63,6 @@
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
 
 <div id="app-container" class="w-full max-w-6xl bg-white shadow-xl rounded-2xl p-6 sm:p-10 transition-all duration-300">
-    <!-- Cabeçalho centralizado e botão posicionado -->
     <header class="mb-8 border-b pb-4 relative">
         <h1 class="text-3xl font-extrabold text-red-700 text-center">
             Gestão de Tarefas Escolar
@@ -76,22 +71,21 @@
         <button onclick="logout()" id="logoutBtn" class="btn-secondary hidden absolute top-0 right-0">Sair</button>
     </header>
 
-    <!-- Conteúdo da Aplicação -->
     <div id="content-area">
-        <!-- Tela de Login (Estado Inicial) -->
+        <!-- Conteúdo dinâmico -->
     </div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 3.1
+        Desenvolvido por Geovane Modena | Versão 3.2
     </footer>
 </div>
 
-<!-- Modal Customizado para Avisos -->
+<!-- Modal para mensagens -->
 <div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg p-6 max-w-sm w-full shadow-2xl">
         <h3 id="modal-title" class="text-xl font-bold mb-3 text-red-600"></h3>
         <p id="modal-message" class="text-gray-700 mb-4 whitespace-pre-wrap"></p>
-        <button id="modal-close-button" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">
+        <button onclick="closeModal()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">
             OK
         </button>
     </div>
@@ -116,7 +110,6 @@ const logoutBtn = document.getElementById('logoutBtn');
 const modalOverlay = document.getElementById('modal-overlay');
 const modalTitle = document.getElementById('modal-title');
 const modalMessage = document.getElementById('modal-message');
-const modalCloseButton = document.getElementById('modal-close-button');
 
 // --- FUNÇÕES UTILITÁRIAS ---
 const showModal = (title, message) => {
@@ -128,58 +121,47 @@ const showModal = (title, message) => {
 
 const closeModal = () => {
     modalOverlay.classList.add('hidden');
-}
-window.closeModal = closeModal;
-modalCloseButton.onclick = closeModal;
+};
 
 const renderIcons = () => {
     if (window.lucide) {
         window.lucide.createIcons();
     }
-}
-
-const toggleLoading = (isLoading) => {
-    const indicator = document.getElementById('loading-indicator');
-    if (indicator) {
-        indicator.classList.toggle('hidden', !isLoading);
-    }
-}
+};
 
 const formatarData = (dataISO) => {
-    return new Date(dataISO).toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
+    if (!dataISO) return 'N/A';
+    return new Date(dataISO).toLocaleDateString('pt-BR');
 };
 
-const formatarDataHora = (dataISO) => {
-    return new Date(dataISO).toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-};
-
-// --- API REQUEST SEGURO ---
+// --- API REQUEST MELHORADO ---
 async function apiRequest(url, options = {}) {
     const config = {
-        ...options,
+        method: options.method || 'GET',
         headers: {
             'Content-Type': 'application/json',
             ...options.headers
-        },
-        body: options.body ? JSON.stringify({
-            ...JSON.parse(options.body),
-            token: API_CONFIG.token
-        }) : undefined
+        }
     };
 
+    // Para requisições POST, adiciona o token
+    if (config.method === 'POST' && options.body) {
+        config.body = JSON.stringify({
+            ...options.body,
+            token: API_CONFIG.token
+        });
+    }
+
     try {
+        console.log('Fazendo requisição para:', url, config);
         const response = await fetch(url, config);
+        
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('Resposta recebida:', data);
         
         if (data.status === 'error') {
             throw new Error(data.message);
@@ -188,7 +170,8 @@ async function apiRequest(url, options = {}) {
         return data;
     } catch (error) {
         console.error('Erro na requisição:', error);
-        showModal('Erro', error.message || 'Falha na comunicação com o servidor');
+        showModal('Erro de Conexão', 
+            `Não foi possível conectar ao servidor.\n\nDetalhes: ${error.message}\n\nVerifique:\n1. Se o Apps Script está publicado\n2. Se a URL está correta\n3. Sua conexão com internet`);
         throw error;
     }
 }
@@ -230,7 +213,7 @@ const renderLogin = () => {
         loginButton.disabled = false;
     } else {
         loadingMessage.textContent = "Erro: Ficheiro 'users.js' não encontrado ou vazio.";
-        showModal('Erro Crítico de Carga', 'Não foi possível ler o ficheiro local de utilizadores (users.js).');
+        showModal('Erro Crítico', 'Não foi possível ler o ficheiro local de utilizadores (users.js).');
     }
 
     document.getElementById('login-form').addEventListener('submit', login);
@@ -253,7 +236,7 @@ async function login(event) {
     usuarioLogado = user;
     loginErro.style.display = 'none';
     
-    contentArea.innerHTML = `<div class="text-center text-gray-500 mb-4">Carregando painel... <div id="loading-indicator"></div></div>`;
+    contentArea.innerHTML = `<div class="text-center text-gray-500 py-8">Carregando painel...</div>`;
     
     logoutBtn.classList.remove('hidden');
     userInfoDisplay.innerHTML = `Logado como: <span class="font-semibold text-red-700">${user.NomeCompleto} (${user.Perfil})</span> | Turma: ${user.Turma || 'N/A'}`;
@@ -280,453 +263,307 @@ async function mostrarPainelProfessor() {
         <div id="painelProfessor" class="space-y-6">
             <!-- Gestão de Tarefas -->
             <div class="card p-6 border-t-4 border-red-600">
-                <h3 class="text-2xl font-bold mb-4 text-red-700">Gerenciar Tarefa</h3>
+                <h3 class="text-2xl font-bold mb-4 text-red-700">Criar Nova Tarefa</h3>
                 <input type="hidden" id="tarefaId" value="">
 
                 <div>
-                    <label for="turmasCheckboxes" class="block text-sm font-medium text-gray-700">Selecione as turmas:</label>
+                    <label class="block text-sm font-medium text-gray-700">Selecione as turmas:</label>
                     <div class="checkbox-group" id="turmasCheckboxes"></div>
                 </div>
                 
                 <div class="mt-4">
-                    <label for="tema" class="block text-sm font-medium text-gray-700">Tema</label>
-                    <input type="text" id="tema" placeholder="Tema da atividade" class="mt-1">
+                    <label for="tema" class="block text-sm font-medium text-gray-700">Tema da Tarefa *</label>
+                    <input type="text" id="tema" placeholder="Ex: Matemática - Frações" class="mt-1" required>
                 </div>
                 
                 <div class="mt-4">
-                    <label for="dataAula" class="block text-sm font-medium text-gray-700">Data da Aula (Prazo)</label>
-                    <input type="date" id="dataAula" class="mt-1">
+                    <label for="dataAula" class="block text-sm font-medium text-gray-700">Data da Aula *</label>
+                    <input type="date" id="dataAula" class="mt-1" required>
                 </div>
 
                 <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <textarea id="parte1" placeholder="Instrução Parte 1" rows="3"></textarea>
-                    <textarea id="parte2" placeholder="Instrução Parte 2" rows="3"></textarea>
-                    <textarea id="parte3" placeholder="Instrução Parte 3" rows="3"></textarea>
-                    <textarea id="parte4" placeholder="Instrução Parte 4" rows="3"></textarea>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Parte 1 (até 18h do dia)</label>
+                        <textarea id="parte1" placeholder="Instruções para a primeira parte..." rows="3" class="mt-1"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Parte 2 (3º-7º dia)</label>
+                        <textarea id="parte2" placeholder="Instruções para a segunda parte..." rows="3" class="mt-1"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Parte 3 (8º-14º dia)</label>
+                        <textarea id="parte3" placeholder="Instruções para a terceira parte..." rows="3" class="mt-1"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Parte 4 (15º-28º dia)</label>
+                        <textarea id="parte4" placeholder="Instruções para a quarta parte..." rows="3" class="mt-1"></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <p class="text-sm text-blue-700"><strong>Importante:</strong> Cada parte entregue vale 2.5 pontos (total 10 pontos)</p>
                 </div>
 
                 <div class="mt-6 flex space-x-4">
                     <button onclick="salvarTarefa()" id="btnSalvar" class="btn-primary flex-1">
                         <i data-lucide="check-circle" class="mr-2"></i> Salvar Tarefa
                     </button>
-                    <button onclick="limparFormulario()" id="btnLimpar" class="btn-secondary flex-1">
+                    <button onclick="limparFormulario()" class="btn-secondary flex-1">
                         <i data-lucide="x-circle" class="mr-2"></i> Limpar
                     </button>
                 </div>
             </div>
 
-            <!-- Avaliação de Entregas -->
-            <div class="card p-6">
-                <h3 class="text-2xl font-bold mb-4 text-red-700">Avaliar Entregas</h3>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Selecionar Tarefa:</label>
-                    <select id="selecionar-tarefa-avaliacao" onchange="carregarEntregasParaAvaliacao()" class="mt-1">
-                        <option value="">Carregando tarefas...</option>
-                    </select>
-                </div>
-                <div id="lista-entregas-avaliacao" class="space-y-4">
-                    <div class="text-center text-gray-500">Selecione uma tarefa para ver as entregas</div>
-                </div>
-            </div>
-
             <!-- Lista de Tarefas -->
             <div class="card p-6">
-                <h3 class="text-2xl font-bold mb-4 text-red-700">Lista de Tarefas</h3>
+                <h3 class="text-2xl font-bold mb-4 text-red-700">Tarefas Criadas</h3>
                 <div class="overflow-x-auto">
                     <table id="tabelaTarefas">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Turma</th>
                                 <th>Tema</th>
                                 <th>Data</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
-                        <tbody></tbody>
+                        <tbody id="tabelaTarefasBody">
+                            <tr><td colspan="4" class="text-center py-4 text-gray-500">Carregando tarefas...</td></tr>
+                        </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
-
-        <!-- Modal de Avaliação -->
-        <div id="modal-avaliacao" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <h3 class="text-xl font-bold mb-4">Avaliar Entrega</h3>
-                <form id="form-avaliacao" onsubmit="salvarAvaliacao(event)" class="space-y-4">
-                    <input type="hidden" id="avaliacao-id-entrega">
-                    <input type="hidden" id="avaliacao-ra-aluno">
-                    <input type="hidden" id="avaliacao-id-tarefa">
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Aluno:</label>
-                        <p id="avaliacao-nome-aluno" class="font-semibold"></p>
-                    </div>
-                    
-                    <div id="links-entregues" class="space-y-2 p-4 bg-gray-50 rounded-lg"></div>
-                    
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div>
-                            <label for="avaliacao-parte1" class="block text-sm font-medium text-gray-700">Parte 1 (0-1)</label>
-                            <input type="number" id="avaliacao-parte1" min="0" max="1" step="0.1" class="mt-1" value="0" onchange="calcularNotaTotal()">
-                        </div>
-                        <div>
-                            <label for="avaliacao-parte2" class="block text-sm font-medium text-gray-700">Parte 2 (0-1)</label>
-                            <input type="number" id="avaliacao-parte2" min="0" max="1" step="0.1" class="mt-1" value="0" onchange="calcularNotaTotal()">
-                        </div>
-                        <div>
-                            <label for="avaliacao-parte3" class="block text-sm font-medium text-gray-700">Parte 3 (0-1)</label>
-                            <input type="number" id="avaliacao-parte3" min="0" max="1" step="0.1" class="mt-1" value="0" onchange="calcularNotaTotal()">
-                        </div>
-                        <div>
-                            <label for="avaliacao-parte4" class="block text-sm font-medium text-gray-700">Parte 4 (0-1)</label>
-                            <input type="number" id="avaliacao-parte4" min="0" max="1" step="0.1" class="mt-1" value="0" onchange="calcularNotaTotal()">
-                        </div>
-                    </div>
-                    
-                    <div class="bg-blue-50 p-3 rounded border border-blue-200">
-                        <p class="text-sm text-blue-700"><strong>Nota Total Calculada:</strong> <span id="nota-total-calculada">0.0</span> pontos</p>
-                        <p class="text-xs text-blue-600">Cada parte entregue vale 2.5 pontos (1 × 2.5)</p>
-                    </div>
-                    
-                    <div class="flex space-x-4">
-                        <button type="submit" class="btn-primary flex-1">Salvar Avaliação</button>
-                        <button type="button" onclick="fecharModalAvaliacao()" class="btn-secondary flex-1">Cancelar</button>
-                    </div>
-                </form>
             </div>
         </div>
     `;
 
     // Popula checkboxes de turma
     const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
-    const checkboxes = turmas.map(t => `<label><input type='checkbox' value='${t}' class="w-auto m-2"> ${t}</label>`).join("");
+    const checkboxes = turmas.map(t => `
+        <label class="flex items-center">
+            <input type="checkbox" value="${t}" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+            <span class="ml-2 text-gray-700">${t}</span>
+        </label>
+    `).join("");
     document.getElementById('turmasCheckboxes').innerHTML = checkboxes;
 
-    await carregarTarefasParaAvaliacao();
-    await atualizarListaTarefas();
+    await carregarTarefasProfessor();
     renderIcons();
 }
 
-// --- PAINEL DO ALUNO ---
-async function mostrarPainelAluno() {
-    contentArea.innerHTML = `
-        <div id="painelAluno" class="space-y-6">
-            <!-- Cabeçalho com Notificações -->
-            <div class="card p-6 flex justify-between items-center">
-                <h3 class="text-2xl font-bold text-red-700">Minhas Tarefas - Turma ${usuarioLogado.Turma}</h3>
-                <button onclick="mostrarNotificacoes()" class="relative btn-secondary">
-                    <i data-lucide="bell" class="mr-2"></i> Notificações
-                    <span id="contador-notificacoes" class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center hidden">0</span>
-                </button>
-            </div>
-
-            <!-- Lista de Tarefas Pendentes -->
-            <div class="card p-6">
-                <h4 class="text-xl font-semibold mb-4 text-gray-800">Tarefas Disponíveis</h4>
-                <div id="lista-tarefas-aluno" class="space-y-4">
-                    <div class="text-center text-gray-500">Carregando tarefas...</div>
-                </div>
-            </div>
-
-            <!-- Histórico de Entregas -->
-            <div class="card p-6">
-                <h4 class="text-xl font-semibold mb-4 text-gray-800">Minhas Entregas</h4>
-                <div id="historico-entregas">
-                    <div class="text-center text-gray-500">Carregando histórico...</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal de Entrega -->
-        <div id="modal-entrega" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <h3 class="text-xl font-bold mb-4">Entregar Tarefa: <span id="titulo-tarefa-entrega"></span></h3>
-                <div class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p class="text-sm text-yellow-700"><strong>Importante:</strong> Cada link entregue vale 2.5 pontos</p>
-                    <p class="text-xs text-yellow-600 mt-1">Parte 1: até 18h do dia da aula | Parte 2: 3º-7º dia | Parte 3: 8º-14º dia | Parte 4: 15º-28º dia</p>
-                </div>
-                <form id="form-entrega" class="space-y-4">
-                    <input type="hidden" id="tarefa-entrega-id">
-                    <div id="campos-links"></div>
-                    <div class="flex space-x-4">
-                        <button type="submit" class="btn-primary flex-1">Enviar Entrega</button>
-                        <button type="button" onclick="fecharModalEntrega()" class="btn-secondary flex-1">Cancelar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Modal de Notificações -->
-        <div id="modal-notificacoes" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold">Notificações</h3>
-                    <button onclick="fecharModalNotificacoes()" class="text-gray-500 hover:text-gray-700">
-                        <i data-lucide="x"></i>
-                    </button>
-                </div>
-                <div id="lista-notificacoes" class="space-y-3"></div>
-            </div>
-        </div>
-    `;
-
-    await carregarTarefasAluno();
-    await carregarHistoricoEntregas();
-    await carregarNotificacoes();
-    renderIcons();
-}
-
-// --- FUNÇÕES DE TAREFAS (PROFESSOR) ---
-async function atualizarListaTarefas() {
+// --- FUNÇÕES DO PROFESSOR ---
+async function carregarTarefasProfessor() {
     try {
-        const res = await fetch(`${API_URL}?func=getTarefas`);
-        const data = await res.json();
-        
-        if (data.status === 'success') {
-            tarefas = data.data;
-            renderizarTabela();
-        }
+        const data = await apiRequest(`${API_URL}?func=getTarefas`);
+        tarefas = data.data || [];
+        renderizarTabelaTarefas();
     } catch (error) {
-        console.error("Erro ao carregar tarefas:", error);
-        showModal('Erro', 'Não foi possível carregar a lista de tarefas.');
+        document.getElementById('tabelaTarefasBody').innerHTML = 
+            `<tr><td colspan="4" class="text-center py-4 text-red-500">Erro ao carregar tarefas</td></tr>`;
     }
 }
 
-function renderizarTabela() {
-    const tbody = document.querySelector("#tabelaTarefas tbody");
-    tbody.innerHTML = "";
+function renderizarTabelaTarefas() {
+    const tbody = document.getElementById('tabelaTarefasBody');
     
-    tarefas.sort((a, b) => new Date(b.DataAula) - new Date(a.DataAula));
+    if (tarefas.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">Nenhuma tarefa criada</td></tr>`;
+        return;
+    }
 
-    tarefas.forEach(t => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${t.ID.substring(0, 8)}...</td>
-            <td>${t.Turma}</td>
-            <td>${t.Tema}</td>
-            <td>${formatarData(t.DataAula)}</td>
-            <td>
-                <button onclick="preencherFormularioParaEditar('${t.ID}')" class="text-blue-600 hover:text-blue-800" title="Editar">
-                    <i data-lucide="edit" class="w-5 h-5"></i>
+    tbody.innerHTML = tarefas.map(tarefa => `
+        <tr>
+            <td class="py-3">${tarefa.Turma}</td>
+            <td class="py-3">
+                <div class="font-semibold">${tarefa.Tema}</div>
+                ${tarefa.Parte1 ? `<div class="text-xs text-gray-600 mt-1">Parte 1: ${tarefa.Parte1.substring(0, 50)}...</div>` : ''}
+            </td>
+            <td class="py-3">${formatarData(tarefa.DataAula)}</td>
+            <td class="py-3">
+                <button onclick="editarTarefa('${tarefa.ID}')" class="text-blue-600 hover:text-blue-800 mr-3" title="Editar">
+                    <i data-lucide="edit" class="w-4 h-4"></i>
                 </button>
-                <button onclick="excluirTarefa('${t.ID}')" class="text-red-600 hover:text-red-800 ml-2" title="Excluir">
-                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                <button onclick="excluirTarefa('${tarefa.ID}')" class="text-red-600 hover:text-red-800" title="Excluir">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
-            </td>`;
-        tbody.appendChild(tr);
-    });
+            </td>
+        </tr>
+    `).join('');
+    
     renderIcons();
 }
 
 async function salvarTarefa() {
-    const id = document.getElementById('tarefaId').value;
-    if (id) {
-        await editarTarefa(id);
-    } else {
-        await criarTarefa();
-    }
-}
-
-async function criarTarefa() {
-    const turmasSelecionadas = Array.from(document.querySelectorAll('#turmasCheckboxes input:checked')).map(c => c.value);
+    const turmasSelecionadas = Array.from(document.querySelectorAll('#turmasCheckboxes input:checked'))
+        .map(c => c.value);
+    
     if (turmasSelecionadas.length === 0) {
         showModal('Atenção', 'Selecione pelo menos uma turma.');
         return;
     }
 
-    const dados = {
-        Turmas: turmasSelecionadas,
-        Tema: document.getElementById('tema').value,
-        Parte1: document.getElementById('parte1').value,
-        Parte2: document.getElementById('parte2').value,
-        Parte3: document.getElementById('parte3').value,
-        Parte4: document.getElementById('parte4').value,
-        DataAula: document.getElementById('dataAula').value
-    };
+    const tema = document.getElementById('tema').value.trim();
+    const dataAula = document.getElementById('dataAula').value;
 
-    if (!dados.Tema || !dados.DataAula) {
-        showModal('Erro', 'Tema e Data da Aula são obrigatórios.');
+    if (!tema || !dataAula) {
+        showModal('Atenção', 'Preencha o tema e a data da aula.');
         return;
     }
+
+    const dados = {
+        Turmas: turmasSelecionadas,
+        Tema: tema,
+        Parte1: document.getElementById('parte1').value.trim(),
+        Parte2: document.getElementById('parte2').value.trim(),
+        Parte3: document.getElementById('parte3').value.trim(),
+        Parte4: document.getElementById('parte4').value.trim(),
+        DataAula: dataAula
+    };
 
     try {
         await apiRequest(API_URL, {
             method: 'POST',
-            body: JSON.stringify({
+            body: {
                 action: 'criarTarefa',
                 ...dados
-            })
+            }
         });
         
         showModal('Sucesso', 'Tarefa criada com sucesso!');
         limparFormulario();
-        await atualizarListaTarefas();
+        await carregarTarefasProfessor();
     } catch (error) {
-        console.error('Erro ao criar tarefa:', error);
+        // Erro já tratado na apiRequest
     }
 }
 
-async function excluirTarefa(ID) {
-    if (!confirm("Deseja realmente excluir esta tarefa?")) return;
+async function excluirTarefa(idTarefa) {
+    if (!confirm("Tem certeza que deseja excluir esta tarefa?")) return;
     
     try {
         await apiRequest(API_URL, {
             method: 'POST',
-            body: JSON.stringify({ 
-                action: 'excluirTarefa', 
-                ID 
-            })
+            body: {
+                action: 'excluirTarefa',
+                ID: idTarefa
+            }
         });
         
-        showModal('Sucesso', 'Tarefa excluída.');
-        await atualizarListaTarefas();
+        showModal('Sucesso', 'Tarefa excluída com sucesso.');
+        await carregarTarefasProfessor();
     } catch (error) {
-        console.error('Erro ao excluir tarefa:', error);
-    }
-}
-
-function preencherFormularioParaEditar(ID) {
-    const t = tarefas.find(x => String(x.ID) === String(ID));
-    if (!t) return showModal("Erro", "Tarefa não encontrada");
-
-    document.getElementById('tarefaId').value = t.ID;
-    document.getElementById('tema').value = t.Tema;
-    document.getElementById('parte1').value = t.Parte1;
-    document.getElementById('parte2').value = t.Parte2;
-    document.getElementById('parte3').value = t.Parte3;
-    document.getElementById('parte4').value = t.Parte4;
-    document.getElementById('dataAula').value = t.DataAula;
-    
-    document.querySelectorAll('#turmasCheckboxes input:checked').forEach(c => c.checked = false);
-    const turmaCheckbox = document.querySelector(`#turmasCheckboxes input[value="${t.Turma}"]`);
-    if (turmaCheckbox) turmaCheckbox.checked = true;
-
-    window.scrollTo(0, 0);
-    const btnSalvar = document.getElementById('btnSalvar');
-    btnSalvar.innerHTML = '<i data-lucide="check-circle" class="mr-2"></i> Salvar Edição';
-    renderIcons();
-}
-
-async function editarTarefa(ID) {
-    const dados = {
-        ID: ID,
-        Tema: document.getElementById('tema').value,
-        Parte1: document.getElementById('parte1').value,
-        Parte2: document.getElementById('parte2').value,
-        Parte3: document.getElementById('parte3').value,
-        Parte4: document.getElementById('parte4').value,
-        DataAula: document.getElementById('dataAula').value
-    };
-
-    try {
-        await apiRequest(API_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: 'editarTarefa',
-                ...dados
-            })
-        });
-        
-        showModal("Sucesso", "Tarefa atualizada!");
-        limparFormulario();
-        await atualizarListaTarefas();
-    } catch (error) {
-        console.error('Erro ao editar tarefa:', error);
+        // Erro já tratado na apiRequest
     }
 }
 
 function limparFormulario() {
     document.getElementById('tarefaId').value = '';
     document.getElementById('tema').value = '';
+    document.getElementById('dataAula').value = '';
     document.getElementById('parte1').value = '';
     document.getElementById('parte2').value = '';
     document.getElementById('parte3').value = '';
     document.getElementById('parte4').value = '';
-    document.getElementById('dataAula').value = '';
-    document.querySelectorAll('#turmasCheckboxes input:checked').forEach(c => c.checked = false);
     
-    const btnSalvar = document.getElementById('btnSalvar');
-    btnSalvar.innerHTML = '<i data-lucide="check-circle" class="mr-2"></i> Salvar Tarefa';
-    renderIcons();
+    document.querySelectorAll('#turmasCheckboxes input:checked').forEach(c => c.checked = false);
 }
 
-// --- SISTEMA DE ENTREGAS (ALUNO) ---
+// --- PAINEL DO ALUNO (SIMPLIFICADO) ---
+async function mostrarPainelAluno() {
+    contentArea.innerHTML = `
+        <div id="painelAluno" class="space-y-6">
+            <div class="card p-6">
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${usuarioLogado.Turma}</h3>
+                <div id="tarefas-aluno-container">
+                    <div class="text-center text-gray-500 py-8">Carregando tarefas...</div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    await carregarTarefasAluno();
+}
+
 async function carregarTarefasAluno() {
     try {
-        const res = await fetch(`${API_URL}?func=getTarefasPorTurma&turma=${usuarioLogado.Turma}`);
-        const data = await res.json();
+        const data = await apiRequest(`${API_URL}?func=getTarefasPorTurma&turma=${usuarioLogado.Turma}`);
+        const container = document.getElementById('tarefas-aluno-container');
         
-        if (data.status === 'success') {
-            const container = document.getElementById('lista-tarefas-aluno');
-            const entregas = await carregarEntregasAluno();
-            
-            if (data.data.length === 0) {
-                container.innerHTML = '<div class="text-center text-gray-500">Nenhuma tarefa disponível para sua turma.</div>';
-                return;
-            }
-
-            container.innerHTML = data.data.map(tarefa => {
-                const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
-                const prazo = new Date(tarefa.DataAula);
-                const hoje = new Date();
-                const atrasada = prazo < hoje;
-                
-                return `
-                    <div class="border rounded-lg p-4 ${atrasada && !entrega ? 'border-red-300 bg-red-50' : 'border-gray-200'}">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <h5 class="font-semibold text-lg">${tarefa.Tema}</h5>
-                                <p class="text-sm text-gray-600 mt-1">Data da Aula: ${formatarData(tarefa.DataAula)}</p>
-                                ${tarefa.Parte1 ? `<p class="text-sm mt-2"><strong>Parte 1:</strong> ${tarefa.Parte1}</p>` : ''}
-                                ${tarefa.Parte2 ? `<p class="text-sm"><strong>Parte 2:</strong> ${tarefa.Parte2}</p>` : ''}
-                                ${tarefa.Parte3 ? `<p class="text-sm"><strong>Parte 3:</strong> ${tarefa.Parte3}</p>` : ''}
-                                ${tarefa.Parte4 ? `<p class="text-sm"><strong>Parte 4:</strong> ${tarefa.Parte4}</p>` : ''}
-                            </div>
-                            <div class="text-right ml-4">
-                                ${entrega ? `
-                                    <span class="inline-block px-3 py-1 status-avaliada rounded-full text-sm">
-                                        <i data-lucide="check-circle" class="w-4 h-4 inline mr-1"></i>
-                                        ${entrega.Nota ? `Avaliada: ${entrega.Nota}` : 'Entregue'}
-                                    </span>
-                                ` : `
-                                    <button onclick="abrirModalEntrega('${tarefa.ID}', '${tarefa.Tema}', '${tarefa.DataAula}')" 
-                                            class="btn-primary ${atrasada ? 'bg-orange-600 hover:bg-orange-700' : ''}">
-                                        <i data-lucide="upload" class="mr-2"></i>
-                                        ${atrasada ? 'Entregar com Atraso' : 'Entregar Tarefa'}
-                                    </button>
-                                `}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            renderIcons();
+        if (!data.data || data.data.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-500 py-8">Nenhuma tarefa disponível para sua turma.</div>';
+            return;
         }
+
+        container.innerHTML = data.data.map(tarefa => `
+            <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-lg text-gray-800">${tarefa.Tema}</h4>
+                        <p class="text-sm text-gray-600 mt-1">Data da aula: ${formatarData(tarefa.DataAula)}</p>
+                        
+                        ${tarefa.Parte1 ? `
+                            <div class="mt-3 p-3 bg-gray-50 rounded border">
+                                <h5 class="font-medium text-gray-700">Parte 1 (até 18h do dia)</h5>
+                                <p class="text-sm text-gray-600 mt-1">${tarefa.Parte1}</p>
+                            </div>
+                        ` : ''}
+                        
+                        ${tarefa.Parte2 ? `
+                            <div class="mt-2 p-3 bg-gray-50 rounded border">
+                                <h5 class="font-medium text-gray-700">Parte 2 (3º-7º dia)</h5>
+                                <p class="text-sm text-gray-600 mt-1">${tarefa.Parte2}</p>
+                            </div>
+                        ` : ''}
+                        
+                        ${tarefa.Parte3 ? `
+                            <div class="mt-2 p-3 bg-gray-50 rounded border">
+                                <h5 class="font-medium text-gray-700">Parte 3 (8º-14º dia)</h5>
+                                <p class="text-sm text-gray-600 mt-1">${tarefa.Parte3}</p>
+                            </div>
+                        ` : ''}
+                        
+                        ${tarefa.Parte4 ? `
+                            <div class="mt-2 p-3 bg-gray-50 rounded border">
+                                <h5 class="font-medium text-gray-700">Parte 4 (15º-28º dia)</h5>
+                                <p class="text-sm text-gray-600 mt-1">${tarefa.Parte4}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="ml-4">
+                        <button onclick="entregarTarefaAluno('${tarefa.ID}', '${tarefa.Tema}')" class="btn-primary whitespace-nowrap">
+                            <i data-lucide="upload" class="mr-2"></i>
+                            Entregar Tarefa
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        renderIcons();
     } catch (error) {
-        console.error('Erro ao carregar tarefas:', error);
-        document.getElementById('lista-tarefas-aluno').innerHTML = 
-            '<div class="text-center text-red-500">Erro ao carregar tarefas.</div>';
+        document.getElementById('tarefas-aluno-container').innerHTML = 
+            '<div class="text-center text-red-500 py-8">Erro ao carregar tarefas.</div>';
     }
 }
 
-// --- FUNÇÕES RESTANTES DO SISTEMA (entregas, avaliações, notificações) ---
-// [As funções restantes seriam implementadas aqui...]
+function entregarTarefaAluno(idTarefa, temaTarefa) {
+    showModal('Funcionalidade em Desenvolvimento', 
+        `Entrega para: ${temaTarefa}\n\nEsta funcionalidade será implementada em breve!`);
+}
 
 // --- INICIALIZAÇÃO ---
 init();
 
-// --- ANEXA FUNÇÕES AO ESCOPO GLOBAL ---
+// --- FUNÇÕES GLOBAIS ---
 window.login = login;
 window.logout = logout;
 window.mostrarPainelProfessor = mostrarPainelProfessor;
 window.salvarTarefa = salvarTarefa;
-window.criarTarefa = criarTarefa;
 window.excluirTarefa = excluirTarefa;
-window.preencherFormularioParaEditar = preencherFormularioParaEditar;
-window.editarTarefa = editarTarefa;
 window.limparFormulario = limparFormulario;
 window.mostrarPainelAluno = mostrarPainelAluno;
+window.entregarTarefaAluno = entregarTarefaAluno;
+window.closeModal = closeModal;
 </script>
 </body>
 </html>
