@@ -76,7 +76,7 @@
     </div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 3.2
+        Desenvolvido por Geovane Modena | Versão 3.3
     </footer>
 </div>
 
@@ -140,7 +140,6 @@ async function apiRequest(url, options = {}) {
         method: options.method || 'GET',
         headers: {
             'Content-Type': 'application/json',
-            ...options.headers
         }
     };
 
@@ -171,7 +170,7 @@ async function apiRequest(url, options = {}) {
     } catch (error) {
         console.error('Erro na requisição:', error);
         showModal('Erro de Conexão', 
-            `Não foi possível conectar ao servidor.\n\nDetalhes: ${error.message}\n\nVerifique:\n1. Se o Apps Script está publicado\n2. Se a URL está correta\n3. Sua conexão com internet`);
+            `Não foi possível conectar ao servidor.\n\nDetalhes: ${error.message}\n\nVerifique:\n• Se o Apps Script está publicado\n• Se a URL está correta\n• Sua conexão com internet`);
         throw error;
     }
 }
@@ -467,7 +466,7 @@ function limparFormulario() {
     document.querySelectorAll('#turmasCheckboxes input:checked').forEach(c => c.checked = false);
 }
 
-// --- PAINEL DO ALUNO (SIMPLIFICADO) ---
+// --- PAINEL DO ALUNO ---
 async function mostrarPainelAluno() {
     contentArea.innerHTML = `
         <div id="painelAluno" class="space-y-6">
