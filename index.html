@@ -7,9 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
     
-    <!-- Base de dados de utilizadores -->
-    <script src="users.js"></script> 
-    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
@@ -50,7 +47,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 4.2
+        Desenvolvido por Geovane Modena | Versão 4.3
     </footer>
 </div>
 
@@ -66,13 +63,12 @@
 <script>
 // --- CONFIGURAÇÃO ---
 const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
-const API_CONFIG = { token: 'SESI_EDUCATION_2024' };
+const SECURITY_TOKEN = 'SESI_EDUCATION_2024';
 
 // --- ESTADO DA APLICAÇÃO ---
-let usuarios = window.listaDeUsuarios || []; 
+let usuarios = [];
 let usuarioLogado = null;
 let tarefas = [];
-let jsonpCallbackId = 0;
 
 // --- ELEMENTOS DOM ---
 const contentArea = document.getElementById('content-area');
@@ -99,131 +95,113 @@ const formatarData = (dataISO) => {
     return new Date(dataISO).toLocaleDateString('pt-BR');
 };
 
-// --- API REQUEST COM JSONP (SOLUÇÃO DEFINITIVA) ---
-function apiRequestJSONP(url, callback) {
-    const callbackName = 'jsonp_callback_' + jsonpCallbackId++;
-    
-    window[callbackName] = function(data) {
-        delete window[callbackName];
-        document.body.removeChild(script);
-        callback(null, data);
-    };
-    
-    const script = document.createElement('script');
-    script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
-    script.onerror = function() {
-        delete window[callbackName];
-        document.body.removeChild(script);
-        callback(new Error('Falha ao carregar o script'));
-    };
-    
-    document.body.appendChild(script);
+// --- API REQUEST MELHORADA ---
+async function apiRequest(func, params = {}, method = 'GET') {
+    return new Promise((resolve, reject) => {
+        // Adiciona parâmetros fixos
+        params.func = func;
+        params.token = SECURITY_TOKEN;
+        params.callback = 'callback_' + Date.now();
+        
+        // Constrói a URL
+        const urlParams = new URLSearchParams(params);
+        const url = `${API_URL}?${urlParams}`;
+        
+        console.log(`Fazendo requisição ${method} para:`, url);
+        
+        // Cria a função de callback global temporária
+        window[params.callback] = (response) => {
+            // Limpa a função temporária
+            delete window[params.callback];
+            
+            if (response && response.success) {
+                resolve(response);
+            } else {
+                reject(new Error(response ? response.error : 'Resposta inválida do servidor'));
+            }
+        };
+        
+        // Cria e adiciona o script
+        const script = document.createElement('script');
+        script.src = url;
+        script.onerror = () => {
+            delete window[params.callback];
+            reject(new Error('Falha ao conectar com o servidor'));
+        };
+        
+        document.head.appendChild(script);
+    });
 }
 
 // Função para requisições GET
 async function apiGet(func, params = {}) {
-    return new Promise((resolve, reject) => {
-        let url = `${API_URL}?func=${func}`;
-        
-        // Adiciona parâmetros extras
-        for (const key in params) {
-            if (params[key]) {
-                url += `&${key}=${encodeURIComponent(params[key])}`;
-            }
-        }
-        
-        console.log('Fazendo requisição JSONP para:', url);
-        
-        apiRequestJSONP(url, (error, data) => {
-            if (error) {
-                reject(error);
-            } else if (data && data.status === 'error') {
-                reject(new Error(data.message));
-            } else {
-                resolve(data);
-            }
-        });
-    });
+    return await apiRequest(func, params, 'GET');
 }
 
-// Função para requisições POST (usando Google Forms como proxy)
-async function apiPost(action, dados) {
-    return new Promise((resolve, reject) => {
-        // Cria um formulário invisível para enviar os dados
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = API_URL;
-        form.style.display = 'none';
-        
-        // Adiciona os dados como campos hidden
-        const addField = (name, value) => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = name;
-            input.value = typeof value === 'object' ? JSON.stringify(value) : value;
-            form.appendChild(input);
-        };
-        
-        addField('action', action);
-        addField('token', API_CONFIG.token);
-        
-        // Adiciona outros dados
-        for (const key in dados) {
-            if (dados[key] !== undefined && dados[key] !== null) {
-                addField(key, dados[key]);
+// Função para requisições POST
+async function apiPost(func, data = {}) {
+    // Para POST, usamos uma abordagem diferente
+    const formData = new FormData();
+    formData.append('action', func);
+    formData.append('token', SECURITY_TOKEN);
+    
+    // Adiciona outros dados
+    for (const key in data) {
+        if (data[key] !== undefined && data[key] !== null) {
+            if (typeof data[key] === 'object') {
+                formData.append(key, JSON.stringify(data[key]));
+            } else {
+                formData.append(key, data[key]);
             }
         }
+    }
+    
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            body: formData
+        });
         
-        document.body.appendChild(form);
+        const result = await response.json();
         
-        // Cria um iframe para receber a resposta
-        const iframe = document.createElement('iframe');
-        iframe.name = 'post_target_' + Date.now();
-        iframe.style.display = 'none';
-        
-        iframe.onload = function() {
-            try {
-                // Tenta ler a resposta do iframe
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                const responseText = iframeDoc.body.innerText;
-                
-                if (responseText) {
-                    const data = JSON.parse(responseText);
-                    if (data.status === 'success') {
-                        resolve(data);
-                    } else {
-                        reject(new Error(data.message || 'Erro desconhecido'));
-                    }
-                } else {
-                    // Assume sucesso se não há resposta (comum em Google Apps Script)
-                    resolve({ status: 'success', message: 'Ação realizada com sucesso' });
-                }
-            } catch (error) {
-                // Se não conseguiu ler resposta, assume sucesso
-                resolve({ status: 'success', message: 'Ação realizada com sucesso' });
-            } finally {
-                // Limpa
-                setTimeout(() => {
-                    document.body.removeChild(form);
-                    document.body.removeChild(iframe);
-                }, 1000);
-            }
-        };
-        
-        iframe.onerror = function() {
-            document.body.removeChild(form);
-            document.body.removeChild(iframe);
-            reject(new Error('Erro ao enviar formulário'));
-        };
-        
-        document.body.appendChild(iframe);
-        form.target = iframe.name;
-        form.submit();
-    });
+        if (result.success) {
+            return result;
+        } else {
+            throw new Error(result.error || 'Erro desconhecido');
+        }
+    } catch (error) {
+        throw new Error('Erro de conexão: ' + error.message);
+    }
 }
 
 // --- INICIALIZAÇÃO ---
 async function init() {
+    // Carrega usuários do backend
+    try {
+        const response = await apiGet('getUsers');
+        usuarios = response.data || [];
+        console.log('Usuários carregados:', usuarios.length);
+    } catch (error) {
+        console.error('Erro ao carregar usuários:', error);
+        // Usuários fallback
+        usuarios = [
+            { 
+                NomeCompleto: "Professor SESI", 
+                Email: "professorsesi176@gmail.com", 
+                RA: "9999", 
+                Turma: "", 
+                Perfil: "Professor" 
+            },
+            { 
+                NomeCompleto: "Aluno Teste", 
+                Email: "aluno@escola.com", 
+                RA: "1234", 
+                Turma: "1A", 
+                Perfil: "Aluno" 
+            }
+        ];
+    }
+    
     renderLogin();
 }
 
@@ -233,7 +211,7 @@ const renderLogin = () => {
         <div id="login" class="max-w-md mx-auto p-6">
             <h2 class="text-2xl font-bold text-center text-red-700 mb-6">Login</h2>
             <div id="loading-message" class="text-center text-gray-500 mb-4">
-                ${usuarios.length > 0 ? "Pronto para o login." : "Erro: users.js não carregado"}
+                ${usuarios.length > 0 ? "Pronto para o login." : "Carregando usuários..."}
             </div>
             <div id="loginErro" class="text-red-500 mb-4 hidden text-center font-semibold">Usuário ou RA incorretos!</div>
 
@@ -250,6 +228,12 @@ const renderLogin = () => {
                     <i data-lucide="log-in" class="mr-2"></i> Entrar
                 </button>
             </form>
+            
+            <div class="mt-6 text-center">
+                <button onclick="testarConexao()" class="text-blue-600 hover:text-blue-800 text-sm">
+                    Testar Conexão com Servidor
+                </button>
+            </div>
         </div>
     `;
 
@@ -330,12 +314,19 @@ async function mostrarPainelProfessor() {
             <div class="card p-6">
                 <h3 class="text-2xl font-bold mb-4 text-red-700">Tarefas Criadas</h3>
                 <div class="overflow-x-auto">
-                    <table>
+                    <table class="min-w-full">
                         <thead>
-                            <tr><th>Turma</th><th>Tema</th><th>Data</th><th>Ações</th></tr>
+                            <tr>
+                                <th class="px-4 py-2">Turma</th>
+                                <th class="px-4 py-2">Tema</th>
+                                <th class="px-4 py-2">Data</th>
+                                <th class="px-4 py-2">Ações</th>
+                            </tr>
                         </thead>
                         <tbody id="tabelaTarefasBody">
-                            <tr><td colspan="4" class="text-center py-4 text-gray-500">Carregando tarefas...</td></tr>
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-gray-500">Carregando tarefas...</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -359,8 +350,8 @@ async function mostrarPainelProfessor() {
 // --- FUNÇÕES DO PROFESSOR ---
 async function carregarTarefasProfessor() {
     try {
-        const data = await apiGet('getTarefas');
-        tarefas = data.data || [];
+        const response = await apiGet('getTarefas');
+        tarefas = response.data || [];
         renderizarTabelaTarefas();
     } catch (error) {
         console.error('Erro ao carregar tarefas:', error);
@@ -379,13 +370,13 @@ function renderizarTabelaTarefas() {
 
     tbody.innerHTML = tarefas.map(tarefa => `
         <tr>
-            <td class="py-3">${tarefa.Turma}</td>
-            <td class="py-3">
+            <td class="px-4 py-2">${tarefa.Turma}</td>
+            <td class="px-4 py-2">
                 <div class="font-semibold">${tarefa.Tema}</div>
                 ${tarefa.Parte1 ? `<div class="text-xs text-gray-600 mt-1">Parte 1: ${tarefa.Parte1.substring(0, 50)}...</div>` : ''}
             </td>
-            <td class="py-3">${formatarData(tarefa.DataAula)}</td>
-            <td class="py-3">
+            <td class="px-4 py-2">${formatarData(tarefa.DataAula)}</td>
+            <td class="px-4 py-2">
                 <button onclick="excluirTarefa('${tarefa.ID}')" class="text-red-600 hover:text-red-800" title="Excluir">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
@@ -420,7 +411,8 @@ async function salvarTarefa() {
         Parte2: document.getElementById('parte2').value.trim(),
         Parte3: document.getElementById('parte3').value.trim(),
         Parte4: document.getElementById('parte4').value.trim(),
-        DataAula: dataAula
+        DataAula: dataAula,
+        professor: usuarioLogado.NomeCompleto
     };
 
     try {
@@ -473,15 +465,15 @@ async function mostrarPainelAluno() {
 
 async function carregarTarefasAluno() {
     try {
-        const data = await apiGet('getTarefasPorTurma', { turma: usuarioLogado.Turma });
+        const response = await apiGet('getTarefasPorTurma', { turma: usuarioLogado.Turma });
         const container = document.getElementById('tarefas-aluno-container');
         
-        if (!data.data || data.data.length === 0) {
+        if (!response.data || response.data.length === 0) {
             container.innerHTML = '<div class="text-center text-gray-500 py-8">Nenhuma tarefa disponível para sua turma.</div>';
             return;
         }
 
-        container.innerHTML = data.data.map(tarefa => `
+        container.innerHTML = response.data.map(tarefa => `
             <div class="border border-gray-200 rounded-lg p-4 mb-4">
                 <div class="flex justify-between items-start">
                     <div class="flex-1">
@@ -504,6 +496,20 @@ async function carregarTarefasAluno() {
     }
 }
 
+// --- FUNÇÃO DE TESTE DE CONEXÃO ---
+async function testarConexao() {
+    try {
+        showModal('Teste de Conexão', 'Testando conexão com o servidor...');
+        
+        const response = await apiGet('getTarefas');
+        
+        showModal('Conexão OK', `Conexão estabelecida com sucesso!\n\nTarefas no sistema: ${response.data ? response.data.length : 0}\nUsuários carregados: ${usuarios.length}`);
+        
+    } catch (error) {
+        showModal('Erro de Conexão', `Falha na conexão:\n${error.message}`);
+    }
+}
+
 // --- INICIALIZAÇÃO ---
 init();
 
@@ -516,6 +522,7 @@ window.excluirTarefa = excluirTarefa;
 window.limparFormulario = limparFormulario;
 window.mostrarPainelAluno = mostrarPainelAluno;
 window.closeModal = closeModal;
+window.testarConexao = testarConexao;
 </script>
 </body>
 </html>
