@@ -238,7 +238,7 @@
         }
 
         .btn-turma {
-            background-color: #3b82f6;
+            background-color: #CC0000;
             color: white;
             padding: 10px 20px;
             border-radius: 8px;
@@ -249,7 +249,12 @@
         }
 
         .btn-turma:hover {
-            background-color: #2563eb;
+            background-color: #A00000;
+        }
+
+        .table-header-white th {
+            color: white !important;
+            background-color: #CC0000 !important;
         }
     </style>
 </head>
@@ -270,7 +275,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 5.9.3
+        Desenvolvido por Geovane Modena | Versão 5.9.4
     </footer>
 </div>
 
@@ -751,19 +756,19 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         let relatorioTurmaHTML = `
             <h4 class="text-lg font-semibold mb-3 text-red-700">Relatório da Turma ${turmaSelecionada}</h4>
             <div class="overflow-x-auto border rounded-lg">
-                <table class="min-w-full compact-table">
+                <table class="min-w-full compact-table table-header-white">
                     <thead>
-                        <tr class="bg-gray-50">
-                            <th class="px-4 py-3 text-left font-semibold text-gray-700 border-b">Aluno</th>
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold border-b">Aluno</th>
         `;
         
         // Cabeçalho com as tarefas
         tarefasTurma.forEach(tarefa => {
-            relatorioTurmaHTML += `<th class="px-4 py-3 text-center font-semibold text-gray-700 border-b">${tarefa.Tema}</th>`;
+            relatorioTurmaHTML += `<th class="px-4 py-3 text-center font-semibold border-b">${tarefa.Tema}</th>`;
         });
         
         relatorioTurmaHTML += `
-                            <th class="px-4 py-3 text-center font-semibold text-gray-700 border-b">Média</th>
+                            <th class="px-4 py-3 text-center font-semibold border-b">Média</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -864,7 +869,6 @@ async function mostrarRelatorioAluno() {
                         <thead>
                             <tr>
                                 <th>Tarefa</th>
-                                <th>Turma</th>
                                 <th>Links Entregues</th>
                                 <th class="data-column">Data de Submissão</th>
                                 <th class="data-column">Nota</th>
@@ -874,9 +878,17 @@ async function mostrarRelatorioAluno() {
             `;
             
             entregas.forEach(entrega => {
-                const tarefa = todasTarefas.find(t => t.ID === entrega.ID_Tarefa);
-                const temaTarefa = tarefa ? tarefa.Tema : 'Tarefa não encontrada';
-                const turmaTarefa = tarefa ? tarefa.Turma : '-';
+                // Buscar a tarefa de forma mais robusta
+                let tarefa = todasTarefas.find(t => t.ID === entrega.ID_Tarefa);
+                
+                // Se não encontrou, tentar buscar por tema ou outros critérios
+                if (!tarefa) {
+                    // Tentar buscar a tarefa diretamente pelo ID
+                    console.log('Tarefa não encontrada para entrega:', entrega.ID_Tarefa);
+                    tarefa = { Tema: `Tarefa (ID: ${entrega.ID_Tarefa})` };
+                }
+                
+                const temaTarefa = tarefa ? tarefa.Tema : `Tarefa (ID: ${entrega.ID_Tarefa})`;
                 
                 const linksEntregues = [];
                 if (entrega.Link1) linksEntregues.push('Parte 1');
@@ -884,23 +896,24 @@ async function mostrarRelatorioAluno() {
                 if (entrega.Link3) linksEntregues.push('Parte 3');
                 if (entrega.Link4) linksEntregues.push('Parte 4');
                 
-                if (entrega.Nota) {
-                    notaTotal += parseFloat(entrega.Nota);
+                // Corrigir cálculo da nota - garantir que está usando o valor correto
+                const notaEntrega = parseFloat(entrega.Nota) || 0;
+                if (notaEntrega > 0) {
+                    notaTotal += notaEntrega;
                     countEntregas++;
                 }
                 
                 relatorioHTML += `
                     <tr>
                         <td>${temaTarefa}</td>
-                        <td>${turmaTarefa}</td>
                         <td>${linksEntregues.join(', ') || 'Nenhum'}</td>
                         <td class="data-column">${formatarData(entrega.DataSubmissao)}</td>
-                        <td class="data-column font-semibold">${entrega.Nota || '0'}</td>
+                        <td class="data-column font-semibold">${notaEntrega.toFixed(1)}</td>
                     </tr>
                 `;
             });
             
-            const media = countEntregas > 0 ? (notaTotal / countEntregas).toFixed(1) : '0';
+            const media = countEntregas > 0 ? (notaTotal / countEntregas).toFixed(1) : '0.0';
             
             relatorioHTML += `
                         </tbody>
@@ -908,7 +921,7 @@ async function mostrarRelatorioAluno() {
                     <div class="mt-4 p-3 bg-gray-50 rounded border">
                         <div class="flex justify-between items-center">
                             <span class="font-semibold">Média Geral:</span>
-                            <span class="text-lg font-bold text-green-600">${media}</span>
+                            <span class="text-lg font-bold ${parseFloat(media) >= 7.5 ? 'text-green-600' : 'text-red-600'}">${media}</span>
                         </div>
                     </div>
                 </div>
