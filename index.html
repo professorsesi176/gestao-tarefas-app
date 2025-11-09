@@ -11,7 +11,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
         .card { background-color: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.2); }
-        .btn-primary { background-color: #CC0000; color: white; padding: 8px 16px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; }
+        .btn-primary { background-color: #CC0000; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; font-size: 16px; }
         .btn-primary:hover { background-color: #A00000; }
         .btn-secondary { background-color: #d1d5db; color: #1e1e1e; padding: 8px 16px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; }
         .btn-secondary:hover { background-color: #9ca3af; }
@@ -29,13 +29,12 @@
         .hidden { display: none; }
         
         .checkbox-group {
-            display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding: 10px;
+            display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; padding: 10px;
             background-color: #f9f9f9; border-radius: 8px;
         }
         .checkbox-group label { font-weight: normal; display: flex; align-items: center; }
         .checkbox-group input { width: auto; margin: 0 5px 0 0; }
         
-        /* Estilos para formulários em linha */
         .form-row {
             display: flex;
             align-items: center;
@@ -51,24 +50,22 @@
             margin-top: 0;
         }
         
-        /* Estilos para tabela compacta */
         .compact-table th, .compact-table td {
-            padding: 8px 4px;
+            padding: 12px 8px;
         }
         .turma-column {
-            width: 60px;
+            width: 80px;
             text-align: center;
         }
         .data-column {
-            width: 100px;
-            text-align: center;
-        }
-        .acoes-column {
             width: 120px;
             text-align: center;
         }
+        .acoes-column {
+            width: 200px;
+            text-align: center;
+        }
         
-        /* Estilos para contadores de tempo */
         .contador {
             display: inline-block;
             padding: 4px 8px;
@@ -92,7 +89,6 @@
             color: #991b1b;
         }
         
-        /* Estilos para links de entrega */
         .link-container {
             display: flex;
             gap: 8px;
@@ -105,11 +101,10 @@
             font-size: 0.875rem;
         }
         .btn-link {
-            padding: 6px 10px;
-            font-size: 0.75rem;
+            padding: 8px 12px;
+            font-size: 0.8rem;
         }
 
-        /* Botões desabilitados */
         .btn-link:disabled {
             background-color: #9ca3af !important;
             color: #6b7280 !important;
@@ -122,46 +117,70 @@
             transform: none !important;
         }
 
-        /* Ajustes para o formulário de login */
+        .link-salvo {
+            background-color: #f3f4f6 !important;
+            color: #6b7280 !important;
+            cursor: not-allowed !important;
+            border: 1px solid #d1d5db;
+        }
+
         #login-form input {
-            height: 45px; /* Reduzindo a altura */
-            width: 100%; /* Aumentando a largura */
-            padding: 10px 12px;
+            height: 50px;
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 16px;
         }
 
         #login-form button {
-            padding: 10px 20px; /* Botão menor */
-            font-size: 0.9rem;
+            padding: 14px 24px;
+            font-size: 18px;
+            width: 100%;
         }
 
-        /* Container do login mais compacto */
         #login {
-            max-width: 450px;
+            max-width: 500px;
             margin: 0 auto;
             padding: 2rem;
         }
 
-        /* Campo data menor */
-        #dataAula {
-            width: 180px; /* Largura reduzida */
-        }
-
-        /* Botões de ação mais visíveis */
         .acoes-column button {
-            margin: 0 3px;
-            padding: 6px;
-            border-radius: 4px;
+            margin: 0 4px;
+            padding: 8px 16px;
+            border-radius: 6px;
             transition: all 0.2s;
+            font-size: 0.875rem;
         }
 
-        .acoes-column button:hover {
-            transform: scale(1.1);
+        .btn-editar {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-editar:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-excluir {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-excluir:hover {
+            background-color: #dc2626;
         }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
 
-<div id="app-container" class="w-full max-w-5xl bg-white shadow-xl rounded-2xl p-6 sm:p-8 transition-all duration-300">
+<div id="app-container" class="w-full max-w-6xl bg-white shadow-xl rounded-2xl p-6 sm:p-8 transition-all duration-300">
     <header class="mb-8 border-b pb-4 relative">
         <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar</h1>
         <div id="user-info" class="text-center text-sm text-gray-600 mt-2"></div>
@@ -171,7 +190,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 5.1
+        Desenvolvido por Geovane Modena | Versão 5.3
     </footer>
 </div>
 
@@ -236,7 +255,6 @@ const showConfirmModal = (message, onConfirm) => {
     confirmModal.classList.remove('hidden');
     confirmModal.classList.add('flex');
     
-    // Configurar eventos dos botões
     confirmCancel.onclick = () => {
         confirmModal.classList.add('hidden');
         tarefaParaExcluir = null;
@@ -256,25 +274,22 @@ const formatarData = (dataISO) => {
     return new Date(dataISO).toLocaleDateString('pt-BR');
 };
 
-// Função para calcular contadores de tempo com minutos e segundos
 function calcularContadores(dataAula) {
     const agora = new Date();
     const dataAulaObj = new Date(dataAula);
     
-    // Calcula as datas limites para cada parte
     const parte1Limite = new Date(dataAulaObj);
-    parte1Limite.setHours(18, 0, 0, 0); // Até 18h do dia da aula
+    parte1Limite.setHours(18, 0, 0, 0);
     
     const parte2Limite = new Date(dataAulaObj);
-    parte2Limite.setDate(parte2Limite.getDate() + 7); // Até 7 dias após
+    parte2Limite.setDate(parte2Limite.getDate() + 7);
     
     const parte3Limite = new Date(dataAulaObj);
-    parte3Limite.setDate(parte3Limite.getDate() + 14); // Até 14 dias após
+    parte3Limite.setDate(parte3Limite.getDate() + 14);
     
     const parte4Limite = new Date(dataAulaObj);
-    parte4Limite.setDate(parte4Limite.getDate() + 28); // Até 28 dias após
+    parte4Limite.setDate(parte4Limite.getDate() + 28);
     
-    // Calcula o tempo restante para cada parte
     const calcularTempoRestante = (limite) => {
         const diff = limite - agora;
         if (diff <= 0) return { 
@@ -315,13 +330,10 @@ function calcularContadores(dataAula) {
     };
 }
 
-// Função para atualizar contadores em tempo real
 function iniciarAtualizacaoContadores() {
-    // Limpar intervalos anteriores
     contadoresAtivos.forEach(interval => clearInterval(interval));
     contadoresAtivos = [];
     
-    // Atualizar contadores a cada segundo
     const interval = setInterval(() => {
         if (usuarioLogado && usuarioLogado.Perfil === 'Aluno') {
             atualizarContadoresAluno();
@@ -335,41 +347,23 @@ function atualizarContadoresAluno() {
     const containers = document.querySelectorAll('#tarefas-aluno-container > div');
     containers.forEach(container => {
         const tema = container.querySelector('h4').textContent;
-        const dataAulaText = container.querySelector('p').textContent.replace('Data da aula: ', '');
-        
-        // Encontrar a tarefa correspondente
         const tarefa = tarefas.find(t => t.Tema === tema);
         if (tarefa) {
             const contadores = calcularContadores(tarefa.DataAula);
             
-            // Atualizar cada parte
             [1, 2, 3, 4].forEach(parte => {
                 const contadorElement = container.querySelector(`.parte-${parte} .contador`);
                 if (contadorElement) {
                     const contador = contadores[`parte${parte}`];
                     contadorElement.textContent = contador.texto;
                     contadorElement.className = `contador ${contador.classe}`;
-                    
-                    // Atualizar estado dos botões
-                    const salvarBtn = container.querySelector(`.parte-${parte} .btn-salvar`);
-                    const excluirBtn = container.querySelector(`.parte-${parte} .btn-excluir`);
-                    
-                    if (salvarBtn && excluirBtn) {
-                        const desabilitado = contador.expirado;
-                        salvarBtn.disabled = desabilitado;
-                        excluirBtn.disabled = desabilitado;
-                        
-                        // Desabilitar input também
-                        const input = container.querySelector(`.parte-${parte} .link-input`);
-                        if (input) input.disabled = desabilitado;
-                    }
                 }
             });
         }
     });
 }
 
-// --- API REQUEST COM JSONP (SOLUÇÃO SIMPLIFICADA) ---
+// --- API REQUEST COM JSONP ---
 function apiRequestJSONP(url, callback) {
     const callbackName = 'jsonp_callback_' + jsonpCallbackId++;
     
@@ -390,24 +384,19 @@ function apiRequestJSONP(url, callback) {
     document.body.appendChild(script);
 }
 
-// Função para requisições GET
 async function apiGet(func, params = {}) {
     return new Promise((resolve, reject) => {
         let url = `${API_URL}?token=${SECURITY_TOKEN}`;
         
-        // Adiciona função se fornecida
         if (func) {
             url += `&func=${func}`;
         }
         
-        // Adiciona parâmetros extras
         for (const key in params) {
             if (params[key] !== undefined && params[key] !== null) {
                 url += `&${key}=${encodeURIComponent(params[key])}`;
             }
         }
-        
-        console.log('Fazendo requisição JSONP para:', url);
         
         apiRequestJSONP(url, (error, data) => {
             if (error) {
@@ -421,15 +410,12 @@ async function apiGet(func, params = {}) {
     });
 }
 
-// Função para requisições POST (agora via GET com parâmetro action)
 async function apiPost(action, dados) {
     return new Promise((resolve, reject) => {
         let url = `${API_URL}?token=${SECURITY_TOKEN}&action=${action}`;
         
-        // Adiciona todos os dados como parâmetros
         for (const key in dados) {
             if (dados[key] !== undefined && dados[key] !== null) {
-                // Se for array, converte para JSON string
                 if (Array.isArray(dados[key])) {
                     url += `&${key}=${encodeURIComponent(JSON.stringify(dados[key]))}`;
                 } else {
@@ -437,8 +423,6 @@ async function apiPost(action, dados) {
                 }
             }
         }
-        
-        console.log('Fazendo requisição POST via GET para:', url);
         
         apiRequestJSONP(url, (error, data) => {
             if (error) {
@@ -454,14 +438,10 @@ async function apiPost(action, dados) {
 
 // --- INICIALIZAÇÃO ---
 async function init() {
-    // Carrega usuários do backend
     try {
         const response = await apiGet('getUsers');
         usuarios = response.data || [];
-        console.log('Usuários carregados:', usuarios.length);
     } catch (error) {
-        console.error('Erro ao carregar usuários:', error);
-        // Usuários fallback
         usuarios = [
             { 
                 NomeCompleto: "Geovane Módena", 
@@ -484,23 +464,22 @@ const renderLogin = () => {
             <div id="loginErro" class="text-red-500 mb-4 hidden text-center font-semibold">Usuário ou RA incorretos!</div>
 
             <form id="login-form" class="space-y-4">
-                <div class="form-row">
-                    <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
-                    <input type="email" id="email" name="email" required placeholder="seu.email@escola.com" class="mt-1 p-3">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
+                    <input type="email" id="email" name="email" required placeholder="seu.email@escola.com" class="w-full">
                 </div>
-                <div class="form-row">
-                    <label for="ra" class="block text-sm font-medium text-gray-700">RA</label>
-                    <input type="text" id="ra" name="ra" required placeholder="Apenas números" class="mt-1 p-3">
+                <div>
+                    <label for="ra" class="block text-sm font-medium text-gray-700 mb-2">RA</label>
+                    <input type="text" id="ra" name="ra" required placeholder="Apenas números" class="w-full">
                 </div>
-                <button type="submit" class="w-full flex justify-center items-center py-2 px-4 btn-primary">
-                    <i data-lucide="log-in" class="mr-2"></i> Entrar
+                <button type="submit" class="w-full btn-primary">
+                    Entrar
                 </button>
             </form>
         </div>
     `;
 
     document.getElementById('login-form').addEventListener('submit', login);
-    renderIcons();
 };
 
 async function login(event) {
@@ -510,7 +489,6 @@ async function login(event) {
     
     const loginErro = document.getElementById('loginErro'); 
     
-    // Comparar RAs como strings e fazer trim
     const user = usuarios.find(u => {
         const userEmail = u.Email.toLowerCase().trim();
         const userRA = String(u.RA).trim();
@@ -521,7 +499,6 @@ async function login(event) {
     });
     
     if (!user) {
-        console.log('Usuário não encontrado. Email:', email, 'RA:', ra);
         loginErro.style.display = 'block';
         return;
     }
@@ -533,12 +510,10 @@ async function login(event) {
     logoutBtn.classList.remove('hidden');
     userInfoDisplay.innerHTML = `Logado como: <span class="font-semibold text-red-700">${user.NomeCompleto} (${user.Perfil})</span> | Turma: ${user.Turma || 'N/A'}`;
 
-    // Carregar tarefas para uso geral
     try {
         const response = await apiGet('getTarefas');
         tarefas = response.data || [];
     } catch (error) {
-        console.error('Erro ao carregar tarefas:', error);
         tarefas = [];
     }
 
@@ -547,15 +522,12 @@ async function login(event) {
     } else {
         await mostrarPainelAluno(); 
     }
-    
-    renderIcons(); 
 }
 
 function logout() {
     usuarioLogado = null;
     logoutBtn.classList.add('hidden');
     userInfoDisplay.innerHTML = '';
-    // Parar todos os contadores
     contadoresAtivos.forEach(interval => clearInterval(interval));
     contadoresAtivos = [];
     renderLogin(); 
@@ -580,7 +552,7 @@ async function mostrarPainelProfessor() {
                 
                 <div class="form-row">
                     <label for="dataAula" class="block text-sm font-medium text-gray-700">Data da Aula</label>
-                    <input type="date" id="dataAula" class="mt-1" required style="width: 180px;">
+                    <input type="date" id="dataAula" class="mt-1" required>
                 </div>
                 
                 <div class="mt-4 space-y-4">
@@ -604,10 +576,10 @@ async function mostrarPainelProfessor() {
                 
                 <div class="mt-6 flex space-x-4">
                     <button onclick="salvarTarefa()" class="btn-primary flex-1">
-                        <i data-lucide="check-circle" class="mr-2"></i> Salvar Tarefa
+                        Salvar Tarefa
                     </button>
                     <button onclick="limparFormulario()" class="btn-secondary flex-1">
-                        <i data-lucide="x-circle" class="mr-2"></i> Limpar
+                        Limpar
                     </button>
                 </div>
             </div>
@@ -632,16 +604,9 @@ async function mostrarPainelProfessor() {
                     </table>
                 </div>
             </div>
-            
-            <div class="text-center">
-                <button onclick="testarConexao()" class="text-blue-600 hover:text-blue-800 text-sm">
-                    Testar Conexão com Servidor
-                </button>
-            </div>
         </div>
     `;
 
-    // Popula checkboxes de turma
     const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
     document.getElementById('turmasCheckboxes').innerHTML = turmas.map(t => `
         <label class="flex items-center">
@@ -651,7 +616,6 @@ async function mostrarPainelProfessor() {
     `).join("");
 
     await carregarTarefasProfessor();
-    renderIcons();
 }
 
 // --- FUNÇÕES DO PROFESSOR ---
@@ -661,7 +625,6 @@ async function carregarTarefasProfessor() {
         tarefas = response.data || [];
         renderizarTabelaTarefas();
     } catch (error) {
-        console.error('Erro ao carregar tarefas:', error);
         document.getElementById('tabelaTarefasBody').innerHTML = 
             `<tr><td colspan="4" class="text-center py-4 text-red-500">Erro ao carregar tarefas: ${error.message}</td></tr>`;
     }
@@ -676,7 +639,6 @@ function renderizarTabelaTarefas() {
     }
 
     tbody.innerHTML = tarefas.map(tarefa => {
-        // Garantir que todas as partes sejam strings
         const parte1 = tarefa.Parte1 || '';
         const parte2 = tarefa.Parte2 || '';
         const parte3 = tarefa.Parte3 || '';
@@ -695,19 +657,17 @@ function renderizarTabelaTarefas() {
             <td class="data-column">${formatarData(tarefa.DataAula)}</td>
             <td class="acoes-column">
                 <div class="flex justify-center space-x-2">
-                    <button onclick="editarTarefa('${tarefa.ID}')" class="text-blue-600 hover:text-blue-800" title="Editar">
-                        <i data-lucide="edit" class="w-4 h-4"></i>
+                    <button onclick="editarTarefa('${tarefa.ID}')" class="btn-editar">
+                        Editar
                     </button>
-                    <button onclick="solicitarExclusaoTarefa('${tarefa.ID}')" class="text-red-600 hover:text-red-800" title="Excluir">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    <button onclick="solicitarExclusaoTarefa('${tarefa.ID}')" class="btn-excluir">
+                        Excluir
                     </button>
                 </div>
             </td>
         </tr>
         `;
     }).join('');
-    
-    renderIcons();
 }
 
 function solicitarExclusaoTarefa(idTarefa) {
@@ -750,7 +710,6 @@ async function salvarTarefa() {
         return;
     }
 
-    // Verificar se todas as partes foram preenchidas
     const parte1 = document.getElementById('parte1').value.trim();
     const parte2 = document.getElementById('parte2').value.trim();
     const parte3 = document.getElementById('parte3').value.trim();
@@ -773,15 +732,11 @@ async function salvarTarefa() {
     };
 
     try {
-        console.log('Tentando salvar tarefa:', dados);
         const response = await apiPost('criarTarefa', dados);
-        console.log('Resposta do servidor:', response);
-        
         showModal('Sucesso', 'Tarefa criada com sucesso!');
         limparFormulario();
         await carregarTarefasProfessor();
     } catch (error) {
-        console.error('Erro detalhado:', error);
         showModal('Erro', `Erro ao criar tarefa: ${error.message}`);
     }
 }
@@ -833,7 +788,6 @@ async function carregarTarefasAluno() {
             return;
         }
 
-        // Buscar entregas existentes do aluno
         let entregas = [];
         try {
             const entregasResponse = await apiGet('getEntregasAluno', { ra: usuarioLogado.RA });
@@ -843,16 +797,12 @@ async function carregarTarefasAluno() {
         }
 
         container.innerHTML = response.data.map(tarefa => {
-            // Garantir que todas as partes sejam strings para alunos também
             const parte1 = tarefa.Parte1 || '';
             const parte2 = tarefa.Parte2 || '';
             const parte3 = tarefa.Parte3 || '';
             const parte4 = tarefa.Parte4 || '';
             
-            // Calcular contadores de tempo
             const contadores = calcularContadores(tarefa.DataAula);
-
-            // Encontrar entrega existente para esta tarefa
             const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
 
             return `
@@ -871,20 +821,17 @@ async function carregarTarefasAluno() {
             </div>
             `;
         }).join('');
-        
-        renderIcons();
     } catch (error) {
-        console.error('Erro ao carregar tarefas:', error);
         document.getElementById('tarefas-aluno-container').innerHTML = 
             `<div class="text-center text-red-500 py-8">Erro ao carregar tarefas: ${error.message}</div>`;
     }
 }
 
-// Função auxiliar para renderizar cada parte da tarefa
 function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     const desabilitado = contador.expirado;
     const linkSalvo = entrega ? entrega[`Link${numeroParte}`] : '';
     const inputId = `link-${idTarefa}-${numeroParte}`;
+    const temLinkSalvo = linkSalvo && linkSalvo.trim() !== '';
 
     return `
     <div class="mt-3 p-3 bg-gray-50 rounded border parte-${numeroParte}">
@@ -895,27 +842,26 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
         <p class="mt-1">${conteudo}</p>
         <div class="link-container">
             <input type="text" 
-                   class="link-input" 
+                   class="link-input ${temLinkSalvo ? 'link-salvo' : ''}" 
                    placeholder="Cole o link da atividade aqui" 
                    id="${inputId}"
                    value="${linkSalvo || ''}"
-                   ${desabilitado ? 'disabled' : ''}>
+                   ${temLinkSalvo || desabilitado ? 'disabled' : ''}>
             <button class="btn-primary btn-link btn-salvar" 
                     onclick="salvarLink('${idTarefa}', ${numeroParte})"
-                    ${desabilitado ? 'disabled' : ''}>
+                    ${temLinkSalvo || desabilitado ? 'disabled' : ''}>
                 Salvar
             </button>
             <button class="btn-secondary btn-link btn-excluir" 
                     onclick="excluirLink('${idTarefa}', ${numeroParte})"
-                    ${desabilitado || !linkSalvo ? 'disabled' : ''}>
+                    ${!temLinkSalvo || desabilitado ? 'disabled' : ''}>
                 Excluir
             </button>
         </div>
-        ${linkSalvo ? '<p class="text-green-600 text-sm mt-1">✓ Link já enviado</p>' : ''}
+        ${temLinkSalvo ? '<p class="text-green-600 text-sm mt-1">✓ Link salvo com sucesso</p>' : ''}
     </div>`;
 }
 
-// Funções para gerenciar links de entrega
 async function salvarLink(idTarefa, parte) {
     const input = document.getElementById(`link-${idTarefa}-${parte}`);
     const link = input.value.trim();
@@ -926,7 +872,7 @@ async function salvarLink(idTarefa, parte) {
     }
 
     try {
-        const response = await apiPost('entregarTarefa', {
+        await apiPost('entregarTarefa', {
             ID_Tarefa: idTarefa,
             RA_Aluno: usuarioLogado.RA,
             NomeAluno: usuarioLogado.NomeCompleto,
@@ -936,7 +882,7 @@ async function salvarLink(idTarefa, parte) {
         });
         
         showModal('Sucesso', `Link da parte ${parte} salvo com sucesso!`);
-        await carregarTarefasAluno(); // Recarrega as tarefas para atualizar o estado
+        await carregarTarefasAluno();
     } catch (error) {
         showModal('Erro', `Erro ao salvar link: ${error.message}`);
     }
@@ -944,39 +890,16 @@ async function salvarLink(idTarefa, parte) {
 
 async function excluirLink(idTarefa, parte) {
     try {
-        const response = await apiPost('excluirEntrega', {
+        await apiPost('excluirEntrega', {
             ID_Tarefa: idTarefa,
             RA_Aluno: usuarioLogado.RA,
             Parte: parte
         });
         
         showModal('Sucesso', `Link da parte ${parte} excluído com sucesso!`);
-        await carregarTarefasAluno(); // Recarrega as tarefas para atualizar o estado
+        await carregarTarefasAluno();
     } catch (error) {
         showModal('Erro', `Erro ao excluir link: ${error.message}`);
-    }
-}
-
-// --- FUNÇÃO DE TESTE DE CONEXÃO ---
-async function testarConexao() {
-    try {
-        showModal('Teste de Conexão', 'Testando conexão com o servidor...');
-        
-        const response = await apiGet('getTarefas');
-        const usersResponse = await apiGet('getUsers');
-        
-        const professor = usersResponse.data.find(user => user.RA === '9999');
-        
-        showModal('Conexão OK', 
-            `Conexão estabelecida com sucesso!\n\n` +
-            `Tarefas no sistema: ${response.data ? response.data.length : 0}\n` +
-            `Usuários carregados: ${usersResponse.data ? usersResponse.data.length : 0}\n` +
-            `Professor Geovane Modena: ${professor ? 'ENCONTRADO' : 'NÃO ENCONTRADO'}\n` +
-            `Email do professor: ${professor ? professor.Email : 'N/A'}`
-        );
-        
-    } catch (error) {
-        showModal('Erro de Conexão', `Falha na conexão:\n${error.message}`);
     }
 }
 
@@ -994,7 +917,6 @@ window.editarTarefa = editarTarefa;
 window.limparFormulario = limparFormulario;
 window.mostrarPainelAluno = mostrarPainelAluno;
 window.closeModal = closeModal;
-window.testarConexao = testarConexao;
 window.salvarLink = salvarLink;
 window.excluirLink = excluirLink;
 </script>
