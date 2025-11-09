@@ -255,7 +255,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 5.9.1
+        Desenvolvido por Geovane Modena | Versão 5.9.2
     </footer>
 </div>
 
@@ -681,13 +681,25 @@ async function mostrarRelatorioProfessor() {
         <div class="card p-6">
             <h3 class="text-2xl font-bold text-red-700 mb-4">Relatório por Turma</h3>
             <div class="mb-4">
-                <label for="selectTurmaRelatorio" class="block text-sm font-medium text-gray-700">Selecione a Turma:</label>
-                <select id="selectTurmaRelatorio" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
-                    ${turmas.map(turma => `<option value="${turma}">Turma ${turma}</option>`).join('')}
-                </select>
+                <p class="block text-sm font-medium text-gray-700 mb-2">Selecione a Turma:</p>
+                <div class="flex flex-wrap gap-2 mb-6">
+    `;
+    
+    // Botões para cada turma
+    turmas.forEach(turma => {
+        relatorioHTML += `
+            <button onclick="carregarRelatorioTurma('${turma}')" class="btn-primary">
+                Turma ${turma}
+            </button>
+        `;
+    });
+    
+    relatorioHTML += `
+                </div>
             </div>
-            <button onclick="carregarRelatorioTurma()" class="btn-primary">Carregar Relatório</button>
-            <div id="relatorio-turma-container" class="mt-4"></div>
+            <div id="relatorio-turma-container" class="mt-4">
+                <p class="text-gray-500 text-center py-8">Selecione uma turma para visualizar o relatório</p>
+            </div>
             <div class="mt-4 text-center">
                 <button onclick="mostrarPainelProfessor()" class="btn-secondary">Voltar ao Painel</button>
             </div>
@@ -697,9 +709,9 @@ async function mostrarRelatorioProfessor() {
     contentArea.innerHTML = relatorioHTML;
 }
 
-async function carregarRelatorioTurma() {
-    const turmaSelecionada = document.getElementById('selectTurmaRelatorio').value;
+async function carregarRelatorioTurma(turmaSelecionada) {
     const container = document.getElementById('relatorio-turma-container');
+    container.innerHTML = '<p class="text-gray-500 text-center py-4">Carregando relatório...</p>';
     
     try {
         // Buscar todos os alunos da turma
@@ -710,15 +722,32 @@ async function carregarRelatorioTurma() {
         const tarefasResponse = await apiGet('getTarefasPorTurma', { turma: turmaSelecionada });
         const tarefasTurma = tarefasResponse.data || [];
         
+        if (alunosTurma.length === 0) {
+            container.innerHTML = `<p class="text-gray-500 text-center py-8">Nenhum aluno encontrado na turma ${turmaSelecionada}.</p>`;
+            return;
+        }
+        
+        if (tarefasTurma.length === 0) {
+            container.innerHTML = `<p class="text-gray-500 text-center py-8">Nenhuma tarefa encontrada para a turma ${turmaSelecionada}.</p>`;
+            return;
+        }
+        
         let relatorioTurmaHTML = `
-            <h4 class="text-lg font-semibold mb-3">Relatório da Turma ${turmaSelecionada}</h4>
-            <div class="overflow-x-auto">
+            <h4 class="text-lg font-semibold mb-3 text-red-700">Relatório da Turma ${turmaSelecionada}</h4>
+            <div class="overflow-x-auto border rounded-lg">
                 <table class="min-w-full compact-table">
                     <thead>
-                        <tr>
-                            <th>Aluno</th>
-                            ${tarefasTurma.map(tarefa => `<th>${tarefa.Tema}</th>`).join('')}
-                            <th>Média</th>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700 border-b">Aluno</th>
+        `;
+        
+        // Cabeçalho com as tarefas
+        tarefasTurma.forEach(tarefa => {
+            relatorioTurmaHTML += `<th class="px-4 py-3 text-center font-semibold text-gray-700 border-b">${tarefa.Tema}</th>`;
+        });
+        
+        relatorioTurmaHTML += `
+                            <th class="px-4 py-3 text-center font-semibold text-gray-700 border-b">Média</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -733,8 +762,8 @@ async function carregarRelatorioTurma() {
             let countNotas = 0;
             
             relatorioTurmaHTML += `
-                <tr>
-                    <td class="font-medium">${aluno.NomeCompleto}</td>
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 font-medium text-gray-900 border-b">${aluno.NomeCompleto}</td>
             `;
             
             for (const tarefa of tarefasTurma) {
@@ -746,11 +775,28 @@ async function carregarRelatorioTurma() {
                     countNotas++;
                 }
                 
-                relatorioTurmaHTML += `<td class="text-center">${nota}</td>`;
+                // Diferentes cores para as notas
+                let classeNota = 'text-gray-600';
+                if (entrega && entrega.Nota) {
+                    const notaNum = parseFloat(entrega.Nota);
+                    if (notaNum >= 8) classeNota = 'text-green-600 font-semibold';
+                    else if (notaNum >= 6) classeNota = 'text-yellow-600';
+                    else classeNota = 'text-red-600';
+                }
+                
+                relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b ${classeNota}">${nota}</td>`;
             }
             
             const media = countNotas > 0 ? (totalNotas / countNotas).toFixed(1) : '-';
-            relatorioTurmaHTML += `<td class="text-center font-semibold">${media}</td>`;
+            let classeMedia = 'text-gray-600';
+            if (media !== '-') {
+                const mediaNum = parseFloat(media);
+                if (mediaNum >= 8) classeMedia = 'text-green-600 font-bold';
+                else if (mediaNum >= 6) classeMedia = 'text-yellow-600 font-semibold';
+                else classeMedia = 'text-red-600 font-semibold';
+            }
+            
+            relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b ${classeMedia}">${media}</td>`;
             relatorioTurmaHTML += `</tr>`;
         }
         
@@ -758,11 +804,14 @@ async function carregarRelatorioTurma() {
                     </tbody>
                 </table>
             </div>
+            <div class="mt-4 text-sm text-gray-600">
+                <p>Total de alunos: ${alunosTurma.length} | Total de tarefas: ${tarefasTurma.length}</p>
+            </div>
         `;
         
         container.innerHTML = relatorioTurmaHTML;
     } catch (error) {
-        container.innerHTML = `<p class="text-red-500">Erro ao carregar relatório: ${error.message}</p>`;
+        container.innerHTML = `<p class="text-red-500 text-center py-4">Erro ao carregar relatório: ${error.message}</p>`;
     }
 }
 
@@ -1169,9 +1218,11 @@ async function atualizarTarefa() {
 
         const response = await apiPost('editarTarefa', dados);
         showModal('Sucesso', 'Tarefa atualizada com sucesso!');
+        
+        // Limpar formulário e recarregar lista
         tarefaEditando = null;
         limparFormulario();
-        await carregarTarefasProfessor();
+        
     } catch (error) {
         showModal('Erro', `Erro ao atualizar tarefa: ${error.message}`);
     } finally {
@@ -1203,6 +1254,13 @@ function limparFormulario() {
     if (tarefaEditando) {
         tarefaEditando = null;
         document.getElementById('titulo-formulario').textContent = 'Criar Nova Tarefa';
+        document.getElementById('btnSalvarTarefa').textContent = 'Salvar Tarefa';
+        document.getElementById('btnSalvarTarefa').setAttribute('onclick', 'salvarTarefa()');
+        
+        // Recarregar a lista de tarefas para garantir que está atualizada
+        setTimeout(() => {
+            carregarTarefasProfessor();
+        }, 100);
     }
 }
 
