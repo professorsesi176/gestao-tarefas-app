@@ -47,7 +47,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 4.7
+        Desenvolvido por Geovane Modena | Versão 4.9
     </footer>
 </div>
 
@@ -386,12 +386,22 @@ function renderizarTabelaTarefas() {
         return;
     }
 
-    tbody.innerHTML = tarefas.map(tarefa => `
+    tbody.innerHTML = tarefas.map(tarefa => {
+        // CORREÇÃO: Garantir que todas as partes sejam strings
+        const parte1 = tarefa.Parte1 || '';
+        const parte2 = tarefa.Parte2 || '';
+        const parte3 = tarefa.Parte3 || '';
+        const parte4 = tarefa.Parte4 || '';
+        
+        // CORREÇÃO: Verificar se é string antes de usar substring
+        const textoParte1 = parte1 && typeof parte1 === 'string' ? parte1.substring(0, 50) : '';
+
+        return `
         <tr>
             <td class="px-4 py-2">${tarefa.Turma}</td>
             <td class="px-4 py-2">
                 <div class="font-semibold">${tarefa.Tema}</div>
-                ${tarefa.Parte1 ? `<div class="text-xs text-gray-600 mt-1">Parte 1: ${tarefa.Parte1.substring(0, 50)}...</div>` : ''}
+                ${parte1 ? `<div class="text-xs text-gray-600 mt-1">Parte 1: ${textoParte1}${parte1.length > 50 ? '...' : ''}</div>` : ''}
             </td>
             <td class="px-4 py-2">${formatarData(tarefa.DataAula)}</td>
             <td class="px-4 py-2">
@@ -400,7 +410,8 @@ function renderizarTabelaTarefas() {
                 </button>
             </td>
         </tr>
-    `).join('');
+        `;
+    }).join('');
     
     renderIcons();
 }
@@ -495,20 +506,28 @@ async function carregarTarefasAluno() {
             return;
         }
 
-        container.innerHTML = response.data.map(tarefa => `
+        container.innerHTML = response.data.map(tarefa => {
+            // CORREÇÃO: Garantir que todas as partes sejam strings para alunos também
+            const parte1 = tarefa.Parte1 || '';
+            const parte2 = tarefa.Parte2 || '';
+            const parte3 = tarefa.Parte3 || '';
+            const parte4 = tarefa.Parte4 || '';
+
+            return `
             <div class="border border-gray-200 rounded-lg p-4 mb-4">
                 <div class="flex justify-between items-start">
                     <div class="flex-1">
                         <h4 class="font-semibold text-lg text-gray-800">${tarefa.Tema}</h4>
                         <p class="text-sm text-gray-600 mt-1">Data da aula: ${formatarData(tarefa.DataAula)}</p>
-                        ${tarefa.Parte1 ? `<div class="mt-3 p-3 bg-gray-50 rounded border"><strong>Parte 1:</strong> ${tarefa.Parte1}</div>` : ''}
-                        ${tarefa.Parte2 ? `<div class="mt-2 p-3 bg-gray-50 rounded border"><strong>Parte 2:</strong> ${tarefa.Parte2}</div>` : ''}
-                        ${tarefa.Parte3 ? `<div class="mt-2 p-3 bg-gray-50 rounded border"><strong>Parte 3:</strong> ${tarefa.Parte3}</div>` : ''}
-                        ${tarefa.Parte4 ? `<div class="mt-2 p-3 bg-gray-50 rounded border"><strong>Parte 4:</strong> ${tarefa.Parte4}</div>` : ''}
+                        ${parte1 ? `<div class="mt-3 p-3 bg-gray-50 rounded border"><strong>Parte 1:</strong> ${parte1}</div>` : ''}
+                        ${parte2 ? `<div class="mt-2 p-3 bg-gray-50 rounded border"><strong>Parte 2:</strong> ${parte2}</div>` : ''}
+                        ${parte3 ? `<div class="mt-2 p-3 bg-gray-50 rounded border"><strong>Parte 3:</strong> ${parte3}</div>` : ''}
+                        ${parte4 ? `<div class="mt-2 p-3 bg-gray-50 rounded border"><strong>Parte 4:</strong> ${parte4}</div>` : ''}
                     </div>
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
         
         renderIcons();
     } catch (error) {
