@@ -236,6 +236,21 @@
             opacity: 0.7;
             pointer-events: none;
         }
+
+        .btn-turma {
+            background-color: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .btn-turma:hover {
+            background-color: #2563eb;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -255,7 +270,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 5.9.2
+        Desenvolvido por Geovane Modena | Versão 5.9.3
     </footer>
 </div>
 
@@ -682,13 +697,13 @@ async function mostrarRelatorioProfessor() {
             <h3 class="text-2xl font-bold text-red-700 mb-4">Relatório por Turma</h3>
             <div class="mb-4">
                 <p class="block text-sm font-medium text-gray-700 mb-2">Selecione a Turma:</p>
-                <div class="flex flex-wrap gap-2 mb-6">
+                <div class="flex flex-wrap gap-2 mb-6" id="botoes-turma">
     `;
     
     // Botões para cada turma
     turmas.forEach(turma => {
         relatorioHTML += `
-            <button onclick="carregarRelatorioTurma('${turma}')" class="btn-primary">
+            <button onclick="carregarRelatorioTurma('${turma}')" class="btn-turma">
                 Turma ${turma}
             </button>
         `;
@@ -710,6 +725,7 @@ async function mostrarRelatorioProfessor() {
 }
 
 async function carregarRelatorioTurma(turmaSelecionada) {
+    console.log('Carregando relatório para turma:', turmaSelecionada);
     const container = document.getElementById('relatorio-turma-container');
     container.innerHTML = '<p class="text-gray-500 text-center py-4">Carregando relatório...</p>';
     
@@ -775,13 +791,15 @@ async function carregarRelatorioTurma(turmaSelecionada) {
                     countNotas++;
                 }
                 
-                // Diferentes cores para as notas
+                // Cores para as notas (SESI: 7.5+ verde, abaixo vermelho)
                 let classeNota = 'text-gray-600';
                 if (entrega && entrega.Nota) {
                     const notaNum = parseFloat(entrega.Nota);
-                    if (notaNum >= 8) classeNota = 'text-green-600 font-semibold';
-                    else if (notaNum >= 6) classeNota = 'text-yellow-600';
-                    else classeNota = 'text-red-600';
+                    if (notaNum >= 7.5) {
+                        classeNota = 'text-green-600 font-semibold';
+                    } else {
+                        classeNota = 'text-red-600';
+                    }
                 }
                 
                 relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b ${classeNota}">${nota}</td>`;
@@ -791,9 +809,11 @@ async function carregarRelatorioTurma(turmaSelecionada) {
             let classeMedia = 'text-gray-600';
             if (media !== '-') {
                 const mediaNum = parseFloat(media);
-                if (mediaNum >= 8) classeMedia = 'text-green-600 font-bold';
-                else if (mediaNum >= 6) classeMedia = 'text-yellow-600 font-semibold';
-                else classeMedia = 'text-red-600 font-semibold';
+                if (mediaNum >= 7.5) {
+                    classeMedia = 'text-green-600 font-bold';
+                } else {
+                    classeMedia = 'text-red-600 font-semibold';
+                }
             }
             
             relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b ${classeMedia}">${media}</td>`;
@@ -811,6 +831,7 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         
         container.innerHTML = relatorioTurmaHTML;
     } catch (error) {
+        console.error('Erro ao carregar relatório:', error);
         container.innerHTML = `<p class="text-red-500 text-center py-4">Erro ao carregar relatório: ${error.message}</p>`;
     }
 }
