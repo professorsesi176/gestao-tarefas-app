@@ -11,7 +11,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
         .card { background-color: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.2); }
-        .btn-primary { background-color: #CC0000; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; font-size: 16px; }
+        .btn-primary { background-color: #CC0000; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; font-size: 16px; }
         .btn-primary:hover { background-color: #A00000; }
         .btn-secondary { background-color: #d1d5db; color: #1e1e1e; padding: 8px 16px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; }
         .btn-secondary:hover { background-color: #9ca3af; }
@@ -136,7 +136,7 @@
         }
 
         #login-form button {
-            padding: 14px 24px;
+            padding: 12px 24px; /* Reduzido o padding vertical */
             font-size: 18px;
             width: auto;
             margin: 0 auto;
@@ -198,6 +198,22 @@
             font-size: 1.1em;
             transform: scale(1.1);
             display: inline-block;
+            margin-top: 10px; /* Adicionado margem para evitar sobreposição */
+        }
+
+        .btn-relatorio {
+            background-color: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .btn-relatorio:hover {
+            background-color: #059669;
         }
     </style>
 </head>
@@ -206,14 +222,14 @@
 <div id="app-container" class="w-full max-w-6xl bg-white shadow-xl rounded-2xl p-6 sm:p-8 transition-all duration-300">
     <header class="mb-8 border-b pb-4 relative">
         <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar</h1>
-        <div id="user-info" class="text-center text-gray-600 mt-2"></div>
+        <div id="user-info" class="text-center text-gray-600 mt-4"></div> <!-- Aumentado margin-top -->
         <button onclick="logout()" id="logoutBtn" class="btn-secondary hidden absolute top-0 right-0">Sair</button>
     </header>
 
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 5.4
+        Desenvolvido por Geovane Modena | Versão 5.5
     </footer>
 </div>
 
@@ -610,6 +626,10 @@ function logout() {
 async function mostrarPainelProfessor() {
     contentArea.innerHTML = `
         <div id="painelProfessor" class="space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-red-700">Painel do Professor</h2>
+                <button onclick="mostrarRelatorioProfessor()" class="btn-relatorio">Relatório</button>
+            </div>
             <div class="card p-6 border-t-4 border-red-600">
                 <h3 class="text-2xl font-bold mb-4 text-red-700" id="titulo-formulario">${tarefaEditando ? 'Editar Tarefa' : 'Criar Nova Tarefa'}</h3>
                 
@@ -878,7 +898,8 @@ async function atualizarTarefa() {
         showModal('Sucesso', 'Tarefa atualizada com sucesso!');
         tarefaEditando = null;
         limparFormulario();
-        await carregarTarefasProfessor();
+        // Recarrega o painel do professor para sair do modo de edição
+        await mostrarPainelProfessor();
     } catch (error) {
         showModal('Erro', `Erro ao atualizar tarefa: ${error.message}`);
     }
@@ -906,6 +927,115 @@ function limparFormulario() {
     if (tarefaEditando) {
         tarefaEditando = null;
         document.getElementById('titulo-formulario').textContent = 'Criar Nova Tarefa';
+        // Recarrega o painel do professor para sair do modo de edição
+        mostrarPainelProfessor();
+    }
+}
+
+// --- RELATÓRIO DO PROFESSOR ---
+async function mostrarRelatorioProfessor() {
+    contentArea.innerHTML = `
+        <div class="space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-red-700">Relatório por Turma</h2>
+                <button onclick="mostrarPainelProfessor()" class="btn-secondary">Voltar</button>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div class="card p-6 text-center cursor-pointer hover:bg-gray-50" onclick="mostrarRelatorioTurma('1A')">
+                    <h3 class="text-xl font-bold text-red-700">Turma 1A</h3>
+                </div>
+                <div class="card p-6 text-center cursor-pointer hover:bg-gray-50" onclick="mostrarRelatorioTurma('1B')">
+                    <h3 class="text-xl font-bold text-red-700">Turma 1B</h3>
+                </div>
+                <div class="card p-6 text-center cursor-pointer hover:bg-gray-50" onclick="mostrarRelatorioTurma('2A')">
+                    <h3 class="text-xl font-bold text-red-700">Turma 2A</h3>
+                </div>
+                <div class="card p-6 text-center cursor-pointer hover:bg-gray-50" onclick="mostrarRelatorioTurma('2B')">
+                    <h3 class="text-xl font-bold text-red-700">Turma 2B</h3>
+                </div>
+                <div class="card p-6 text-center cursor-pointer hover:bg-gray-50" onclick="mostrarRelatorioTurma('3A')">
+                    <h3 class="text-xl font-bold text-red-700">Turma 3A</h3>
+                </div>
+                <div class="card p-6 text-center cursor-pointer hover:bg-gray-50" onclick="mostrarRelatorioTurma('3B')">
+                    <h3 class="text-xl font-bold text-red-700">Turma 3B</h3>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function mostrarRelatorioTurma(turma) {
+    try {
+        const response = await apiGet('getRelatorioTurma', { turma });
+        const relatorio = response.data;
+
+        if (!relatorio || relatorio.length === 0) {
+            contentArea.innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-red-700">Relatório da Turma ${turma}</h2>
+                        <button onclick="mostrarRelatorioProfessor()" class="btn-secondary">Voltar</button>
+                    </div>
+                    <div class="card p-6">
+                        <p class="text-center text-gray-500">Nenhum dado encontrado para esta turma.</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        // Obter a lista de tarefas para esta turma
+        const tarefasTurma = tarefas.filter(t => t.Turma === turma);
+
+        let tableHeaders = '';
+        tarefasTurma.forEach(tarefa => {
+            tableHeaders += `<th class="px-4 py-2">${tarefa.Tema}</th>`;
+        });
+
+        let tableRows = '';
+        relatorio.forEach(aluno => {
+            let row = `<tr>
+                <td class="px-4 py-2 font-semibold">${aluno.NomeCompleto}</td>`;
+            
+            tarefasTurma.forEach(tarefa => {
+                const entrega = aluno.tarefas.find(t => t.ID_Tarefa === tarefa.ID);
+                const nota = entrega ? entrega.Nota : '-';
+                row += `<td class="px-4 py-2 text-center">${nota}</td>`;
+            });
+            
+            row += `<td class="px-4 py-2 text-center font-semibold">${aluno.totalPontos.toFixed(1)}</td>`;
+            row += `<td class="px-4 py-2 text-center">${aluno.media.toFixed(1)}</td>`;
+            row += `</tr>`;
+            tableRows += row;
+        });
+
+        contentArea.innerHTML = `
+            <div class="space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-red-700">Relatório da Turma ${turma}</h2>
+                    <button onclick="mostrarRelatorioProfessor()" class="btn-secondary">Voltar</button>
+                </div>
+                <div class="card p-6">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2">Aluno</th>
+                                    ${tableHeaders}
+                                    <th class="px-4 py-2">Total</th>
+                                    <th class="px-4 py-2">Média</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        showModal('Erro', `Erro ao carregar relatório: ${error.message}`);
     }
 }
 
@@ -913,8 +1043,12 @@ function limparFormulario() {
 async function mostrarPainelAluno() {
     contentArea.innerHTML = `
         <div id="painelAluno" class="space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-red-700">Minhas Tarefas</h2>
+                <button onclick="mostrarRelatorioAluno()" class="btn-relatorio">Relatório</button>
+            </div>
             <div class="card p-6">
-                <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${usuarioLogado.Turma}</h3>
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Tarefas - Turma ${usuarioLogado.Turma}</h3>
                 <div id="tarefas-aluno-container">
                     <div class="text-center text-gray-500 py-8">Carregando tarefas...</div>
                 </div>
@@ -1054,6 +1188,73 @@ async function excluirLink(idTarefa, parte) {
     }
 }
 
+// --- RELATÓRIO DO ALUNO ---
+async function mostrarRelatorioAluno() {
+    try {
+        const response = await apiGet('getRelatorioAluno', { ra: usuarioLogado.RA });
+        const relatorio = response.data;
+
+        if (!relatorio) {
+            showModal('Erro', 'Nenhum dado de relatório encontrado.');
+            return;
+        }
+
+        let tabelaTarefas = '';
+        relatorio.tarefas.forEach(tarefa => {
+            tabelaTarefas += `
+                <tr>
+                    <td class="px-4 py-2">${tarefa.Tema}</td>
+                    <td class="px-4 py-2 text-center">${tarefa.Nota}</td>
+                    <td class="px-4 py-2 text-center">${tarefa.NotaMaxima}</td>
+                </tr>
+            `;
+        });
+
+        contentArea.innerHTML = `
+            <div class="space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-red-700">Meu Relatório</h2>
+                    <button onclick="mostrarPainelAluno()" class="btn-secondary">Voltar</button>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold text-red-700 mb-4">Resumo</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-gray-50 p-4 rounded-lg text-center">
+                            <p class="text-sm text-gray-600">Total de Pontos</p>
+                            <p class="text-2xl font-bold text-red-700">${relatorio.totalPontos.toFixed(1)}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg text-center">
+                            <p class="text-sm text-gray-600">Total de Tarefas</p>
+                            <p class="text-2xl font-bold text-red-700">${relatorio.totalTarefas}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg text-center">
+                            <p class="text-sm text-gray-600">Média</p>
+                            <p class="text-2xl font-bold text-red-700">${relatorio.media.toFixed(1)}</p>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-bold text-red-700 mb-4">Detalhes por Tarefa</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2">Tarefa</th>
+                                    <th class="px-4 py-2">Nota Obtida</th>
+                                    <th class="px-4 py-2">Nota Máxima</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tabelaTarefas}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        showModal('Erro', `Erro ao carregar relatório: ${error.message}`);
+    }
+}
+
 // --- INICIALIZAÇÃO ---
 init();
 
@@ -1071,6 +1272,9 @@ window.mostrarPainelAluno = mostrarPainelAluno;
 window.closeModal = closeModal;
 window.salvarLink = salvarLink;
 window.excluirLink = excluirLink;
+window.mostrarRelatorioProfessor = mostrarRelatorioProfessor;
+window.mostrarRelatorioTurma = mostrarRelatorioTurma;
+window.mostrarRelatorioAluno = mostrarRelatorioAluno;
 </script>
 </body>
 </html>
