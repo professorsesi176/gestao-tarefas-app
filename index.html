@@ -256,6 +256,30 @@
             color: white !important;
             background-color: #CC0000 !important;
         }
+
+        .btn-login-loading {
+            position: relative;
+            color: transparent;
+        }
+
+        .btn-login-loading::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin-left: -10px;
+            margin-top: -10px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -275,7 +299,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 5.9.4
+        Desenvolvido por Geovane Modena | Versão 6.0
     </footer>
 </div>
 
@@ -306,7 +330,6 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQve
 const SECURITY_TOKEN = 'SESI_EDUCATION_2024';
 
 // --- ESTADO DA APLICAÇÃO ---
-let usuarios = [];
 let usuarioLogado = null;
 let tarefas = [];
 let jsonpCallbackId = 0;
@@ -579,21 +602,7 @@ async function apiPost(action, dados) {
 
 // --- INICIALIZAÇÃO ---
 async function init() {
-    try {
-        const response = await apiGet('getUsers');
-        usuarios = response.data || [];
-    } catch (error) {
-        usuarios = [
-            { 
-                NomeCompleto: "Geovane Módena", 
-                Email: "geovane.modena@portalsesisp.org.br", 
-                RA: "9999", 
-                Turma: "", 
-                Perfil: "Professor" 
-            }
-        ];
-    }
-    
+    // Não carrega mais todos os usuários na inicialização
     renderLogin();
 }
 
@@ -613,7 +622,7 @@ const renderLogin = () => {
                     <label for="ra" class="block text-sm font-medium text-gray-700 mb-2">RA</label>
                     <input type="text" id="ra" name="ra" required placeholder="Apenas números" class="w-full">
                 </div>
-                <button type="submit" class="btn-primary">
+                <button type="submit" class="btn-primary w-full" id="loginBtn">
                     Entrar
                 </button>
             </form>
@@ -625,60 +634,85 @@ const renderLogin = () => {
 
 async function login(event) {
     event.preventDefault(); 
+    
     const email = document.getElementById('email').value.trim();
     const ra = document.getElementById('ra').value.trim();
+    const loginBtn = document.getElementById('loginBtn');
+    const loginErro = document.getElementById('loginErro');
     
-    const loginErro = document.getElementById('loginErro'); 
-    
-    const user = usuarios.find(u => {
-        const userEmail = u.Email.toLowerCase().trim();
-        const userRA = String(u.RA).trim();
-        const inputEmail = email.toLowerCase().trim();
-        const inputRA = ra.trim();
-        
-        return userEmail === inputEmail && userRA === inputRA;
-    });
-    
-    if (!user) {
+    // Validação básica
+    if (!email || !ra) {
+        loginErro.textContent = 'Por favor, preencha todos os campos.';
         loginErro.style.display = 'block';
         return;
     }
-    
-    usuarioLogado = user;
+
+    // Mostrar loading
+    loginBtn.disabled = true;
+    loginBtn.classList.add('btn-login-loading');
     loginErro.style.display = 'none';
     
-    contentArea.innerHTML = `<div class="text-center text-gray-500 py-8">Carregando painel...</div>`;
-    logoutBtn.classList.remove('hidden');
-    relatorioBtn.classList.remove('hidden');
-    
-    // Ajustar informações do usuário conforme o perfil
-    if (user.Perfil === "Professor") {
-        userInfoDisplay.innerHTML = `
-            <div class="user-info-text">
-                Logado como: <span class="user-info-name">${user.NomeCompleto} (${user.Perfil})</span> | Professor
-            </div>
-        `;
-        relatorioBtn.onclick = mostrarRelatorioProfessor;
-    } else {
-        userInfoDisplay.innerHTML = `
-            <div class="user-info-text">
-                Logado como: <span class="user-info-name">${user.NomeCompleto} (${user.Perfil})</span> | Turma: ${user.Turma || 'N/A'}
-            </div>
-        `;
-        relatorioBtn.onclick = mostrarRelatorioAluno;
-    }
-
     try {
-        const response = await apiGet('getTarefas');
-        tarefas = response.data || [];
-    } catch (error) {
-        tarefas = [];
-    }
+        // ⚡ CHAMADA OTIMIZADA - Busca apenas o usuário específico
+        const response = await apiPost('loginUser', { 
+            email: email, 
+            ra: ra 
+        });
+        
+        if (response.success && response.user) {
+            usuarioLogado = response.user;
+            
+            // Mostrar informações do usuário
+            logoutBtn.classList.remove('hidden');
+            relatorioBtn.classList.remove('hidden');
+            
+            if (usuarioLogado.Perfil === "Professor") {
+                userInfoDisplay.innerHTML = `
+                    <div class="user-info-text">
+                        Logado como: <span class="user-info-name">${usuarioLogado.NomeCompleto} (${usuarioLogado.Perfil})</span> | Professor
+                    </div>
+                `;
+                relatorioBtn.onclick = mostrarRelatorioProfessor;
+            } else {
+                userInfoDisplay.innerHTML = `
+                    <div class="user-info-text">
+                        Logado como: <span class="user-info-name">${usuarioLogado.NomeCompleto} (${usuarioLogado.Perfil})</span> | Turma: ${usuarioLogado.Turma || 'N/A'}
+                    </div>
+                `;
+                relatorioBtn.onclick = mostrarRelatorioAluno;
+            }
 
-    if (user.Perfil === "Professor") {
-        await mostrarPainelProfessor();
-    } else {
-        await mostrarPainelAluno(); 
+            // Carregar tarefas
+            contentArea.innerHTML = `<div class="text-center text-gray-500 py-8">Carregando painel...</div>`;
+            
+            try {
+                const tarefasResponse = await apiGet('getTarefas');
+                tarefas = tarefasResponse.data || [];
+            } catch (error) {
+                tarefas = [];
+                console.error('Erro ao carregar tarefas:', error);
+            }
+
+            // Redirecionar para o painel correto
+            if (usuarioLogado.Perfil === "Professor") {
+                await mostrarPainelProfessor();
+            } else {
+                await mostrarPainelAluno(); 
+            }
+            
+        } else {
+            loginErro.textContent = response.error || 'Usuário ou RA incorretos!';
+            loginErro.style.display = 'block';
+        }
+        
+    } catch (error) {
+        console.error('Erro no login:', error);
+        loginErro.textContent = 'Erro ao conectar com o servidor. Tente novamente.';
+        loginErro.style.display = 'block';
+    } finally {
+        // Restaurar botão
+        loginBtn.disabled = false;
+        loginBtn.classList.remove('btn-login-loading');
     }
 }
 
@@ -733,6 +767,97 @@ async function carregarRelatorioTurma(turmaSelecionada) {
     console.log('Carregando relatório para turma:', turmaSelecionada);
     const container = document.getElementById('relatorio-turma-container');
     container.innerHTML = '<p class="text-gray-500 text-center py-4">Carregando relatório...</p>';
+    
+    try {
+        // ⚡ CHAMADA OTIMIZADA - Busca relatório completo de uma vez
+        const response = await apiGet('getRelatorioTurmaRapido', { turma: turmaSelecionada });
+        const relatorioData = response.data || [];
+        
+        if (relatorioData.length === 0) {
+            container.innerHTML = `<p class="text-gray-500 text-center py-8">Nenhum dado encontrado para a turma ${turmaSelecionada}.</p>`;
+            return;
+        }
+        
+        // Buscar informações das tarefas para o cabeçalho
+        const tarefasResponse = await apiGet('getTarefasPorTurma', { turma: turmaSelecionada });
+        const tarefasTurma = tarefasResponse.data || [];
+        
+        let relatorioTurmaHTML = `
+            <h4 class="text-lg font-semibold mb-3 text-red-700">Relatório da Turma ${turmaSelecionada}</h4>
+            <div class="overflow-x-auto border rounded-lg">
+                <table class="min-w-full compact-table table-header-white">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold border-b">Aluno</th>
+        `;
+        
+        // Cabeçalho com as tarefas
+        tarefasTurma.forEach(tarefa => {
+            relatorioTurmaHTML += `<th class="px-4 py-3 text-center font-semibold border-b">${tarefa.Tema}</th>`;
+        });
+        
+        relatorioTurmaHTML += `
+                            <th class="px-4 py-3 text-center font-semibold border-b">Média</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        relatorioData.forEach(item => {
+            relatorioTurmaHTML += `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 font-medium text-gray-900 border-b">${item.aluno}</td>
+            `;
+            
+            item.notas.forEach(nota => {
+                // Cores para as notas (SESI: 7.5+ verde, abaixo vermelho)
+                let classeNota = 'text-gray-600';
+                if (nota !== '-') {
+                    const notaNum = parseFloat(nota);
+                    if (notaNum >= 7.5) {
+                        classeNota = 'text-green-600 font-semibold';
+                    } else {
+                        classeNota = 'text-red-600';
+                    }
+                }
+                
+                relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b ${classeNota}">${nota}</td>`;
+            });
+            
+            let classeMedia = 'text-gray-600';
+            if (item.media !== '-') {
+                const mediaNum = parseFloat(item.media);
+                if (mediaNum >= 7.5) {
+                    classeMedia = 'text-green-600 font-bold';
+                } else {
+                    classeMedia = 'text-red-600 font-semibold';
+                }
+            }
+            
+            relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b ${classeMedia}">${item.media}</td>`;
+            relatorioTurmaHTML += `</tr>`;
+        });
+        
+        relatorioTurmaHTML += `
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4 text-sm text-gray-600">
+                <p>Total de alunos: ${relatorioData.length} | Total de tarefas: ${tarefasTurma.length}</p>
+            </div>
+        `;
+        
+        container.innerHTML = relatorioTurmaHTML;
+    } catch (error) {
+        console.error('Erro ao carregar relatório:', error);
+        // Fallback para método antigo se o novo não estiver disponível
+        await carregarRelatorioTurmaFallback(turmaSelecionada);
+    }
+}
+
+// Fallback caso a função otimizada não esteja disponível
+async function carregarRelatorioTurmaFallback(turmaSelecionada) {
+    const container = document.getElementById('relatorio-turma-container');
     
     try {
         // Buscar todos os alunos da turma
@@ -836,7 +961,7 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         
         container.innerHTML = relatorioTurmaHTML;
     } catch (error) {
-        console.error('Erro ao carregar relatório:', error);
+        console.error('Erro ao carregar relatório fallback:', error);
         container.innerHTML = `<p class="text-red-500 text-center py-4">Erro ao carregar relatório: ${error.message}</p>`;
     }
 }
@@ -1455,6 +1580,7 @@ window.mostrarPainelAluno = mostrarPainelAluno;
 window.mostrarRelatorioProfessor = mostrarRelatorioProfessor;
 window.mostrarRelatorioAluno = mostrarRelatorioAluno;
 window.carregarRelatorioTurma = carregarRelatorioTurma;
+window.carregarRelatorioTurmaFallback = carregarRelatorioTurmaFallback;
 window.salvarTarefa = salvarTarefa;
 window.atualizarTarefa = atualizarTarefa;
 window.excluirTarefa = excluirTarefa;
