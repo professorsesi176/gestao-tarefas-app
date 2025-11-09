@@ -47,7 +47,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 4.4
+        Desenvolvido por Geovane Modena | Versão 4.5
     </footer>
 </div>
 
@@ -138,28 +138,24 @@ async function apiGet(func, params = {}) {
     return await apiRequest(func, params, 'GET');
 }
 
-// Função para requisições POST
+// Função para requisições POST CORRIGIDA
 async function apiPost(func, data = {}) {
-    // Para POST, usamos uma abordagem diferente
-    const formData = new FormData();
-    formData.append('action', func);
-    formData.append('token', SECURITY_TOKEN);
-    
-    // Adiciona outros dados
-    for (const key in data) {
-        if (data[key] !== undefined && data[key] !== null) {
-            if (typeof data[key] === 'object') {
-                formData.append(key, JSON.stringify(data[key]));
-            } else {
-                formData.append(key, data[key]);
-            }
-        }
-    }
-    
     try {
+        // Prepara os dados para enviar como JSON
+        const postData = {
+            action: func,
+            token: SECURITY_TOKEN,
+            ...data
+        };
+
+        console.log('Enviando POST para:', func, postData);
+
         const response = await fetch(API_URL, {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(postData)
         });
         
         const result = await response.json();
@@ -170,6 +166,7 @@ async function apiPost(func, data = {}) {
             throw new Error(result.error || 'Erro desconhecido');
         }
     } catch (error) {
+        console.error('Erro na requisição POST:', error);
         throw new Error('Erro de conexão: ' + error.message);
     }
 }
@@ -438,11 +435,15 @@ async function salvarTarefa() {
     };
 
     try {
-        await apiPost('criarTarefa', dados);
+        console.log('Tentando salvar tarefa:', dados);
+        const response = await apiPost('criarTarefa', dados);
+        console.log('Resposta do servidor:', response);
+        
         showModal('Sucesso', 'Tarefa criada com sucesso!');
         limparFormulario();
         await carregarTarefasProfessor();
     } catch (error) {
+        console.error('Erro detalhado:', error);
         showModal('Erro', `Erro ao criar tarefa: ${error.message}`);
     }
 }
