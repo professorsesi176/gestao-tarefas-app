@@ -8,8 +8,229 @@
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
     
     <style>
-        /* Estilos anteriores mantidos */
-        /* ... */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
+        .card { background-color: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.2); }
+        .btn-primary { background-color: #CC0000; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; font-size: 14px; }
+        .btn-primary:hover { background-color: #A00000; }
+        .btn-secondary { background-color: #d1d5db; color: #1e1e1e; padding: 8px 16px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; }
+        .btn-secondary:hover { background-color: #9ca3af; }
+        .btn-small { padding: 6px 12px; font-size: 0.875rem; }
+        input, textarea, select {
+            border: 1px solid #d1d5db; padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box;
+            transition: border-color 0.2s; margin-top: 4px; margin-bottom: 8px;
+        }
+        input:focus, textarea:focus, select:focus { border-color: #CC0000; outline: none; }
+        [data-lucide] { width: 20px; height: 20px; display: inline-block; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #CC0000; color: white; }
+        tbody tr:nth-child(even) { background-color: #f9f9f9; }
+        .hidden { display: none; }
+        
+        .checkbox-group {
+            display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; padding: 10px;
+            background-color: #f9f9f9; border-radius: 8px;
+        }
+        .checkbox-group label { font-weight: normal; display: flex; align-items: center; }
+        .checkbox-group input { width: auto; margin: 0 5px 0 0; }
+        
+        .form-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .form-row label {
+            margin-bottom: 0;
+            min-width: 120px;
+        }
+        .form-row input, .form-row textarea {
+            flex: 1;
+            margin-top: 0;
+        }
+        
+        .compact-table th, .compact-table td {
+            padding: 12px 8px;
+        }
+        .turma-column {
+            width: 80px;
+            text-align: center;
+        }
+        .data-column {
+            width: 120px;
+            text-align: center;
+        }
+        .acoes-column {
+            width: 200px;
+            text-align: center;
+        }
+        
+        .contador {
+            display: inline-block;
+            padding: 4px 8px;
+            background-color: #f3f4f6;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+            min-width: 80px;
+            text-align: center;
+        }
+        .contador.disponivel {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .contador.urgente {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .contador.expirado {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .contador.aguardando {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+        
+        .link-container {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            align-items: center;
+        }
+        .link-input {
+            flex: 1;
+            padding: 8px;
+            font-size: 0.875rem;
+        }
+        .btn-link {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+        }
+
+        .btn-link:disabled {
+            background-color: #9ca3af !important;
+            color: #6b7280 !important;
+            cursor: not-allowed !important;
+            opacity: 0.6;
+        }
+
+        .btn-link:disabled:hover {
+            background-color: #9ca3af !important;
+            transform: none !important;
+        }
+
+        .link-salvo {
+            background-color: #f3f4f6 !important;
+            color: #6b7280 !important;
+            cursor: not-allowed !important;
+            border: 1px solid #d1d5db;
+        }
+
+        #login-form input {
+            height: 50px;
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 16px;
+        }
+
+        #login-form button {
+            padding: 10px 30px;
+            font-size: 16px;
+            width: auto;
+            margin: 10px auto 0 auto;
+            display: block;
+            height: auto;
+        }
+
+        #login {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .acoes-column button {
+            margin: 0 4px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        .btn-editar {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-editar:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-excluir {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-excluir:hover {
+            background-color: #dc2626;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-item label {
+            margin-bottom: 0;
+            min-width: auto;
+        }
+
+        .user-info-container {
+            text-align: center;
+            margin: 10px 0;
+            padding: 0 20px;
+            line-height: 1.5;
+        }
+
+        .user-info-text {
+            font-size: 14px;
+            color: #4b5563;
+        }
+
+        .user-info-name {
+            font-weight: 600;
+            color: #CC0000;
+        }
+
+        .header-content {
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .btn-relatorio {
+            background-color: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .btn-relatorio:hover {
+            background-color: #059669;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -29,7 +250,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 5.8
+        Desenvolvido por Geovane Modena | Versão 5.9
     </footer>
 </div>
 
@@ -465,26 +686,13 @@ async function carregarRelatorioTurma() {
     const container = document.getElementById('relatorio-turma-container');
     
     try {
-        // Buscar todas as entregas da turma
-        const entregasResponse = await apiGet('getEntregasPorTurma', { turma: turmaSelecionada });
-        const entregas = entregasResponse.data || [];
-        
         // Buscar todos os alunos da turma
         const usersResponse = await apiGet('getUsers');
         const alunosTurma = usersResponse.data.filter(user => user.Turma === turmaSelecionada && user.Perfil === 'Aluno');
         
         // Buscar todas as tarefas da turma
         const tarefasResponse = await apiGet('getTarefasPorTurma', { turma: turmaSelecionada });
-        const tarefas = tarefasResponse.data || [];
-        
-        // Agrupar entregas por aluno
-        const entregasPorAluno = {};
-        entregas.forEach(entrega => {
-            if (!entregasPorAluno[entrega.RA_Aluno]) {
-                entregasPorAluno[entrega.RA_Aluno] = [];
-            }
-            entregasPorAluno[entrega.RA_Aluno].push(entrega);
-        });
+        const tarefasTurma = tarefasResponse.data || [];
         
         let relatorioTurmaHTML = `
             <h4 class="text-lg font-semibold mb-3">Relatório da Turma ${turmaSelecionada}</h4>
@@ -493,37 +701,42 @@ async function carregarRelatorioTurma() {
                     <thead>
                         <tr>
                             <th>Aluno</th>
-                            ${tarefas.map(tarefa => `<th>${tarefa.Tema}</th>`).join('')}
+                            ${tarefasTurma.map(tarefa => `<th>${tarefa.Tema}</th>`).join('')}
                             <th>Média</th>
                         </tr>
                     </thead>
                     <tbody>
         `;
         
-        alunosTurma.forEach(aluno => {
-            const entregasAluno = entregasPorAluno[aluno.RA] || [];
+        for (const aluno of alunosTurma) {
+            // Buscar entregas do aluno
+            const entregasResponse = await apiGet('getEntregasAluno', { ra: aluno.RA });
+            const entregasAluno = entregasResponse.data || [];
+            
             let totalNotas = 0;
             let countNotas = 0;
             
             relatorioTurmaHTML += `
                 <tr>
-                    <td>${aluno.NomeCompleto}</td>
+                    <td class="font-medium">${aluno.NomeCompleto}</td>
             `;
             
-            tarefas.forEach(tarefa => {
+            for (const tarefa of tarefasTurma) {
                 const entrega = entregasAluno.find(e => e.ID_Tarefa === tarefa.ID);
-                const nota = entrega ? entrega.Nota : '-';
+                const nota = entrega && entrega.Nota ? parseFloat(entrega.Nota).toFixed(1) : '-';
+                
                 if (entrega && entrega.Nota) {
                     totalNotas += parseFloat(entrega.Nota);
                     countNotas++;
                 }
-                relatorioTurmaHTML += `<td>${nota}</td>`;
-            });
+                
+                relatorioTurmaHTML += `<td class="text-center">${nota}</td>`;
+            }
             
             const media = countNotas > 0 ? (totalNotas / countNotas).toFixed(1) : '-';
-            relatorioTurmaHTML += `<td>${media}</td>`;
+            relatorioTurmaHTML += `<td class="text-center font-semibold">${media}</td>`;
             relatorioTurmaHTML += `</tr>`;
-        });
+        }
         
         relatorioTurmaHTML += `
                     </tbody>
@@ -552,12 +765,20 @@ async function mostrarRelatorioAluno() {
                 <p class="text-gray-500 text-center py-4">Nenhuma entrega registrada.</p>
             `;
         } else {
+            // Buscar informações das tarefas
+            const tarefasResponse = await apiGet('getTarefas');
+            const todasTarefas = tarefasResponse.data || [];
+            
+            let notaTotal = 0;
+            let countEntregas = 0;
+            
             relatorioHTML += `
                 <div class="overflow-x-auto">
                     <table class="min-w-full compact-table">
                         <thead>
                             <tr>
                                 <th>Tarefa</th>
+                                <th>Turma</th>
                                 <th>Links Entregues</th>
                                 <th class="data-column">Data de Submissão</th>
                                 <th class="data-column">Nota</th>
@@ -566,13 +787,10 @@ async function mostrarRelatorioAluno() {
                         <tbody>
             `;
             
-            // Buscar informações das tarefas
-            const tarefasResponse = await apiGet('getTarefas');
-            const todasTarefas = tarefasResponse.data || [];
-            
             entregas.forEach(entrega => {
                 const tarefa = todasTarefas.find(t => t.ID === entrega.ID_Tarefa);
                 const temaTarefa = tarefa ? tarefa.Tema : 'Tarefa não encontrada';
+                const turmaTarefa = tarefa ? tarefa.Turma : '-';
                 
                 const linksEntregues = [];
                 if (entrega.Link1) linksEntregues.push('Parte 1');
@@ -580,9 +798,15 @@ async function mostrarRelatorioAluno() {
                 if (entrega.Link3) linksEntregues.push('Parte 3');
                 if (entrega.Link4) linksEntregues.push('Parte 4');
                 
+                if (entrega.Nota) {
+                    notaTotal += parseFloat(entrega.Nota);
+                    countEntregas++;
+                }
+                
                 relatorioHTML += `
                     <tr>
                         <td>${temaTarefa}</td>
+                        <td>${turmaTarefa}</td>
                         <td>${linksEntregues.join(', ') || 'Nenhum'}</td>
                         <td class="data-column">${formatarData(entrega.DataSubmissao)}</td>
                         <td class="data-column font-semibold">${entrega.Nota || '0'}</td>
@@ -590,9 +814,17 @@ async function mostrarRelatorioAluno() {
                 `;
             });
             
+            const media = countEntregas > 0 ? (notaTotal / countEntregas).toFixed(1) : '0';
+            
             relatorioHTML += `
                         </tbody>
                     </table>
+                    <div class="mt-4 p-3 bg-gray-50 rounded border">
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold">Média Geral:</span>
+                            <span class="text-lg font-bold text-green-600">${media}</span>
+                        </div>
+                    </div>
                 </div>
             `;
         }
