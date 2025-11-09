@@ -231,6 +231,11 @@
         .btn-relatorio:hover {
             background-color: #059669;
         }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -250,7 +255,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 5.9
+        Desenvolvido por Geovane Modena | Versão 5.9.1
     </footer>
 </div>
 
@@ -333,7 +338,18 @@ const renderIcons = () => window.lucide && window.lucide.createIcons();
 
 const formatarData = (dataISO) => {
     if (!dataISO) return 'N/A';
-    return new Date(dataISO).toLocaleDateString('pt-BR');
+    
+    // Garantir que a data está no formato correto
+    let data = new Date(dataISO);
+    if (isNaN(data.getTime())) {
+        // Tentar parse manual se o Date falhar
+        const partes = dataISO.split('-');
+        if (partes.length === 3) {
+            data = new Date(partes[0], partes[1] - 1, partes[2]);
+        }
+    }
+    
+    return data.toLocaleDateString('pt-BR');
 };
 
 // Função para calcular contadores de tempo com liberação progressiva
@@ -884,7 +900,7 @@ async function mostrarPainelProfessor() {
                 </div>
                 
                 <div class="mt-6 flex space-x-4">
-                    <button onclick="${tarefaEditando ? 'atualizarTarefa()' : 'salvarTarefa()'}" class="btn-primary flex-1">
+                    <button onclick="${tarefaEditando ? 'atualizarTarefa()' : 'salvarTarefa()'}" class="btn-primary flex-1" id="btnSalvarTarefa">
                         ${tarefaEditando ? 'Atualizar Tarefa' : 'Salvar Tarefa'}
                     </button>
                     <button onclick="limparFormulario()" class="btn-secondary flex-1">
@@ -1022,94 +1038,135 @@ async function editarTarefa(idTarefa) {
     }
 
     tarefaEditando = tarefa;
+    
+    // Recarregar o painel do professor
     await mostrarPainelProfessor();
+    
+    // Preencher o formulário após o DOM ser renderizado
+    setTimeout(() => {
+        if (document.getElementById('tema')) {
+            document.getElementById('tema').value = tarefaEditando.Tema;
+            document.getElementById('dataAula').value = tarefaEditando.DataAula.split('T')[0];
+            document.getElementById('parte1').value = tarefaEditando.Parte1 || '';
+            document.getElementById('parte2').value = tarefaEditando.Parte2 || '';
+            document.getElementById('parte3').value = tarefaEditando.Parte3 || '';
+            document.getElementById('parte4').value = tarefaEditando.Parte4 || '';
+            
+            // Marcar apenas a turma específica
+            const checkboxes = document.querySelectorAll('#turmasCheckboxes input');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = checkbox.value === tarefaEditando.Turma;
+            });
+            
+            // Rolar para o topo
+            window.scrollTo(0, 0);
+        }
+    }, 100);
 }
 
 async function salvarTarefa() {
-    const turmasSelecionadas = Array.from(document.querySelectorAll('#turmasCheckboxes input:checked'))
-        .map(c => c.value);
+    const btnSalvar = document.getElementById('btnSalvarTarefa');
+    const textoOriginal = btnSalvar.textContent;
     
-    if (turmasSelecionadas.length === 0) {
-        showModal('Atenção', 'Selecione pelo menos uma turma.');
-        return;
-    }
-
-    const tema = document.getElementById('tema').value.trim();
-    const dataAula = document.getElementById('dataAula').value;
-
-    if (!tema || !dataAula) {
-        showModal('Atenção', 'Preencha o tema e a data da aula.');
-        return;
-    }
-
-    const parte1 = document.getElementById('parte1').value.trim();
-    const parte2 = document.getElementById('parte2').value.trim();
-    const parte3 = document.getElementById('parte3').value.trim();
-    const parte4 = document.getElementById('parte4').value.trim();
-
-    if (!parte1 || !parte2 || !parte3 || !parte4) {
-        showModal('Atenção', 'Todas as partes da tarefa devem ser preenchidas.');
-        return;
-    }
-
-    const dados = {
-        Turmas: turmasSelecionadas,
-        Tema: tema,
-        Parte1: parte1,
-        Parte2: parte2,
-        Parte3: parte3,
-        Parte4: parte4,
-        DataAula: dataAula,
-        professor: usuarioLogado.NomeCompleto
-    };
-
     try {
+        btnSalvar.textContent = 'Salvando...';
+        btnSalvar.disabled = true;
+        btnSalvar.classList.add('loading');
+        
+        const turmasSelecionadas = Array.from(document.querySelectorAll('#turmasCheckboxes input:checked'))
+            .map(c => c.value);
+        
+        if (turmasSelecionadas.length === 0) {
+            showModal('Atenção', 'Selecione pelo menos uma turma.');
+            return;
+        }
+
+        const tema = document.getElementById('tema').value.trim();
+        const dataAula = document.getElementById('dataAula').value;
+
+        if (!tema || !dataAula) {
+            showModal('Atenção', 'Preencha o tema e a data da aula.');
+            return;
+        }
+
+        const parte1 = document.getElementById('parte1').value.trim();
+        const parte2 = document.getElementById('parte2').value.trim();
+        const parte3 = document.getElementById('parte3').value.trim();
+        const parte4 = document.getElementById('parte4').value.trim();
+
+        if (!parte1 || !parte2 || !parte3 || !parte4) {
+            showModal('Atenção', 'Todas as partes da tarefa devem ser preenchidas.');
+            return;
+        }
+
+        const dados = {
+            Turmas: turmasSelecionadas,
+            Tema: tema,
+            Parte1: parte1,
+            Parte2: parte2,
+            Parte3: parte3,
+            Parte4: parte4,
+            DataAula: dataAula,
+            professor: usuarioLogado.NomeCompleto
+        };
+
         const response = await apiPost('criarTarefa', dados);
         showModal('Sucesso', 'Tarefa criada com sucesso!');
         limparFormulario();
         await carregarTarefasProfessor();
     } catch (error) {
         showModal('Erro', `Erro ao criar tarefa: ${error.message}`);
+    } finally {
+        btnSalvar.textContent = textoOriginal;
+        btnSalvar.disabled = false;
+        btnSalvar.classList.remove('loading');
     }
 }
 
 async function atualizarTarefa() {
-    if (!tarefaEditando) {
-        showModal('Erro', 'Nenhuma tarefa selecionada para edição.');
-        return;
-    }
-
-    const tema = document.getElementById('tema').value.trim();
-    const dataAula = document.getElementById('dataAula').value;
-    const turmaSelecionada = Array.from(document.querySelectorAll('#turmasCheckboxes input:checked'))
-        .map(c => c.value)[0];
-
-    if (!tema || !dataAula || !turmaSelecionada) {
-        showModal('Atenção', 'Preencha todos os campos obrigatórios.');
-        return;
-    }
-
-    const parte1 = document.getElementById('parte1').value.trim();
-    const parte2 = document.getElementById('parte2').value.trim();
-    const parte3 = document.getElementById('parte3').value.trim();
-    const parte4 = document.getElementById('parte4').value.trim();
-
-    if (!parte1 || !parte2 || !parte3 || !parte4) {
-        showModal('Atenção', 'Todas as partes da tarefa devem ser preenchidas.');
-        return;
-    }
-
-    const dados = {
-        ID: tarefaEditando.ID,
-        Tema: tema,
-        Parte1: parte1,
-        Parte2: parte2,
-        Parte3: parte3,
-        Parte4: parte4,
-        DataAula: dataAula
-    };
-
+    const btnSalvar = document.getElementById('btnSalvarTarefa');
+    const textoOriginal = btnSalvar.textContent;
+    
     try {
+        btnSalvar.textContent = 'Atualizando...';
+        btnSalvar.disabled = true;
+        btnSalvar.classList.add('loading');
+        
+        if (!tarefaEditando) {
+            showModal('Erro', 'Nenhuma tarefa selecionada para edição.');
+            return;
+        }
+
+        const tema = document.getElementById('tema').value.trim();
+        const dataAula = document.getElementById('dataAula').value;
+        const turmaSelecionada = Array.from(document.querySelectorAll('#turmasCheckboxes input:checked'))
+            .map(c => c.value)[0];
+
+        if (!tema || !dataAula || !turmaSelecionada) {
+            showModal('Atenção', 'Preencha todos os campos obrigatórios.');
+            return;
+        }
+
+        const parte1 = document.getElementById('parte1').value.trim();
+        const parte2 = document.getElementById('parte2').value.trim();
+        const parte3 = document.getElementById('parte3').value.trim();
+        const parte4 = document.getElementById('parte4').value.trim();
+
+        if (!parte1 || !parte2 || !parte3 || !parte4) {
+            showModal('Atenção', 'Todas as partes da tarefa devem ser preenchidas.');
+            return;
+        }
+
+        const dados = {
+            ID: tarefaEditando.ID,
+            Tema: tema,
+            Parte1: parte1,
+            Parte2: parte2,
+            Parte3: parte3,
+            Parte4: parte4,
+            DataAula: dataAula
+        };
+
         const response = await apiPost('editarTarefa', dados);
         showModal('Sucesso', 'Tarefa atualizada com sucesso!');
         tarefaEditando = null;
@@ -1117,6 +1174,10 @@ async function atualizarTarefa() {
         await carregarTarefasProfessor();
     } catch (error) {
         showModal('Erro', `Erro ao atualizar tarefa: ${error.message}`);
+    } finally {
+        btnSalvar.textContent = textoOriginal;
+        btnSalvar.disabled = false;
+        btnSalvar.classList.remove('loading');
     }
 }
 
