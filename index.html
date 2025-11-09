@@ -47,7 +47,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 4.3
+        Desenvolvido por Geovane Modena | Versão 4.4
     </footer>
 </div>
 
@@ -181,13 +181,14 @@ async function init() {
         const response = await apiGet('getUsers');
         usuarios = response.data || [];
         console.log('Usuários carregados:', usuarios.length);
+        console.log('Professor Geovane Modena na lista:', usuarios.find(u => u.RA === '9999'));
     } catch (error) {
         console.error('Erro ao carregar usuários:', error);
         // Usuários fallback
         usuarios = [
             { 
-                NomeCompleto: "Professor SESI", 
-                Email: "professorsesi176@gmail.com", 
+                NomeCompleto: "Geovane Módena", 
+                Email: "geovane.modena@portalsesisp.org.br", 
                 RA: "9999", 
                 Turma: "", 
                 Perfil: "Professor" 
@@ -234,6 +235,16 @@ const renderLogin = () => {
                     Testar Conexão com Servidor
                 </button>
             </div>
+
+            <!-- CREDENCIAIS DE TESTE -->
+            <div class="mt-6 p-4 bg-gray-100 rounded-lg">
+                <h3 class="font-semibold text-gray-700 mb-2">Credenciais para teste:</h3>
+                <div class="text-sm text-gray-600 space-y-1">
+                    <div><strong>Professor:</strong> geovane.modena@portalsesisp.org.br / 9999</div>
+                    <div><strong>Aluno 1A:</strong> ana.mattos7@portalsesisp.org.br / 4386</div>
+                    <div><strong>Aluno 1B:</strong> agatha.souza@portalsesisp.org.br / 3691</div>
+                </div>
+            </div>
         </div>
     `;
 
@@ -247,9 +258,20 @@ async function login(event) {
     const ra = document.getElementById('ra').value.trim();
     
     const loginErro = document.getElementById('loginErro'); 
-    const user = usuarios.find(u => u.Email.toLowerCase() === email.toLowerCase() && String(u.RA) === ra);
+    
+    // CORREÇÃO: Comparar RAs como strings e fazer trim
+    const user = usuarios.find(u => {
+        const userEmail = u.Email.toLowerCase().trim();
+        const userRA = String(u.RA).trim();
+        const inputEmail = email.toLowerCase().trim();
+        const inputRA = ra.trim();
+        
+        return userEmail === inputEmail && userRA === inputRA;
+    });
     
     if (!user) {
+        console.log('Usuário não encontrado. Email:', email, 'RA:', ra);
+        console.log('Usuários disponíveis:', usuarios);
         loginErro.style.display = 'block';
         return;
     }
@@ -502,8 +524,17 @@ async function testarConexao() {
         showModal('Teste de Conexão', 'Testando conexão com o servidor...');
         
         const response = await apiGet('getTarefas');
+        const usersResponse = await apiGet('getUsers');
         
-        showModal('Conexão OK', `Conexão estabelecida com sucesso!\n\nTarefas no sistema: ${response.data ? response.data.length : 0}\nUsuários carregados: ${usuarios.length}`);
+        const professor = usersResponse.data.find(user => user.RA === '9999');
+        
+        showModal('Conexão OK', 
+            `Conexão estabelecida com sucesso!\n\n` +
+            `Tarefas no sistema: ${response.data ? response.data.length : 0}\n` +
+            `Usuários carregados: ${usersResponse.data ? usersResponse.data.length : 0}\n` +
+            `Professor Geovane Modena: ${professor ? 'ENCONTRADO' : 'NÃO ENCONTRADO'}\n` +
+            `Email do professor: ${professor ? professor.Email : 'N/A'}`
+        );
         
     } catch (error) {
         showModal('Erro de Conexão', `Falha na conexão:\n${error.message}`);
