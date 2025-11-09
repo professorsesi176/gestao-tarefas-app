@@ -29,7 +29,7 @@
         .hidden { display: none; }
         
         .checkbox-group {
-            display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; padding: 10px;
+            display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding: 10px;
             background-color: #f9f9f9; border-radius: 8px;
         }
         .checkbox-group label { font-weight: normal; display: flex; align-items: center; }
@@ -64,7 +64,7 @@
             text-align: center;
         }
         .acoes-column {
-            width: 100px;
+            width: 120px;
             text-align: center;
         }
         
@@ -74,8 +74,10 @@
             padding: 4px 8px;
             background-color: #f3f4f6;
             border-radius: 4px;
-            font-size: 0.875rem;
+            font-size: 0.75rem;
             margin-left: 8px;
+            min-width: 80px;
+            text-align: center;
         }
         .contador.disponivel {
             background-color: #d1fae5;
@@ -105,6 +107,55 @@
         .btn-link {
             padding: 6px 10px;
             font-size: 0.75rem;
+        }
+
+        /* Botões desabilitados */
+        .btn-link:disabled {
+            background-color: #9ca3af !important;
+            color: #6b7280 !important;
+            cursor: not-allowed !important;
+            opacity: 0.6;
+        }
+
+        .btn-link:disabled:hover {
+            background-color: #9ca3af !important;
+            transform: none !important;
+        }
+
+        /* Ajustes para o formulário de login */
+        #login-form input {
+            height: 45px; /* Reduzindo a altura */
+            width: 100%; /* Aumentando a largura */
+            padding: 10px 12px;
+        }
+
+        #login-form button {
+            padding: 10px 20px; /* Botão menor */
+            font-size: 0.9rem;
+        }
+
+        /* Container do login mais compacto */
+        #login {
+            max-width: 450px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Campo data menor */
+        #dataAula {
+            width: 180px; /* Largura reduzida */
+        }
+
+        /* Botões de ação mais visíveis */
+        .acoes-column button {
+            margin: 0 3px;
+            padding: 6px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .acoes-column button:hover {
+            transform: scale(1.1);
         }
     </style>
 </head>
@@ -156,6 +207,7 @@ let usuarioLogado = null;
 let tarefas = [];
 let jsonpCallbackId = 0;
 let tarefaParaExcluir = null;
+let contadoresAtivos = [];
 
 // --- ELEMENTOS DOM ---
 const contentArea = document.getElementById('content-area');
@@ -204,7 +256,7 @@ const formatarData = (dataISO) => {
     return new Date(dataISO).toLocaleDateString('pt-BR');
 };
 
-// Função para calcular contadores de tempo
+// Função para calcular contadores de tempo com minutos e segundos
 function calcularContadores(dataAula) {
     const agora = new Date();
     const dataAulaObj = new Date(dataAula);
@@ -225,18 +277,34 @@ function calcularContadores(dataAula) {
     // Calcula o tempo restante para cada parte
     const calcularTempoRestante = (limite) => {
         const diff = limite - agora;
-        if (diff <= 0) return { texto: 'Expirado', classe: 'expirado' };
+        if (diff <= 0) return { 
+            texto: 'Expirado', 
+            classe: 'expirado', 
+            expirado: true 
+        };
         
         const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
         const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const segundos = Math.floor((diff % (1000 * 60)) / 1000);
         
-        if (dias === 0) {
-            return { texto: `${horas}h`, classe: 'urgente' };
-        } else if (dias <= 3) {
-            return { texto: `${dias}d ${horas}h`, classe: 'urgente' };
+        let texto = '';
+        if (dias > 0) {
+            texto = `${dias}d ${horas}h ${minutos}m`;
+        } else if (horas > 0) {
+            texto = `${horas}h ${minutos}m ${segundos}s`;
         } else {
-            return { texto: `${dias}d`, classe: 'disponivel' };
+            texto = `${minutos}m ${segundos}s`;
         }
+        
+        const classe = dias === 0 ? 'urgente' : 'disponivel';
+        
+        return { 
+            texto, 
+            classe, 
+            expirado: false,
+            restante: diff
+        };
     };
     
     return {
@@ -245,6 +313,60 @@ function calcularContadores(dataAula) {
         parte3: calcularTempoRestante(parte3Limite),
         parte4: calcularTempoRestante(parte4Limite)
     };
+}
+
+// Função para atualizar contadores em tempo real
+function iniciarAtualizacaoContadores() {
+    // Limpar intervalos anteriores
+    contadoresAtivos.forEach(interval => clearInterval(interval));
+    contadoresAtivos = [];
+    
+    // Atualizar contadores a cada segundo
+    const interval = setInterval(() => {
+        if (usuarioLogado && usuarioLogado.Perfil === 'Aluno') {
+            atualizarContadoresAluno();
+        }
+    }, 1000);
+    
+    contadoresAtivos.push(interval);
+}
+
+function atualizarContadoresAluno() {
+    const containers = document.querySelectorAll('#tarefas-aluno-container > div');
+    containers.forEach(container => {
+        const tema = container.querySelector('h4').textContent;
+        const dataAulaText = container.querySelector('p').textContent.replace('Data da aula: ', '');
+        
+        // Encontrar a tarefa correspondente
+        const tarefa = tarefas.find(t => t.Tema === tema);
+        if (tarefa) {
+            const contadores = calcularContadores(tarefa.DataAula);
+            
+            // Atualizar cada parte
+            [1, 2, 3, 4].forEach(parte => {
+                const contadorElement = container.querySelector(`.parte-${parte} .contador`);
+                if (contadorElement) {
+                    const contador = contadores[`parte${parte}`];
+                    contadorElement.textContent = contador.texto;
+                    contadorElement.className = `contador ${contador.classe}`;
+                    
+                    // Atualizar estado dos botões
+                    const salvarBtn = container.querySelector(`.parte-${parte} .btn-salvar`);
+                    const excluirBtn = container.querySelector(`.parte-${parte} .btn-excluir`);
+                    
+                    if (salvarBtn && excluirBtn) {
+                        const desabilitado = contador.expirado;
+                        salvarBtn.disabled = desabilitado;
+                        excluirBtn.disabled = desabilitado;
+                        
+                        // Desabilitar input também
+                        const input = container.querySelector(`.parte-${parte} .link-input`);
+                        if (input) input.disabled = desabilitado;
+                    }
+                }
+            });
+        }
+    });
 }
 
 // --- API REQUEST COM JSONP (SOLUÇÃO SIMPLIFICADA) ---
@@ -411,6 +533,15 @@ async function login(event) {
     logoutBtn.classList.remove('hidden');
     userInfoDisplay.innerHTML = `Logado como: <span class="font-semibold text-red-700">${user.NomeCompleto} (${user.Perfil})</span> | Turma: ${user.Turma || 'N/A'}`;
 
+    // Carregar tarefas para uso geral
+    try {
+        const response = await apiGet('getTarefas');
+        tarefas = response.data || [];
+    } catch (error) {
+        console.error('Erro ao carregar tarefas:', error);
+        tarefas = [];
+    }
+
     if (user.Perfil === "Professor") {
         await mostrarPainelProfessor();
     } else {
@@ -424,6 +555,9 @@ function logout() {
     usuarioLogado = null;
     logoutBtn.classList.add('hidden');
     userInfoDisplay.innerHTML = '';
+    // Parar todos os contadores
+    contadoresAtivos.forEach(interval => clearInterval(interval));
+    contadoresAtivos = [];
     renderLogin(); 
 }
 
@@ -446,7 +580,7 @@ async function mostrarPainelProfessor() {
                 
                 <div class="form-row">
                     <label for="dataAula" class="block text-sm font-medium text-gray-700">Data da Aula</label>
-                    <input type="date" id="dataAula" class="mt-1" required>
+                    <input type="date" id="dataAula" class="mt-1" required style="width: 180px;">
                 </div>
                 
                 <div class="mt-4 space-y-4">
@@ -577,15 +711,26 @@ function renderizarTabelaTarefas() {
 }
 
 function solicitarExclusaoTarefa(idTarefa) {
+    const tarefa = tarefas.find(t => t.ID === idTarefa);
     tarefaParaExcluir = idTarefa;
-    showConfirmModal('Tem certeza que deseja excluir esta tarefa?', () => {
+    showConfirmModal(`Tem certeza que deseja excluir a tarefa "${tarefa?.Tema}" da turma ${tarefa?.Turma}?`, () => {
         excluirTarefa(idTarefa);
     });
 }
 
 async function editarTarefa(idTarefa) {
-    // Implementar funcionalidade de edição
-    showModal('Editar Tarefa', 'Funcionalidade de edição será implementada em breve.');
+    const tarefa = tarefas.find(t => t.ID === idTarefa);
+    if (!tarefa) {
+        showModal('Erro', 'Tarefa não encontrada.');
+        return;
+    }
+
+    showModal('Editar Tarefa', 
+        `Funcionalidade de edição em desenvolvimento.\n\n` +
+        `Tarefa: ${tarefa.Tema}\n` +
+        `Turma: ${tarefa.Turma}\n` +
+        `Data: ${formatarData(tarefa.DataAula)}`
+    );
 }
 
 async function salvarTarefa() {
@@ -675,6 +820,7 @@ async function mostrarPainelAluno() {
     `;
 
     await carregarTarefasAluno();
+    iniciarAtualizacaoContadores();
 }
 
 async function carregarTarefasAluno() {
@@ -687,6 +833,15 @@ async function carregarTarefasAluno() {
             return;
         }
 
+        // Buscar entregas existentes do aluno
+        let entregas = [];
+        try {
+            const entregasResponse = await apiGet('getEntregasAluno', { ra: usuarioLogado.RA });
+            entregas = entregasResponse.data || [];
+        } catch (error) {
+            console.error('Erro ao carregar entregas:', error);
+        }
+
         container.innerHTML = response.data.map(tarefa => {
             // Garantir que todas as partes sejam strings para alunos também
             const parte1 = tarefa.Parte1 || '';
@@ -697,6 +852,9 @@ async function carregarTarefasAluno() {
             // Calcular contadores de tempo
             const contadores = calcularContadores(tarefa.DataAula);
 
+            // Encontrar entrega existente para esta tarefa
+            const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
+
             return `
             <div class="border border-gray-200 rounded-lg p-4 mb-4">
                 <div class="flex justify-between items-start">
@@ -704,61 +862,10 @@ async function carregarTarefasAluno() {
                         <h4 class="font-semibold text-lg text-gray-800">${tarefa.Tema}</h4>
                         <p class="text-sm text-gray-600 mt-1">Data da aula: ${formatarData(tarefa.DataAula)}</p>
                         
-                        ${parte1 ? `
-                        <div class="mt-3 p-3 bg-gray-50 rounded border">
-                            <div class="flex justify-between items-center">
-                                <strong>Parte 1:</strong>
-                                <span class="contador ${contadores.parte1.classe}">${contadores.parte1.texto}</span>
-                            </div>
-                            <p class="mt-1">${parte1}</p>
-                            <div class="link-container">
-                                <input type="text" class="link-input" placeholder="Cole o link da atividade aqui">
-                                <button class="btn-primary btn-link">Salvar</button>
-                                <button class="btn-secondary btn-link">Excluir</button>
-                            </div>
-                        </div>` : ''}
-                        
-                        ${parte2 ? `
-                        <div class="mt-2 p-3 bg-gray-50 rounded border">
-                            <div class="flex justify-between items-center">
-                                <strong>Parte 2:</strong>
-                                <span class="contador ${contadores.parte2.classe}">${contadores.parte2.texto}</span>
-                            </div>
-                            <p class="mt-1">${parte2}</p>
-                            <div class="link-container">
-                                <input type="text" class="link-input" placeholder="Cole o link da atividade aqui">
-                                <button class="btn-primary btn-link">Salvar</button>
-                                <button class="btn-secondary btn-link">Excluir</button>
-                            </div>
-                        </div>` : ''}
-                        
-                        ${parte3 ? `
-                        <div class="mt-2 p-3 bg-gray-50 rounded border">
-                            <div class="flex justify-between items-center">
-                                <strong>Parte 3:</strong>
-                                <span class="contador ${contadores.parte3.classe}">${contadores.parte3.texto}</span>
-                            </div>
-                            <p class="mt-1">${parte3}</p>
-                            <div class="link-container">
-                                <input type="text" class="link-input" placeholder="Cole o link da atividade aqui">
-                                <button class="btn-primary btn-link">Salvar</button>
-                                <button class="btn-secondary btn-link">Excluir</button>
-                            </div>
-                        </div>` : ''}
-                        
-                        ${parte4 ? `
-                        <div class="mt-2 p-3 bg-gray-50 rounded border">
-                            <div class="flex justify-between items-center">
-                                <strong>Parte 4:</strong>
-                                <span class="contador ${contadores.parte4.classe}">${contadores.parte4.texto}</span>
-                            </div>
-                            <p class="mt-1">${parte4}</p>
-                            <div class="link-container">
-                                <input type="text" class="link-input" placeholder="Cole o link da atividade aqui">
-                                <button class="btn-primary btn-link">Salvar</button>
-                                <button class="btn-secondary btn-link">Excluir</button>
-                            </div>
-                        </div>` : ''}
+                        ${parte1 ? renderParteTarefa(tarefa.ID, 1, parte1, contadores.parte1, entrega) : ''}
+                        ${parte2 ? renderParteTarefa(tarefa.ID, 2, parte2, contadores.parte2, entrega) : ''}
+                        ${parte3 ? renderParteTarefa(tarefa.ID, 3, parte3, contadores.parte3, entrega) : ''}
+                        ${parte4 ? renderParteTarefa(tarefa.ID, 4, parte4, contadores.parte4, entrega) : ''}
                     </div>
                 </div>
             </div>
@@ -770,6 +877,83 @@ async function carregarTarefasAluno() {
         console.error('Erro ao carregar tarefas:', error);
         document.getElementById('tarefas-aluno-container').innerHTML = 
             `<div class="text-center text-red-500 py-8">Erro ao carregar tarefas: ${error.message}</div>`;
+    }
+}
+
+// Função auxiliar para renderizar cada parte da tarefa
+function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
+    const desabilitado = contador.expirado;
+    const linkSalvo = entrega ? entrega[`Link${numeroParte}`] : '';
+    const inputId = `link-${idTarefa}-${numeroParte}`;
+
+    return `
+    <div class="mt-3 p-3 bg-gray-50 rounded border parte-${numeroParte}">
+        <div class="flex justify-between items-center">
+            <strong>Parte ${numeroParte}:</strong>
+            <span class="contador ${contador.classe}">${contador.texto}</span>
+        </div>
+        <p class="mt-1">${conteudo}</p>
+        <div class="link-container">
+            <input type="text" 
+                   class="link-input" 
+                   placeholder="Cole o link da atividade aqui" 
+                   id="${inputId}"
+                   value="${linkSalvo || ''}"
+                   ${desabilitado ? 'disabled' : ''}>
+            <button class="btn-primary btn-link btn-salvar" 
+                    onclick="salvarLink('${idTarefa}', ${numeroParte})"
+                    ${desabilitado ? 'disabled' : ''}>
+                Salvar
+            </button>
+            <button class="btn-secondary btn-link btn-excluir" 
+                    onclick="excluirLink('${idTarefa}', ${numeroParte})"
+                    ${desabilitado || !linkSalvo ? 'disabled' : ''}>
+                Excluir
+            </button>
+        </div>
+        ${linkSalvo ? '<p class="text-green-600 text-sm mt-1">✓ Link já enviado</p>' : ''}
+    </div>`;
+}
+
+// Funções para gerenciar links de entrega
+async function salvarLink(idTarefa, parte) {
+    const input = document.getElementById(`link-${idTarefa}-${parte}`);
+    const link = input.value.trim();
+
+    if (!link) {
+        showModal('Atenção', 'Por favor, cole um link válido.');
+        return;
+    }
+
+    try {
+        const response = await apiPost('entregarTarefa', {
+            ID_Tarefa: idTarefa,
+            RA_Aluno: usuarioLogado.RA,
+            NomeAluno: usuarioLogado.NomeCompleto,
+            Turma: usuarioLogado.Turma,
+            Parte: parte,
+            [`Link${parte}`]: link
+        });
+        
+        showModal('Sucesso', `Link da parte ${parte} salvo com sucesso!`);
+        await carregarTarefasAluno(); // Recarrega as tarefas para atualizar o estado
+    } catch (error) {
+        showModal('Erro', `Erro ao salvar link: ${error.message}`);
+    }
+}
+
+async function excluirLink(idTarefa, parte) {
+    try {
+        const response = await apiPost('excluirEntrega', {
+            ID_Tarefa: idTarefa,
+            RA_Aluno: usuarioLogado.RA,
+            Parte: parte
+        });
+        
+        showModal('Sucesso', `Link da parte ${parte} excluído com sucesso!`);
+        await carregarTarefasAluno(); // Recarrega as tarefas para atualizar o estado
+    } catch (error) {
+        showModal('Erro', `Erro ao excluir link: ${error.message}`);
     }
 }
 
@@ -811,6 +995,8 @@ window.limparFormulario = limparFormulario;
 window.mostrarPainelAluno = mostrarPainelAluno;
 window.closeModal = closeModal;
 window.testarConexao = testarConexao;
+window.salvarLink = salvarLink;
+window.excluirLink = excluirLink;
 </script>
 </body>
 </html>
