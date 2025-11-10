@@ -3,933 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Tarefas Escolar</title>
+    <title>Gestão de Tarefas Escolar - DEBUG</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
-    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
         .card { background-color: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.2); }
-        .btn-primary { background-color: #CC0000; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; font-size: 14px; }
+        .btn-primary { background-color: #CC0000; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; }
         .btn-primary:hover { background-color: #A00000; }
-        .btn-secondary { background-color: #d1d5db; color: #1e1e1e; padding: 8px 16px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; }
-        .btn-secondary:hover { background-color: #9ca3af; }
-        .btn-small { padding: 6px 12px; font-size: 0.875rem; }
-        input, textarea, select {
-            border: 1px solid #d1d5db; padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box;
-            transition: border-color 0.2s; margin-top: 4px; margin-bottom: 8px;
-        }
-        input:focus, textarea:focus, select:focus { border-color: #CC0000; outline: none; }
-        [data-lucide] { width: 20px; height: 20px; display: inline-block; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #CC0000; color: white; }
-        tbody tr:nth-child(even) { background-color: #f9f9f9; }
+        input { border: 1px solid #d1d5db; padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 8px; }
         .hidden { display: none; }
-        
-        .checkbox-group {
-            display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; padding: 10px;
-            background-color: #f9f9f9; border-radius: 8px;
-        }
-        .checkbox-group label { font-weight: normal; display: flex; align-items: center; }
-        .checkbox-group input { width: auto; margin: 0 5px 0 0; }
-        
-        .form-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .form-row label {
-            margin-bottom: 0;
-            min-width: 120px;
-        }
-        .form-row input, .form-row textarea {
-            flex: 1;
-            margin-top: 0;
-        }
-        
-        .compact-table th, .compact-table td {
-            padding: 12px 8px;
-        }
-        .turma-column {
-            width: 80px;
-            text-align: center;
-        }
-        .data-column {
-            width: 120px;
-            text-align: center;
-        }
-        .acoes-column {
-            width: 200px;
-            text-align: center;
-        }
-        
-        .contador {
-            display: inline-block;
-            padding: 4px 8px;
-            background-color: #f3f4f6;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            margin-left: 8px;
-            min-width: 80px;
-            text-align: center;
-        }
-        .contador.disponivel {
-            background-color: #d1fae5;
-            color: #065f46;
-        }
-        .contador.urgente {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
-        .contador.expirado {
-            background-color: #fee2e2;
-            color: #991b1b;
-        }
-        .contador.aguardando {
-            background-color: #e5e7eb;
-            color: #374151;
-        }
-        
-        .link-container {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-            align-items: center;
-        }
-        .link-input {
-            flex: 1;
-            padding: 8px;
-            font-size: 0.875rem;
-        }
-        .btn-link {
-            padding: 8px 12px;
-            font-size: 0.8rem;
-        }
-
-        .btn-link:disabled {
-            background-color: #9ca3af !important;
-            color: #6b7280 !important;
-            cursor: not-allowed !important;
-            opacity: 0.6;
-        }
-
-        .btn-link:disabled:hover {
-            background-color: #9ca3af !important;
-            transform: none !important;
-        }
-
-        .link-salvo {
-            background-color: #f3f4f6 !important;
-            color: #6b7280 !important;
-            cursor: not-allowed !important;
-            border: 1px solid #d1d5db;
-        }
-
-        #login-form input {
-            height: 50px;
-            width: 100%;
-            padding: 12px 16px;
-            font-size: 16px;
-        }
-
-        #login-form button {
-            padding: 10px 30px;
-            font-size: 16px;
-            width: auto;
-            margin: 10px auto 0 auto;
-            display: block;
-            height: auto;
-        }
-
-        #login {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        .acoes-column button {
-            margin: 0 4px;
-            padding: 8px 16px;
-            border-radius: 6px;
-            transition: all 0.2s;
-            font-size: 0.875rem;
-        }
-
-        .btn-editar {
-            background-color: #3b82f6;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .btn-editar:hover {
-            background-color: #2563eb;
-        }
-
-        .btn-excluir {
-            background-color: #ef4444;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .btn-excluir:hover {
-            background-color: #dc2626;
-        }
-
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .checkbox-item label {
-            margin-bottom: 0;
-            min-width: auto;
-        }
-
-        .user-info-container {
-            text-align: center;
-            margin: 10px 0;
-            padding: 0 20px;
-            line-height: 1.5;
-        }
-
-        .user-info-text {
-            font-size: 14px;
-            color: #4b5563;
-        }
-
-        .user-info-name {
-            font-weight: 600;
-            color: #CC0000;
-        }
-
-        .header-content {
-            position: relative;
-            padding-bottom: 15px;
-        }
-
-        .btn-relatorio {
-            background-color: #10b981;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-weight: 600;
-            transition: background-color 0.2s;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-
-        .btn-relatorio:hover {
-            background-color: #059669;
-        }
-
-        .loading {
-            opacity: 0.7;
-            pointer-events: none;
-        }
-
-        .btn-turma {
-            background-color: #CC0000;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: background-color 0.2s;
-            cursor: pointer;
-            margin: 5px;
-        }
-
-        .btn-turma:hover {
-            background-color: #A00000;
-        }
-
-        .table-header-white th {
-            color: white !important;
-            background-color: #CC0000 !important;
-        }
-
-        .btn-login-loading {
-            position: relative;
-            color: transparent;
-        }
-
-        .btn-login-loading::after {
-            content: "";
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            top: 50%;
-            left: 50%;
-            margin-left: -10px;
-            margin-top: -10px;
-            border: 2px solid #ffffff;
-            border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* ESTILO PARA PREVENIR SOBREPOSIÇÃO */
-        #content-area {
-            min-height: 400px;
-            position: relative;
-        }
-        
-        .loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-        }
+        .log-container { background: #1a1a1a; color: #00ff00; padding: 10px; border-radius: 8px; font-family: monospace; max-height: 300px; overflow-y: auto; }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
 
-<div id="app-container" class="w-full max-w-6xl bg-white shadow-xl rounded-2xl p-6 sm:p-8 transition-all duration-300">
+<div class="w-full max-w-4xl bg-white shadow-xl rounded-2xl p-6">
     <header class="mb-8 border-b pb-4">
-        <div class="header-content">
-            <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar</h1>
-            <div id="user-info" class="user-info-container"></div>
-            <div class="absolute top-0 right-0 flex space-x-2">
-                <button id="relatorioBtn" class="btn-relatorio hidden">Relatório</button>
-                <button onclick="logout()" id="logoutBtn" class="btn-secondary hidden">Sair</button>
-            </div>
-        </div>
+        <h1 class="text-3xl font-extrabold text-red-700 text-center">Sistema de Tarefas - MODO DEBUG</h1>
     </header>
 
-    <div id="content-area">
-        <!-- Conteúdo será carregado aqui -->
-    </div>
+    <div class="space-y-6">
+        <!-- TESTE DIRETO DO BACKEND -->
+        <div class="card p-6">
+            <h2 class="text-2xl font-bold text-red-700 mb-4">🧪 Teste de Conexão com Backend</h2>
+            <button onclick="testarBackend()" class="btn-primary mb-4">Testar Conexão</button>
+            <div class="log-container">
+                <div id="debug-log">Clique em "Testar Conexão" para ver os logs...</div>
+            </div>
+        </div>
 
-    <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão Estável
-    </footer>
-</div>
+        <!-- LOGIN SIMPLES -->
+        <div class="card p-6">
+            <h2 class="text-2xl font-bold text-red-700 mb-4">🔐 Login de Teste</h2>
+            <form onsubmit="loginTeste(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
+                    <input type="email" id="email" placeholder="seu.email@escola.com" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">RA</label>
+                    <input type="text" id="ra" placeholder="Apenas números" required>
+                </div>
+                <button type="submit" class="btn-primary w-full">Entrar</button>
+            </form>
+            <div id="login-result" class="mt-4 hidden"></div>
+        </div>
 
-<!-- Modal para mensagens -->
-<div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-lg p-6 max-w-sm w-full shadow-2xl">
-        <h3 id="modal-title" class="text-xl font-bold mb-3 text-red-600"></h3>
-        <p id="modal-message" class="text-gray-700 mb-4 whitespace-pre-wrap"></p>
-        <button onclick="closeModal()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">OK</button>
+        <!-- INFORMAÇÕES TÉCNICAS -->
+        <div class="card p-6">
+            <h2 class="text-2xl font-bold text-red-700 mb-4">🔧 Informações Técnicas</h2>
+            <div class="space-y-2 text-sm">
+                <p><strong>URL do Backend:</strong> <code id="backend-url"></code></p>
+                <p><strong>ID da Planilha:</strong> <code>1EXQmylx6j8knDMYUty3u2x6dM5exR4GjVlJknxAAp7c</code></p>
+                <p><strong>Token de Segurança:</strong> <code>SESI_EDUCATION_2024</code></p>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-// --- CONFIGURAÇÃO ---
-// ⚠️ ATUALIZE ESTE URL COM SEU SCRIPT ID!
+// CONFIGURAÇÃO
 const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
-const SECURITY_TOKEN = 'SESI_EDUCATION_2024';
+const SECRET_KEY = 'SESI_EDUCATION_2024';
 
-// --- ESTADO DA APLICAÇÃO ---
-let usuarioLogado = null;
-let tarefas = [];
-let jsonpCallbackId = 0;
-let tarefaParaExcluir = null;
-let contadoresAtivos = [];
-let tarefaEditando = null;
+// ELEMENTOS
+const debugLog = document.getElementById('debug-log');
+const backendUrl = document.getElementById('backend-url');
+const loginResult = document.getElementById('login-result');
 
-// --- ELEMENTOS DOM ---
-const contentArea = document.getElementById('content-area');
-const userInfoDisplay = document.getElementById('user-info');
-const logoutBtn = document.getElementById('logoutBtn');
-const relatorioBtn = document.getElementById('relatorioBtn');
-const modalOverlay = document.getElementById('modal-overlay');
-const modalTitle = document.getElementById('modal-title');
-const modalMessage = document.getElementById('modal-message');
+// MOSTRAR URL DO BACKEND
+backendUrl.textContent = API_URL;
 
-// --- FUNÇÕES UTILITÁRIAS ---
-const showModal = (title, message) => {
-    modalTitle.textContent = title;
-    modalMessage.textContent = message;
-    modalOverlay.classList.remove('hidden');
-    modalOverlay.classList.add('flex');
-};
-
-const closeModal = () => modalOverlay.classList.add('hidden');
-
-const showLoading = (message = 'Carregando...') => {
-    contentArea.innerHTML = `
-        <div class="loading-overlay">
-            <div class="text-center">
-                <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mb-4"></div>
-                <p class="text-gray-600">${message}</p>
-            </div>
-        </div>
-    `;
-};
-
-const formatarData = (dataISO) => {
-    if (!dataISO) return 'N/A';
-    const data = new Date(dataISO);
-    return data.toLocaleDateString('pt-BR');
-};
-
-// --- API REQUEST SIMPLIFICADA ---
-function apiRequestJSONP(url, callback) {
-    const callbackName = 'jsonp_callback_' + jsonpCallbackId++;
-    
-    window[callbackName] = function(data) {
-        delete window[callbackName];
-        document.body.removeChild(script);
-        callback(null, data);
-    };
-    
-    const script = document.createElement('script');
-    script.src = url;
-    script.onerror = function() {
-        delete window[callbackName];
-        document.body.removeChild(script);
-        callback(new Error('Falha ao carregar o script'));
-    };
-    
-    document.body.appendChild(script);
+// FUNÇÃO PARA ADICIONAR LOGS
+function addLog(message, type = 'info') {
+    const timestamp = new Date().toLocaleTimeString();
+    const color = type === 'error' ? '#ff4444' : type === 'success' ? '#00ff00' : '#ffffff';
+    const logEntry = document.createElement('div');
+    logEntry.innerHTML = `<span style="color: #888">[${timestamp}]</span> <span style="color: ${color}">${message}</span>`;
+    debugLog.appendChild(logEntry);
+    debugLog.scrollTop = debugLog.scrollHeight;
 }
 
-async function apiGet(func, params = {}) {
-    return new Promise((resolve, reject) => {
-        let url = `${API_URL}?token=${SECURITY_TOKEN}&func=${func}`;
+// TESTAR CONEXÃO COM BACKEND
+async function testarBackend() {
+    addLog('🚀 INICIANDO TESTE DE CONEXÃO...');
+    
+    try {
+        addLog('📡 Testando função getUsers...');
         
-        for (const key in params) {
-            if (params[key] !== undefined && params[key] !== null) {
-                url += `&${key}=${encodeURIComponent(params[key])}`;
-            }
+        const url = `${API_URL}?token=${SECRET_KEY}&func=getUsers&_t=${Date.now()}`;
+        addLog(`🔗 URL: ${url}`);
+        
+        const response = await fetch(url);
+        addLog(`📊 Status HTTP: ${response.status}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
-        // Adicionar timestamp para evitar cache
-        url += `&_t=${Date.now()}`;
+        const text = await response.text();
+        addLog(`📨 Resposta bruta: ${text.substring(0, 500)}...`);
         
-        apiRequestJSONP(url, (error, data) => {
-            if (error) {
-                reject(error);
-            } else if (data && data.success === false) {
-                reject(new Error(data.error));
-            } else {
-                resolve(data);
-            }
-        });
-    });
-}
-
-async function apiPost(action, dados) {
-    return new Promise((resolve, reject) => {
-        let url = `${API_URL}?token=${SECURITY_TOKEN}&action=${action}`;
-        
-        for (const key in dados) {
-            if (dados[key] !== undefined && dados[key] !== null) {
-                if (Array.isArray(dados[key])) {
-                    url += `&${key}=${encodeURIComponent(JSON.stringify(dados[key]))}`;
-                } else {
-                    url += `&${key}=${encodeURIComponent(dados[key])}`;
-                }
-            }
+        let data;
+        try {
+            data = JSON.parse(text);
+            addLog('✅ JSON parseado com sucesso');
+        } catch (e) {
+            addLog('❌ Erro ao parsear JSON: ' + e.message, 'error');
+            return;
         }
         
-        // Adicionar timestamp para evitar cache
-        url += `&_t=${Date.now()}`;
+        if (data.success) {
+            addLog(`✅ BACKEND FUNCIONANDO! Usuários encontrados: ${data.data.length}`, 'success');
+            addLog(`📋 Dados: ${JSON.stringify(data.data)}`);
+        } else {
+            addLog(`❌ Backend retornou erro: ${data.error}`, 'error');
+        }
         
-        apiRequestJSONP(url, (error, data) => {
-            if (error) {
-                reject(error);
-            } else if (data && data.success === false) {
-                reject(new Error(data.error));
-            } else {
-                resolve(data);
-            }
-        });
-    });
+    } catch (error) {
+        addLog(`💥 ERRO CRÍTICO: ${error.message}`, 'error');
+        addLog('🔍 Possíveis causas:', 'error');
+        addLog('- Script não implementado como App Web', 'error');
+        addLog('- Permissões insuficientes na planilha', 'error');
+        addLog('- ID da planilha incorreto no backend', 'error');
+    }
 }
 
-// --- INICIALIZAÇÃO ---
-function init() {
-    renderLogin();
-}
-
-// --- FUNÇÕES DE AUTENTICAÇÃO ---
-function renderLogin() {
-    contentArea.innerHTML = `
-        <div id="login" class="max-w-md mx-auto p-6">
-            <h2 class="text-2xl font-bold text-center text-red-700 mb-6">Login</h2>
-            <div id="loginErro" class="text-red-500 mb-4 hidden text-center font-semibold"></div>
-
-            <form id="login-form" class="space-y-4">
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
-                    <input type="email" id="email" name="email" required placeholder="seu.email@escola.com" class="w-full">
-                </div>
-                <div>
-                    <label for="ra" class="block text-sm font-medium text-gray-700 mb-2">RA</label>
-                    <input type="text" id="ra" name="ra" required placeholder="Apenas números" class="w-full">
-                </div>
-                <button type="submit" class="btn-primary w-full" id="loginBtn">
-                    Entrar
-                </button>
-            </form>
-        </div>
-    `;
-
-    document.getElementById('login-form').addEventListener('submit', login);
-}
-
-async function login(event) {
-    event.preventDefault(); 
+// LOGIN DE TESTE
+async function loginTeste(event) {
+    event.preventDefault();
     
     const email = document.getElementById('email').value.trim();
     const ra = document.getElementById('ra').value.trim();
-    const loginBtn = document.getElementById('loginBtn');
-    const loginErro = document.getElementById('loginErro');
     
-    if (!email || !ra) {
-        loginErro.textContent = 'Por favor, preencha todos os campos.';
-        loginErro.style.display = 'block';
-        return;
-    }
-
-    // Mostrar loading
-    loginBtn.disabled = true;
-    loginBtn.classList.add('btn-login-loading');
-    loginErro.style.display = 'none';
+    loginResult.className = 'p-4 rounded hidden';
+    loginResult.innerHTML = '';
     
     try {
-        // Buscar todos os usuários
-        showLoading('Verificando credenciais...');
-        const response = await apiGet('getUsers');
-        const users = response.data || [];
+        addLog(`🔐 Tentando login: ${email} / ${ra}`);
         
-        const usuario = users.find(user => 
-            user.Email === email && user.RA === ra
-        );
+        const url = `${API_URL}?token=${SECRET_KEY}&func=getUsers&_t=${Date.now()}`;
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Erro desconhecido');
+        }
+        
+        const users = data.data || [];
+        const usuario = users.find(user => user.Email === email && user.RA === ra);
         
         if (usuario) {
-            usuarioLogado = usuario;
-            
-            // Mostrar informações do usuário
-            logoutBtn.classList.remove('hidden');
-            relatorioBtn.classList.remove('hidden');
-            
-            if (usuarioLogado.Perfil === "Professor") {
-                userInfoDisplay.innerHTML = `
-                    <div class="user-info-text">
-                        Logado como: <span class="user-info-name">${usuarioLogado.NomeCompleto}</span> | Professor
-                    </div>
-                `;
-                relatorioBtn.onclick = mostrarRelatorioProfessor;
-            } else {
-                userInfoDisplay.innerHTML = `
-                    <div class="user-info-text">
-                        Logado como: <span class="user-info-name">${usuarioLogado.NomeCompleto}</span> | Turma: ${usuarioLogado.Turma || 'N/A'}
-                    </div>
-                `;
-                relatorioBtn.onclick = mostrarRelatorioAluno;
-            }
-
-            // Carregar tarefas
-            showLoading('Carregando painel...');
-            
-            try {
-                const tarefasResponse = await apiGet('getTarefas');
-                tarefas = tarefasResponse.data || [];
-            } catch (error) {
-                console.error('Erro ao carregar tarefas:', error);
-                tarefas = [];
-            }
-
-            // Redirecionar para o painel correto
-            if (usuarioLogado.Perfil === "Professor") {
-                await mostrarPainelProfessor();
-            } else {
-                await mostrarPainelAluno(); 
-            }
-            
-        } else {
-            loginErro.textContent = 'E-mail ou RA incorretos!';
-            loginErro.style.display = 'block';
-            contentArea.innerHTML = document.getElementById('login').innerHTML;
-            document.getElementById('login-form').addEventListener('submit', login);
-        }
-        
-    } catch (error) {
-        console.error('Erro no login:', error);
-        loginErro.textContent = 'Erro ao conectar com o servidor. Verifique a conexão.';
-        loginErro.style.display = 'block';
-        contentArea.innerHTML = document.getElementById('login').innerHTML;
-        document.getElementById('login-form').addEventListener('submit', login);
-    } finally {
-        // Restaurar botão
-        loginBtn.disabled = false;
-        loginBtn.classList.remove('btn-login-loading');
-    }
-}
-
-function logout() {
-    usuarioLogado = null;
-    tarefaEditando = null;
-    logoutBtn.classList.add('hidden');
-    relatorioBtn.classList.add('hidden');
-    userInfoDisplay.innerHTML = '';
-    contadoresAtivos.forEach(interval => clearInterval(interval));
-    contadoresAtivos = [];
-    renderLogin(); 
-}
-
-// --- PAINEL DO PROFESSOR ---
-async function mostrarPainelProfessor() {
-    contentArea.innerHTML = `
-        <div class="space-y-6">
-            <div class="card p-6 border-t-4 border-red-600">
-                <h3 class="text-2xl font-bold mb-4 text-red-700">Criar Nova Tarefa</h3>
-                
-                <div class="form-row">
-                    <label class="block text-sm font-medium text-gray-700">Turmas:</label>
-                    <div class="checkbox-group" id="turmasCheckboxes"></div>
-                </div>
-                
-                <div class="form-row">
-                    <label for="tema" class="block text-sm font-medium text-gray-700">Tema da Tarefa</label>
-                    <input type="text" id="tema" placeholder="Ex: Matemática - Frações" class="mt-1" required>
-                </div>
-                
-                <div class="form-row">
-                    <label for="dataAula" class="block text-sm font-medium text-gray-700">Data da Aula</label>
-                    <input type="date" id="dataAula" class="mt-1" required>
-                </div>
-                
-                <div class="mt-4 space-y-4">
-                    <div>
-                        <label for="parte1" class="block text-sm font-medium text-gray-700 mb-2">Parte 1 (até 18h do dia)</label>
-                        <textarea id="parte1" placeholder="Descreva a parte 1 da tarefa" rows="3" required></textarea>
-                    </div>
-                    <div>
-                        <label for="parte2" class="block text-sm font-medium text-gray-700 mb-2">Parte 2 (3º-7º dia)</label>
-                        <textarea id="parte2" placeholder="Descreva a parte 2 da tarefa" rows="3" required></textarea>
-                    </div>
-                    <div>
-                        <label for="parte3" class="block text-sm font-medium text-gray-700 mb-2">Parte 3 (8º-14º dia)</label>
-                        <textarea id="parte3" placeholder="Descreva a parte 3 da tarefa" rows="3" required></textarea>
-                    </div>
-                    <div>
-                        <label for="parte4" class="block text-sm font-medium text-gray-700 mb-2">Parte 4 (15º-28º dia)</label>
-                        <textarea id="parte4" placeholder="Descreva a parte 4 da tarefa" rows="3" required></textarea>
-                    </div>
-                </div>
-                
-                <div class="mt-6 flex space-x-4">
-                    <button onclick="salvarTarefa()" class="btn-primary flex-1" id="btnSalvarTarefa">
-                        Salvar Tarefa
-                    </button>
-                    <button onclick="limparFormulario()" class="btn-secondary flex-1">
-                        Limpar
-                    </button>
-                </div>
-            </div>
-
-            <div class="card p-6">
-                <h3 class="text-2xl font-bold mb-4 text-red-700">Tarefas Criadas</h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full compact-table">
-                        <thead>
-                            <tr>
-                                <th class="turma-column">Turma</th>
-                                <th>Tema</th>
-                                <th class="data-column">Data</th>
-                                <th class="acoes-column">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaTarefasBody">
-                            <tr>
-                                <td colspan="4" class="text-center py-4 text-gray-500">Carregando tarefas...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    `;
-
-    // Popula checkboxes de turma
-    const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
-    document.getElementById('turmasCheckboxes').innerHTML = turmas.map(t => `
-        <div class="checkbox-item">
-            <input type="checkbox" value="${t}" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
-            <label class="text-gray-700">${t}</label>
-        </div>
-    `).join("");
-
-    await carregarTarefasProfessor();
-}
-
-async function carregarTarefasProfessor() {
-    try {
-        const response = await apiGet('getTarefas');
-        tarefas = response.data || [];
-        renderizarTabelaTarefas();
-    } catch (error) {
-        document.getElementById('tabelaTarefasBody').innerHTML = 
-            `<tr><td colspan="4" class="text-center py-4 text-red-500">Erro ao carregar tarefas</td></tr>`;
-    }
-}
-
-function renderizarTabelaTarefas() {
-    const tbody = document.getElementById('tabelaTarefasBody');
-    
-    if (tarefas.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">Nenhuma tarefa criada</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = tarefas.map(tarefa => {
-        return `
-        <tr>
-            <td class="turma-column">${tarefa.Turma}</td>
-            <td class="px-4 py-2">
-                <div class="font-semibold text-gray-800">${tarefa.Tema}</div>
-            </td>
-            <td class="data-column">${formatarData(tarefa.DataAula)}</td>
-            <td class="acoes-column">
-                <div class="flex justify-center space-x-2">
-                    <button onclick="editarTarefa('${tarefa.ID}')" class="btn-editar">
-                        Editar
-                    </button>
-                    <button onclick="excluirTarefa('${tarefa.ID}')" class="btn-excluir">
-                        Excluir
-                    </button>
-                </div>
-            </td>
-        </tr>
-        `;
-    }).join('');
-}
-
-async function salvarTarefa() {
-    const btnSalvar = document.getElementById('btnSalvarTarefa');
-    const textoOriginal = btnSalvar.textContent;
-    
-    try {
-        btnSalvar.textContent = 'Salvando...';
-        btnSalvar.disabled = true;
-        
-        const turmasSelecionadas = Array.from(document.querySelectorAll('#turmasCheckboxes input:checked'))
-            .map(c => c.value);
-        
-        if (turmasSelecionadas.length === 0) {
-            showModal('Atenção', 'Selecione pelo menos uma turma.');
-            return;
-        }
-
-        const tema = document.getElementById('tema').value.trim();
-        const dataAula = document.getElementById('dataAula').value;
-
-        if (!tema || !dataAula) {
-            showModal('Atenção', 'Preencha o tema e a data da aula.');
-            return;
-        }
-
-        const dados = {
-            Turmas: turmasSelecionadas,
-            Tema: tema,
-            Parte1: document.getElementById('parte1').value.trim(),
-            Parte2: document.getElementById('parte2').value.trim(),
-            Parte3: document.getElementById('parte3').value.trim(),
-            Parte4: document.getElementById('parte4').value.trim(),
-            DataAula: dataAula,
-            professor: usuarioLogado.NomeCompleto
-        };
-
-        await apiPost('criarTarefa', dados);
-        showModal('Sucesso', 'Tarefa criada com sucesso!');
-        limparFormulario();
-        await carregarTarefasProfessor();
-    } catch (error) {
-        showModal('Erro', `Erro ao criar tarefa: ${error.message}`);
-    } finally {
-        btnSalvar.textContent = textoOriginal;
-        btnSalvar.disabled = false;
-    }
-}
-
-function limparFormulario() {
-    document.getElementById('tema').value = '';
-    document.getElementById('dataAula').value = '';
-    document.getElementById('parte1').value = '';
-    document.getElementById('parte2').value = '';
-    document.getElementById('parte3').value = '';
-    document.getElementById('parte4').value = '';
-    document.querySelectorAll('#turmasCheckboxes input:checked').forEach(c => c.checked = false);
-}
-
-async function excluirTarefa(idTarefa) {
-    if (!confirm('Tem certeza que deseja excluir esta tarefa?')) return;
-    
-    try {
-        await apiPost('excluirTarefa', { ID: idTarefa });
-        showModal('Sucesso', 'Tarefa excluída com sucesso.');
-        await carregarTarefasProfessor();
-    } catch (error) {
-        showModal('Erro', `Erro ao excluir tarefa: ${error.message}`);
-    }
-}
-
-// --- PAINEL DO ALUNO ---
-async function mostrarPainelAluno() {
-    contentArea.innerHTML = `
-        <div class="space-y-6">
-            <div class="card p-6">
-                <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${usuarioLogado.Turma}</h3>
-                <div id="tarefas-aluno-container">
-                    <div class="text-center text-gray-500 py-8">Carregando tarefas...</div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    await carregarTarefasAluno();
-}
-
-async function carregarTarefasAluno() {
-    try {
-        const response = await apiGet('getTarefasPorTurma', { turma: usuarioLogado.Turma });
-        const container = document.getElementById('tarefas-aluno-container');
-        
-        if (!response.data || response.data.length === 0) {
-            container.innerHTML = '<div class="text-center text-gray-500 py-8">Nenhuma tarefa disponível para sua turma.</div>';
-            return;
-        }
-
-        const tarefasTurma = response.data;
-        
-        let entregas = [];
-        try {
-            const entregasResponse = await apiGet('getEntregasAluno', { ra: usuarioLogado.RA });
-            entregas = entregasResponse.data || [];
-        } catch (error) {
-            console.error('Erro ao carregar entregas:', error);
-        }
-
-        container.innerHTML = tarefasTurma.map(tarefa => {
-            const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
-
-            return `
-            <div class="border border-gray-200 rounded-lg p-4 mb-4">
-                <div class="flex justify-between items-start">
-                    <div class="flex-1">
-                        <h4 class="font-semibold text-lg text-gray-800">${tarefa.Tema}</h4>
-                        <p class="text-sm text-gray-600 mt-1">Data da aula: ${formatarData(tarefa.DataAula)}</p>
-                        ${entrega && entrega.Nota ? `<p class="text-sm font-semibold text-green-600 mt-1">Nota: ${entrega.Nota}</p>` : ''}
-                        
-                        <div class="mt-3 space-y-3">
-                            ${renderParteTarefa(tarefa.ID, 1, tarefa.Parte1, entrega)}
-                            ${renderParteTarefa(tarefa.ID, 2, tarefa.Parte2, entrega)}
-                            ${renderParteTarefa(tarefa.ID, 3, tarefa.Parte3, entrega)}
-                            ${renderParteTarefa(tarefa.ID, 4, tarefa.Parte4, entrega)}
-                        </div>
-                    </div>
-                </div>
-            </div>
+            loginResult.className = 'p-4 bg-green-100 text-green-800 rounded';
+            loginResult.innerHTML = `
+                <strong>✅ LOGIN BEM-SUCEDIDO!</strong><br>
+                Nome: ${usuario.NomeCompleto}<br>
+                Perfil: ${usuario.Perfil}<br>
+                Turma: ${usuario.Turma || 'N/A'}
             `;
-        }).join('');
-    } catch (error) {
-        document.getElementById('tarefas-aluno-container').innerHTML = 
-            `<div class="text-center text-red-500 py-8">Erro ao carregar tarefas</div>`;
-    }
-}
-
-function renderParteTarefa(idTarefa, numeroParte, conteudo, entrega) {
-    if (!conteudo) return '';
-    
-    const linkSalvo = entrega ? entrega[`Link${numeroParte}`] : '';
-    const inputId = `link-${idTarefa}-${numeroParte}`;
-    const temLinkSalvo = linkSalvo && linkSalvo.trim() !== '';
-
-    return `
-    <div class="p-3 bg-gray-50 rounded border">
-        <div class="flex justify-between items-center">
-            <strong>Parte ${numeroParte}:</strong>
-        </div>
-        <p class="mt-1">${conteudo}</p>
-        <div class="link-container">
-            <input type="text" 
-                   class="link-input ${temLinkSalvo ? 'link-salvo' : ''}" 
-                   placeholder="Cole o link da atividade aqui" 
-                   id="${inputId}"
-                   value="${linkSalvo || ''}"
-                   ${temLinkSalvo ? 'disabled' : ''}>
-            <button class="btn-primary btn-link" 
-                    onclick="salvarLink('${idTarefa}', ${numeroParte})"
-                    ${temLinkSalvo ? 'disabled' : ''}>
-                ${temLinkSalvo ? 'Salvo' : 'Salvar'}
-            </button>
-        </div>
-    </div>`;
-}
-
-async function salvarLink(idTarefa, parte) {
-    const input = document.getElementById(`link-${idTarefa}-${parte}`);
-    const link = input.value.trim();
-
-    if (!link) {
-        showModal('Atenção', 'Por favor, cole um link válido.');
-        return;
-    }
-
-    try {
-        await apiPost('entregarTarefa', {
-            ID_Tarefa: idTarefa,
-            RA_Aluno: usuarioLogado.RA,
-            NomeAluno: usuarioLogado.NomeCompleto,
-            Turma: usuarioLogado.Turma,
-            Parte: parte,
-            [`Link${parte}`]: link
-        });
+            addLog(`✅ Login bem-sucedido para: ${usuario.NomeCompleto}`, 'success');
+        } else {
+            loginResult.className = 'p-4 bg-red-100 text-red-800 rounded';
+            loginResult.innerHTML = '<strong>❌ E-mail ou RA incorretos!</strong>';
+            addLog('❌ Credenciais inválidas', 'error');
+        }
         
-        showModal('Sucesso', `Link da parte ${parte} salvo com sucesso!`);
-        await carregarTarefasAluno();
     } catch (error) {
-        showModal('Erro', `Erro ao salvar link: ${error.message}`);
+        loginResult.className = 'p-4 bg-red-100 text-red-800 rounded';
+        loginResult.innerHTML = `<strong>❌ Erro: ${error.message}</strong>`;
+        addLog(`💥 Erro no login: ${error.message}`, 'error');
     }
 }
 
-// --- FUNÇÕES DE RELATÓRIO (SIMPLIFICADAS) ---
-async function mostrarRelatorioProfessor() {
-    showModal('Info', 'Funcionalidade de relatório em desenvolvimento');
-}
-
-async function mostrarRelatorioAluno() {
-    showModal('Info', 'Funcionalidade de relatório em desenvolvimento');
-}
-
-// --- INICIALIZAÇÃO ---
-init();
-
-// --- FUNÇÕES GLOBAIS ---
-window.login = login;
-window.logout = logout;
-window.mostrarPainelProfessor = mostrarPainelProfessor;
-window.mostrarPainelAluno = mostrarPainelAluno;
-window.mostrarRelatorioProfessor = mostrarRelatorioProfessor;
-window.mostrarRelatorioAluno = mostrarRelatorioAluno;
-window.salvarTarefa = salvarTarefa;
-window.excluirTarefa = excluirTarefa;
-window.limparFormulario = limparFormulario;
-window.closeModal = closeModal;
-window.salvarLink = salvarLink;
+// TESTE AUTOMÁTICO AO CARREGAR
+addLog('📋 Sistema de debug carregado');
+addLog('👆 Clique em "Testar Conexão" para verificar o backend');
 </script>
 </body>
 </html>
