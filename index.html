@@ -299,7 +299,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 6.0
+        Desenvolvido por Geovane Modena | Versão 5.6
     </footer>
 </div>
 
@@ -381,26 +381,15 @@ const renderIcons = () => window.lucide && window.lucide.createIcons();
 
 const formatarData = (dataISO) => {
     if (!dataISO) return 'N/A';
-    
-    // Garantir que a data está no formato correto
-    let data = new Date(dataISO);
-    if (isNaN(data.getTime())) {
-        // Tentar parse manual se o Date falhar
-        const partes = dataISO.split('-');
-        if (partes.length === 3) {
-            data = new Date(partes[0], partes[1] - 1, partes[2]);
-        }
-    }
-    
+    const data = new Date(dataISO);
     return data.toLocaleDateString('pt-BR');
 };
 
-// Função para calcular contadores de tempo com liberação progressiva
+// Função para calcular contadores de tempo
 function calcularContadores(dataAula) {
     const agora = new Date();
     const dataAulaObj = new Date(dataAula);
     
-    // Calcula as datas de liberação para cada parte
     const parte1Liberacao = new Date(dataAulaObj);
     parte1Liberacao.setHours(0, 0, 0, 0);
     
@@ -413,7 +402,6 @@ function calcularContadores(dataAula) {
     const parte4Liberacao = new Date(dataAulaObj);
     parte4Liberacao.setDate(parte4Liberacao.getDate() + 14);
     
-    // Calcula as datas limites para cada parte
     const parte1Limite = new Date(dataAulaObj);
     parte1Limite.setHours(18, 0, 0, 0);
     
@@ -433,20 +421,8 @@ function calcularContadores(dataAula) {
         if (diffLiberacao > 0) {
             const dias = Math.floor(diffLiberacao / (1000 * 60 * 60 * 24));
             const horas = Math.floor((diffLiberacao % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutos = Math.floor((diffLiberacao % (1000 * 60 * 60)) / (1000 * 60));
-            const segundos = Math.floor((diffLiberacao % (1000 * 60)) / 1000);
-            
-            let texto = '';
-            if (dias > 0) {
-                texto = `Libera em ${dias}d ${horas}h`;
-            } else if (horas > 0) {
-                texto = `Libera em ${horas}h ${minutos}m`;
-            } else {
-                texto = `Libera em ${minutos}m ${segundos}s`;
-            }
-            
             return { 
-                texto, 
+                texto: `Libera em ${dias}d ${horas}h`, 
                 classe: 'aguardando', 
                 liberada: false,
                 expirado: false
@@ -464,18 +440,8 @@ function calcularContadores(dataAula) {
         
         const dias = Math.floor(diffLimite / (1000 * 60 * 60 * 24));
         const horas = Math.floor((diffLimite % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutos = Math.floor((diffLimite % (1000 * 60 * 60)) / (1000 * 60));
-        const segundos = Math.floor((diffLimite % (1000 * 60)) / 1000);
         
-        let texto = '';
-        if (dias > 0) {
-            texto = `${dias}d ${horas}h ${minutos}m`;
-        } else if (horas > 0) {
-            texto = `${horas}h ${minutos}m ${segundos}s`;
-        } else {
-            texto = `${minutos}m ${segundos}s`;
-        }
-        
+        let texto = `${dias}d ${horas}h`;
         const classe = dias === 0 ? 'urgente' : 'disponivel';
         
         return { 
@@ -502,7 +468,7 @@ function iniciarAtualizacaoContadores() {
         if (usuarioLogado && usuarioLogado.Perfil === 'Aluno') {
             atualizarContadoresAluno();
         }
-    }, 1000);
+    }, 60000); // Atualiza a cada minuto
     
     contadoresAtivos.push(interval);
 }
@@ -602,7 +568,6 @@ async function apiPost(action, dados) {
 
 // --- INICIALIZAÇÃO ---
 async function init() {
-    // Não carrega mais todos os usuários na inicialização
     renderLogin();
 }
 
@@ -640,7 +605,6 @@ async function login(event) {
     const loginBtn = document.getElementById('loginBtn');
     const loginErro = document.getElementById('loginErro');
     
-    // Validação básica
     if (!email || !ra) {
         loginErro.textContent = 'Por favor, preencha todos os campos.';
         loginErro.style.display = 'block';
@@ -653,14 +617,16 @@ async function login(event) {
     loginErro.style.display = 'none';
     
     try {
-        // ⚡ CHAMADA OTIMIZADA - Busca apenas o usuário específico
-        const response = await apiPost('loginUser', { 
-            email: email, 
-            ra: ra 
-        });
+        // Buscar todos os usuários e fazer login no frontend
+        const response = await apiGet('getUsers');
+        const users = response.data || [];
         
-        if (response.success && response.user) {
-            usuarioLogado = response.user;
+        const usuario = users.find(user => 
+            user.Email === email && user.RA === ra
+        );
+        
+        if (usuario) {
+            usuarioLogado = usuario;
             
             // Mostrar informações do usuário
             logoutBtn.classList.remove('hidden');
@@ -701,7 +667,7 @@ async function login(event) {
             }
             
         } else {
-            loginErro.textContent = response.error || 'Usuário ou RA incorretos!';
+            loginErro.textContent = 'Usuário ou RA incorretos!';
             loginErro.style.display = 'block';
         }
         
@@ -739,7 +705,6 @@ async function mostrarRelatorioProfessor() {
                 <div class="flex flex-wrap gap-2 mb-6" id="botoes-turma">
     `;
     
-    // Botões para cada turma
     turmas.forEach(turma => {
         relatorioHTML += `
             <button onclick="carregarRelatorioTurma('${turma}')" class="btn-turma">
@@ -764,100 +729,8 @@ async function mostrarRelatorioProfessor() {
 }
 
 async function carregarRelatorioTurma(turmaSelecionada) {
-    console.log('Carregando relatório para turma:', turmaSelecionada);
     const container = document.getElementById('relatorio-turma-container');
     container.innerHTML = '<p class="text-gray-500 text-center py-4">Carregando relatório...</p>';
-    
-    try {
-        // ⚡ CHAMADA OTIMIZADA - Busca relatório completo de uma vez
-        const response = await apiGet('getRelatorioTurmaRapido', { turma: turmaSelecionada });
-        const relatorioData = response.data || [];
-        
-        if (relatorioData.length === 0) {
-            container.innerHTML = `<p class="text-gray-500 text-center py-8">Nenhum dado encontrado para a turma ${turmaSelecionada}.</p>`;
-            return;
-        }
-        
-        // Buscar informações das tarefas para o cabeçalho
-        const tarefasResponse = await apiGet('getTarefasPorTurma', { turma: turmaSelecionada });
-        const tarefasTurma = tarefasResponse.data || [];
-        
-        let relatorioTurmaHTML = `
-            <h4 class="text-lg font-semibold mb-3 text-red-700">Relatório da Turma ${turmaSelecionada}</h4>
-            <div class="overflow-x-auto border rounded-lg">
-                <table class="min-w-full compact-table table-header-white">
-                    <thead>
-                        <tr>
-                            <th class="px-4 py-3 text-left font-semibold border-b">Aluno</th>
-        `;
-        
-        // Cabeçalho com as tarefas
-        tarefasTurma.forEach(tarefa => {
-            relatorioTurmaHTML += `<th class="px-4 py-3 text-center font-semibold border-b">${tarefa.Tema}</th>`;
-        });
-        
-        relatorioTurmaHTML += `
-                            <th class="px-4 py-3 text-center font-semibold border-b">Média</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
-        
-        relatorioData.forEach(item => {
-            relatorioTurmaHTML += `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-3 font-medium text-gray-900 border-b">${item.aluno}</td>
-            `;
-            
-            item.notas.forEach(nota => {
-                // Cores para as notas (SESI: 7.5+ verde, abaixo vermelho)
-                let classeNota = 'text-gray-600';
-                if (nota !== '-') {
-                    const notaNum = parseFloat(nota);
-                    if (notaNum >= 7.5) {
-                        classeNota = 'text-green-600 font-semibold';
-                    } else {
-                        classeNota = 'text-red-600';
-                    }
-                }
-                
-                relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b ${classeNota}">${nota}</td>`;
-            });
-            
-            let classeMedia = 'text-gray-600';
-            if (item.media !== '-') {
-                const mediaNum = parseFloat(item.media);
-                if (mediaNum >= 7.5) {
-                    classeMedia = 'text-green-600 font-bold';
-                } else {
-                    classeMedia = 'text-red-600 font-semibold';
-                }
-            }
-            
-            relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b ${classeMedia}">${item.media}</td>`;
-            relatorioTurmaHTML += `</tr>`;
-        });
-        
-        relatorioTurmaHTML += `
-                    </tbody>
-                </table>
-            </div>
-            <div class="mt-4 text-sm text-gray-600">
-                <p>Total de alunos: ${relatorioData.length} | Total de tarefas: ${tarefasTurma.length}</p>
-            </div>
-        `;
-        
-        container.innerHTML = relatorioTurmaHTML;
-    } catch (error) {
-        console.error('Erro ao carregar relatório:', error);
-        // Fallback para método antigo se o novo não estiver disponível
-        await carregarRelatorioTurmaFallback(turmaSelecionada);
-    }
-}
-
-// Fallback caso a função otimizada não esteja disponível
-async function carregarRelatorioTurmaFallback(turmaSelecionada) {
-    const container = document.getElementById('relatorio-turma-container');
     
     try {
         // Buscar todos os alunos da turma
@@ -921,7 +794,7 @@ async function carregarRelatorioTurmaFallback(turmaSelecionada) {
                     countNotas++;
                 }
                 
-                // Cores para as notas (SESI: 7.5+ verde, abaixo vermelho)
+                // Cores para as notas
                 let classeNota = 'text-gray-600';
                 if (entrega && entrega.Nota) {
                     const notaNum = parseFloat(entrega.Nota);
@@ -961,7 +834,7 @@ async function carregarRelatorioTurmaFallback(turmaSelecionada) {
         
         container.innerHTML = relatorioTurmaHTML;
     } catch (error) {
-        console.error('Erro ao carregar relatório fallback:', error);
+        console.error('Erro ao carregar relatório:', error);
         container.innerHTML = `<p class="text-red-500 text-center py-4">Erro ao carregar relatório: ${error.message}</p>`;
     }
 }
@@ -1003,16 +876,7 @@ async function mostrarRelatorioAluno() {
             `;
             
             entregas.forEach(entrega => {
-                // Buscar a tarefa de forma mais robusta
                 let tarefa = todasTarefas.find(t => t.ID === entrega.ID_Tarefa);
-                
-                // Se não encontrou, tentar buscar por tema ou outros critérios
-                if (!tarefa) {
-                    // Tentar buscar a tarefa diretamente pelo ID
-                    console.log('Tarefa não encontrada para entrega:', entrega.ID_Tarefa);
-                    tarefa = { Tema: `Tarefa (ID: ${entrega.ID_Tarefa})` };
-                }
-                
                 const temaTarefa = tarefa ? tarefa.Tema : `Tarefa (ID: ${entrega.ID_Tarefa})`;
                 
                 const linksEntregues = [];
@@ -1021,7 +885,6 @@ async function mostrarRelatorioAluno() {
                 if (entrega.Link3) linksEntregues.push('Parte 3');
                 if (entrega.Link4) linksEntregues.push('Parte 4');
                 
-                // Corrigir cálculo da nota - garantir que está usando o valor correto
                 const notaEntrega = parseFloat(entrega.Nota) || 0;
                 if (notaEntrega > 0) {
                     notaTotal += notaEntrega;
@@ -1246,30 +1109,7 @@ async function editarTarefa(idTarefa) {
     }
 
     tarefaEditando = tarefa;
-    
-    // Recarregar o painel do professor
     await mostrarPainelProfessor();
-    
-    // Preencher o formulário após o DOM ser renderizado
-    setTimeout(() => {
-        if (document.getElementById('tema')) {
-            document.getElementById('tema').value = tarefaEditando.Tema;
-            document.getElementById('dataAula').value = tarefaEditando.DataAula.split('T')[0];
-            document.getElementById('parte1').value = tarefaEditando.Parte1 || '';
-            document.getElementById('parte2').value = tarefaEditando.Parte2 || '';
-            document.getElementById('parte3').value = tarefaEditando.Parte3 || '';
-            document.getElementById('parte4').value = tarefaEditando.Parte4 || '';
-            
-            // Marcar apenas a turma específica
-            const checkboxes = document.querySelectorAll('#turmasCheckboxes input');
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = checkbox.value === tarefaEditando.Turma;
-            });
-            
-            // Rolar para o topo
-            window.scrollTo(0, 0);
-        }
-    }, 100);
 }
 
 async function salvarTarefa() {
@@ -1580,7 +1420,6 @@ window.mostrarPainelAluno = mostrarPainelAluno;
 window.mostrarRelatorioProfessor = mostrarRelatorioProfessor;
 window.mostrarRelatorioAluno = mostrarRelatorioAluno;
 window.carregarRelatorioTurma = carregarRelatorioTurma;
-window.carregarRelatorioTurmaFallback = carregarRelatorioTurmaFallback;
 window.salvarTarefa = salvarTarefa;
 window.atualizarTarefa = atualizarTarefa;
 window.excluirTarefa = excluirTarefa;
