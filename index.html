@@ -8,7 +8,6 @@
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
     
     <style>
-        /* (MANTENHA TODOS OS ESTILOS ORIGINAIS - são os mesmos) */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
         .card { background-color: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.2); }
@@ -281,6 +280,25 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* ESTILO PARA PREVENIR SOBREPOSIÇÃO */
+        #content-area {
+            min-height: 400px;
+            position: relative;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -297,10 +315,12 @@
         </div>
     </header>
 
-    <div id="content-area"></div>
+    <div id="content-area">
+        <!-- Conteúdo será carregado aqui -->
+    </div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 5.6 Corrigida
+        Desenvolvido por Geovane Modena | Versão Estável
     </footer>
 </div>
 
@@ -310,18 +330,6 @@
         <h3 id="modal-title" class="text-xl font-bold mb-3 text-red-600"></h3>
         <p id="modal-message" class="text-gray-700 mb-4 whitespace-pre-wrap"></p>
         <button onclick="closeModal()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">OK</button>
-    </div>
-</div>
-
-<!-- Modal de confirmação para exclusão -->
-<div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-lg p-6 max-w-sm w-full shadow-2xl">
-        <h3 class="text-xl font-bold mb-3 text-red-600">Confirmar Exclusão</h3>
-        <p id="confirm-message" class="text-gray-700 mb-4">Tem certeza que deseja excluir esta tarefa?</p>
-        <div class="flex space-x-4">
-            <button id="confirm-cancel" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded transition">Cancelar</button>
-            <button id="confirm-delete" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">Excluir</button>
-        </div>
     </div>
 </div>
 
@@ -347,10 +355,6 @@ const relatorioBtn = document.getElementById('relatorioBtn');
 const modalOverlay = document.getElementById('modal-overlay');
 const modalTitle = document.getElementById('modal-title');
 const modalMessage = document.getElementById('modal-message');
-const confirmModal = document.getElementById('confirm-modal');
-const confirmMessage = document.getElementById('confirm-message');
-const confirmCancel = document.getElementById('confirm-cancel');
-const confirmDelete = document.getElementById('confirm-delete');
 
 // --- FUNÇÕES UTILITÁRIAS ---
 const showModal = (title, message) => {
@@ -362,24 +366,16 @@ const showModal = (title, message) => {
 
 const closeModal = () => modalOverlay.classList.add('hidden');
 
-const showConfirmModal = (message, onConfirm) => {
-    confirmMessage.textContent = message;
-    confirmModal.classList.remove('hidden');
-    confirmModal.classList.add('flex');
-    
-    confirmCancel.onclick = () => {
-        confirmModal.classList.add('hidden');
-        tarefaParaExcluir = null;
-    };
-    
-    confirmDelete.onclick = () => {
-        confirmModal.classList.add('hidden');
-        if (onConfirm) onConfirm();
-        tarefaParaExcluir = null;
-    };
+const showLoading = (message = 'Carregando...') => {
+    contentArea.innerHTML = `
+        <div class="loading-overlay">
+            <div class="text-center">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mb-4"></div>
+                <p class="text-gray-600">${message}</p>
+            </div>
+        </div>
+    `;
 };
-
-const renderIcons = () => window.lucide && window.lucide.createIcons();
 
 const formatarData = (dataISO) => {
     if (!dataISO) return 'N/A';
@@ -387,115 +383,7 @@ const formatarData = (dataISO) => {
     return data.toLocaleDateString('pt-BR');
 };
 
-// Função para calcular contadores de tempo
-function calcularContadores(dataAula) {
-    const agora = new Date();
-    const dataAulaObj = new Date(dataAula);
-    
-    const parte1Liberacao = new Date(dataAulaObj);
-    parte1Liberacao.setHours(0, 0, 0, 0);
-    
-    const parte2Liberacao = new Date(dataAulaObj);
-    parte2Liberacao.setDate(parte2Liberacao.getDate() + 3);
-    
-    const parte3Liberacao = new Date(dataAulaObj);
-    parte3Liberacao.setDate(parte3Liberacao.getDate() + 7);
-    
-    const parte4Liberacao = new Date(dataAulaObj);
-    parte4Liberacao.setDate(parte4Liberacao.getDate() + 14);
-    
-    const parte1Limite = new Date(dataAulaObj);
-    parte1Limite.setHours(18, 0, 0, 0);
-    
-    const parte2Limite = new Date(dataAulaObj);
-    parte2Limite.setDate(parte2Limite.getDate() + 7);
-    
-    const parte3Limite = new Date(dataAulaObj);
-    parte3Limite.setDate(parte3Limite.getDate() + 14);
-    
-    const parte4Limite = new Date(dataAulaObj);
-    parte4Limite.setDate(parte4Limite.getDate() + 28);
-    
-    const calcularTempoRestante = (liberacao, limite) => {
-        const diffLiberacao = liberacao - agora;
-        const diffLimite = limite - agora;
-        
-        if (diffLiberacao > 0) {
-            const dias = Math.floor(diffLiberacao / (1000 * 60 * 60 * 24));
-            const horas = Math.floor((diffLiberacao % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            return { 
-                texto: `Libera em ${dias}d ${horas}h`, 
-                classe: 'aguardando', 
-                liberada: false,
-                expirado: false
-            };
-        }
-        
-        if (diffLimite <= 0) {
-            return { 
-                texto: 'Expirado', 
-                classe: 'expirado', 
-                liberada: true,
-                expirado: true
-            };
-        }
-        
-        const dias = Math.floor(diffLimite / (1000 * 60 * 60 * 24));
-        const horas = Math.floor((diffLimite % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        
-        let texto = `${dias}d ${horas}h`;
-        const classe = dias === 0 ? 'urgente' : 'disponivel';
-        
-        return { 
-            texto, 
-            classe, 
-            liberada: true,
-            expirado: false
-        };
-    };
-    
-    return {
-        parte1: calcularTempoRestante(parte1Liberacao, parte1Limite),
-        parte2: calcularTempoRestante(parte2Liberacao, parte2Limite),
-        parte3: calcularTempoRestante(parte3Liberacao, parte3Limite),
-        parte4: calcularTempoRestante(parte4Liberacao, parte4Limite)
-    };
-}
-
-function iniciarAtualizacaoContadores() {
-    contadoresAtivos.forEach(interval => clearInterval(interval));
-    contadoresAtivos = [];
-    
-    const interval = setInterval(() => {
-        if (usuarioLogado && usuarioLogado.Perfil === 'Aluno') {
-            atualizarContadoresAluno();
-        }
-    }, 60000);
-    
-    contadoresAtivos.push(interval);
-}
-
-function atualizarContadoresAluno() {
-    const containers = document.querySelectorAll('#tarefas-aluno-container > div');
-    containers.forEach(container => {
-        const tema = container.querySelector('h4').textContent;
-        const tarefa = tarefas.find(t => t.Tema === tema);
-        if (tarefa) {
-            const contadores = calcularContadores(tarefa.DataAula);
-            
-            [1, 2, 3, 4].forEach(parte => {
-                const contadorElement = container.querySelector(`.parte-${parte} .contador`);
-                if (contadorElement) {
-                    const contador = contadores[`parte${parte}`];
-                    contadorElement.textContent = contador.texto;
-                    contadorElement.className = `contador ${contador.classe}`;
-                }
-            });
-        }
-    });
-}
-
-// --- API REQUEST COM JSONP ---
+// --- API REQUEST SIMPLIFICADA ---
 function apiRequestJSONP(url, callback) {
     const callbackName = 'jsonp_callback_' + jsonpCallbackId++;
     
@@ -506,7 +394,7 @@ function apiRequestJSONP(url, callback) {
     };
     
     const script = document.createElement('script');
-    script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+    script.src = url;
     script.onerror = function() {
         delete window[callbackName];
         document.body.removeChild(script);
@@ -518,11 +406,7 @@ function apiRequestJSONP(url, callback) {
 
 async function apiGet(func, params = {}) {
     return new Promise((resolve, reject) => {
-        let url = `${API_URL}?token=${SECURITY_TOKEN}`;
-        
-        if (func) {
-            url += `&func=${func}`;
-        }
+        let url = `${API_URL}?token=${SECURITY_TOKEN}&func=${func}`;
         
         for (const key in params) {
             if (params[key] !== undefined && params[key] !== null) {
@@ -530,17 +414,15 @@ async function apiGet(func, params = {}) {
             }
         }
         
-        console.log(`🔍 API GET: ${func}`, params);
+        // Adicionar timestamp para evitar cache
+        url += `&_t=${Date.now()}`;
         
         apiRequestJSONP(url, (error, data) => {
             if (error) {
-                console.error(`❌ Erro API ${func}:`, error);
                 reject(error);
             } else if (data && data.success === false) {
-                console.error(`❌ API ${func} retornou erro:`, data.error);
                 reject(new Error(data.error));
             } else {
-                console.log(`✅ API ${func} sucesso:`, data);
                 resolve(data);
             }
         });
@@ -561,17 +443,15 @@ async function apiPost(action, dados) {
             }
         }
         
-        console.log(`🔍 API POST: ${action}`, dados);
+        // Adicionar timestamp para evitar cache
+        url += `&_t=${Date.now()}`;
         
         apiRequestJSONP(url, (error, data) => {
             if (error) {
-                console.error(`❌ Erro API ${action}:`, error);
                 reject(error);
             } else if (data && data.success === false) {
-                console.error(`❌ API ${action} retornou erro:`, data.error);
                 reject(new Error(data.error));
             } else {
-                console.log(`✅ API ${action} sucesso:`, data);
                 resolve(data);
             }
         });
@@ -579,16 +459,16 @@ async function apiPost(action, dados) {
 }
 
 // --- INICIALIZAÇÃO ---
-async function init() {
+function init() {
     renderLogin();
 }
 
 // --- FUNÇÕES DE AUTENTICAÇÃO ---
-const renderLogin = () => {
+function renderLogin() {
     contentArea.innerHTML = `
         <div id="login" class="max-w-md mx-auto p-6">
             <h2 class="text-2xl font-bold text-center text-red-700 mb-6">Login</h2>
-            <div id="loginErro" class="text-red-500 mb-4 hidden text-center font-semibold">Usuário ou RA incorretos!</div>
+            <div id="loginErro" class="text-red-500 mb-4 hidden text-center font-semibold"></div>
 
             <form id="login-form" class="space-y-4">
                 <div>
@@ -603,17 +483,11 @@ const renderLogin = () => {
                     Entrar
                 </button>
             </form>
-            
-            <div class="mt-6 p-4 bg-blue-50 rounded-lg">
-                <h3 class="font-semibold text-blue-800 mb-2">Credenciais de Teste:</h3>
-                <p class="text-sm text-blue-600"><strong>Professor:</strong> geovane.modena@portalsesisp.org.br / 9999</p>
-                <p class="text-sm text-blue-600"><strong>Aluno:</strong> Use email e RA da planilha USERS</p>
-            </div>
         </div>
     `;
 
     document.getElementById('login-form').addEventListener('submit', login);
-};
+}
 
 async function login(event) {
     event.preventDefault(); 
@@ -635,23 +509,16 @@ async function login(event) {
     loginErro.style.display = 'none';
     
     try {
-        // ✅ MÉTODO CORRETO: Buscar todos os usuários e fazer login no frontend
-        console.log('🔐 Tentando login:', email, ra);
+        // Buscar todos os usuários
+        showLoading('Verificando credenciais...');
         const response = await apiGet('getUsers');
-        console.log('📋 Resposta getUsers:', response);
-        
         const users = response.data || [];
-        console.log('👥 Usuários encontrados:', users);
         
-        const usuario = users.find(user => {
-            const emailMatch = user.Email && user.Email.toLowerCase().trim() === email.toLowerCase().trim();
-            const raMatch = user.RA && user.RA.toString().trim() === ra.toString().trim();
-            console.log(`Comparando: ${user.Email} == ${email} -> ${emailMatch}, ${user.RA} == ${ra} -> ${raMatch}`);
-            return emailMatch && raMatch;
-        });
+        const usuario = users.find(user => 
+            user.Email === email && user.RA === ra
+        );
         
         if (usuario) {
-            console.log('✅ Login bem-sucedido:', usuario);
             usuarioLogado = usuario;
             
             // Mostrar informações do usuário
@@ -661,29 +528,27 @@ async function login(event) {
             if (usuarioLogado.Perfil === "Professor") {
                 userInfoDisplay.innerHTML = `
                     <div class="user-info-text">
-                        Logado como: <span class="user-info-name">${usuarioLogado.NomeCompleto} (${usuarioLogado.Perfil})</span> | Professor
+                        Logado como: <span class="user-info-name">${usuarioLogado.NomeCompleto}</span> | Professor
                     </div>
                 `;
                 relatorioBtn.onclick = mostrarRelatorioProfessor;
             } else {
                 userInfoDisplay.innerHTML = `
                     <div class="user-info-text">
-                        Logado como: <span class="user-info-name">${usuarioLogado.NomeCompleto} (${usuarioLogado.Perfil})</span> | Turma: ${usuarioLogado.Turma || 'N/A'}
+                        Logado como: <span class="user-info-name">${usuarioLogado.NomeCompleto}</span> | Turma: ${usuarioLogado.Turma || 'N/A'}
                     </div>
                 `;
                 relatorioBtn.onclick = mostrarRelatorioAluno;
             }
 
             // Carregar tarefas
-            contentArea.innerHTML = `<div class="text-center text-gray-500 py-8">Carregando painel...</div>`;
+            showLoading('Carregando painel...');
             
             try {
                 const tarefasResponse = await apiGet('getTarefas');
-                console.log('📦 Resposta getTarefas:', tarefasResponse);
                 tarefas = tarefasResponse.data || [];
-                console.log('📚 Tarefas carregadas:', tarefas);
             } catch (error) {
-                console.error('❌ Erro ao carregar tarefas:', error);
+                console.error('Erro ao carregar tarefas:', error);
                 tarefas = [];
             }
 
@@ -695,15 +560,18 @@ async function login(event) {
             }
             
         } else {
-            console.log('❌ Usuário não encontrado');
-            loginErro.textContent = 'Usuário ou RA incorretos!';
+            loginErro.textContent = 'E-mail ou RA incorretos!';
             loginErro.style.display = 'block';
+            contentArea.innerHTML = document.getElementById('login').innerHTML;
+            document.getElementById('login-form').addEventListener('submit', login);
         }
         
     } catch (error) {
-        console.error('❌ Erro no login:', error);
-        loginErro.textContent = 'Erro ao conectar com o servidor. Tente novamente.';
+        console.error('Erro no login:', error);
+        loginErro.textContent = 'Erro ao conectar com o servidor. Verifique a conexão.';
         loginErro.style.display = 'block';
+        contentArea.innerHTML = document.getElementById('login').innerHTML;
+        document.getElementById('login-form').addEventListener('submit', login);
     } finally {
         // Restaurar botão
         loginBtn.disabled = false;
@@ -725,9 +593,9 @@ function logout() {
 // --- PAINEL DO PROFESSOR ---
 async function mostrarPainelProfessor() {
     contentArea.innerHTML = `
-        <div id="painelProfessor" class="space-y-6">
+        <div class="space-y-6">
             <div class="card p-6 border-t-4 border-red-600">
-                <h3 class="text-2xl font-bold mb-4 text-red-700" id="titulo-formulario">${tarefaEditando ? 'Editar Tarefa' : 'Criar Nova Tarefa'}</h3>
+                <h3 class="text-2xl font-bold mb-4 text-red-700">Criar Nova Tarefa</h3>
                 
                 <div class="form-row">
                     <label class="block text-sm font-medium text-gray-700">Turmas:</label>
@@ -764,11 +632,11 @@ async function mostrarPainelProfessor() {
                 </div>
                 
                 <div class="mt-6 flex space-x-4">
-                    <button onclick="${tarefaEditando ? 'atualizarTarefa()' : 'salvarTarefa()'}" class="btn-primary flex-1" id="btnSalvarTarefa">
-                        ${tarefaEditando ? 'Atualizar Tarefa' : 'Salvar Tarefa'}
+                    <button onclick="salvarTarefa()" class="btn-primary flex-1" id="btnSalvarTarefa">
+                        Salvar Tarefa
                     </button>
                     <button onclick="limparFormulario()" class="btn-secondary flex-1">
-                        ${tarefaEditando ? 'Cancelar Edição' : 'Limpar'}
+                        Limpar
                     </button>
                 </div>
             </div>
@@ -780,7 +648,7 @@ async function mostrarPainelProfessor() {
                         <thead>
                             <tr>
                                 <th class="turma-column">Turma</th>
-                                <th>Tema e Partes</th>
+                                <th>Tema</th>
                                 <th class="data-column">Data</th>
                                 <th class="acoes-column">Ações</th>
                             </tr>
@@ -805,20 +673,124 @@ async function mostrarPainelProfessor() {
         </div>
     `).join("");
 
-    // Se está editando, preenche o formulário
-    if (tarefaEditando) {
-        preencherFormularioEdicao();
-    }
-
     await carregarTarefasProfessor();
 }
 
-// ... (MANTENHA TODAS AS OUTRAS FUNÇÕES DO PROFESSOR ORIGINAIS)
+async function carregarTarefasProfessor() {
+    try {
+        const response = await apiGet('getTarefas');
+        tarefas = response.data || [];
+        renderizarTabelaTarefas();
+    } catch (error) {
+        document.getElementById('tabelaTarefasBody').innerHTML = 
+            `<tr><td colspan="4" class="text-center py-4 text-red-500">Erro ao carregar tarefas</td></tr>`;
+    }
+}
 
-// --- PAINEL DO ALUNO CORRIGIDO ---
+function renderizarTabelaTarefas() {
+    const tbody = document.getElementById('tabelaTarefasBody');
+    
+    if (tarefas.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">Nenhuma tarefa criada</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = tarefas.map(tarefa => {
+        return `
+        <tr>
+            <td class="turma-column">${tarefa.Turma}</td>
+            <td class="px-4 py-2">
+                <div class="font-semibold text-gray-800">${tarefa.Tema}</div>
+            </td>
+            <td class="data-column">${formatarData(tarefa.DataAula)}</td>
+            <td class="acoes-column">
+                <div class="flex justify-center space-x-2">
+                    <button onclick="editarTarefa('${tarefa.ID}')" class="btn-editar">
+                        Editar
+                    </button>
+                    <button onclick="excluirTarefa('${tarefa.ID}')" class="btn-excluir">
+                        Excluir
+                    </button>
+                </div>
+            </td>
+        </tr>
+        `;
+    }).join('');
+}
+
+async function salvarTarefa() {
+    const btnSalvar = document.getElementById('btnSalvarTarefa');
+    const textoOriginal = btnSalvar.textContent;
+    
+    try {
+        btnSalvar.textContent = 'Salvando...';
+        btnSalvar.disabled = true;
+        
+        const turmasSelecionadas = Array.from(document.querySelectorAll('#turmasCheckboxes input:checked'))
+            .map(c => c.value);
+        
+        if (turmasSelecionadas.length === 0) {
+            showModal('Atenção', 'Selecione pelo menos uma turma.');
+            return;
+        }
+
+        const tema = document.getElementById('tema').value.trim();
+        const dataAula = document.getElementById('dataAula').value;
+
+        if (!tema || !dataAula) {
+            showModal('Atenção', 'Preencha o tema e a data da aula.');
+            return;
+        }
+
+        const dados = {
+            Turmas: turmasSelecionadas,
+            Tema: tema,
+            Parte1: document.getElementById('parte1').value.trim(),
+            Parte2: document.getElementById('parte2').value.trim(),
+            Parte3: document.getElementById('parte3').value.trim(),
+            Parte4: document.getElementById('parte4').value.trim(),
+            DataAula: dataAula,
+            professor: usuarioLogado.NomeCompleto
+        };
+
+        await apiPost('criarTarefa', dados);
+        showModal('Sucesso', 'Tarefa criada com sucesso!');
+        limparFormulario();
+        await carregarTarefasProfessor();
+    } catch (error) {
+        showModal('Erro', `Erro ao criar tarefa: ${error.message}`);
+    } finally {
+        btnSalvar.textContent = textoOriginal;
+        btnSalvar.disabled = false;
+    }
+}
+
+function limparFormulario() {
+    document.getElementById('tema').value = '';
+    document.getElementById('dataAula').value = '';
+    document.getElementById('parte1').value = '';
+    document.getElementById('parte2').value = '';
+    document.getElementById('parte3').value = '';
+    document.getElementById('parte4').value = '';
+    document.querySelectorAll('#turmasCheckboxes input:checked').forEach(c => c.checked = false);
+}
+
+async function excluirTarefa(idTarefa) {
+    if (!confirm('Tem certeza que deseja excluir esta tarefa?')) return;
+    
+    try {
+        await apiPost('excluirTarefa', { ID: idTarefa });
+        showModal('Sucesso', 'Tarefa excluída com sucesso.');
+        await carregarTarefasProfessor();
+    } catch (error) {
+        showModal('Erro', `Erro ao excluir tarefa: ${error.message}`);
+    }
+}
+
+// --- PAINEL DO ALUNO ---
 async function mostrarPainelAluno() {
     contentArea.innerHTML = `
-        <div id="painelAluno" class="space-y-6">
+        <div class="space-y-6">
             <div class="card p-6">
                 <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${usuarioLogado.Turma}</h3>
                 <div id="tarefas-aluno-container">
@@ -829,49 +801,29 @@ async function mostrarPainelAluno() {
     `;
 
     await carregarTarefasAluno();
-    iniciarAtualizacaoContadores();
 }
 
 async function carregarTarefasAluno() {
     try {
-        console.log(`📚 Carregando tarefas para turma: ${usuarioLogado.Turma}`);
         const response = await apiGet('getTarefasPorTurma', { turma: usuarioLogado.Turma });
-        console.log('📦 Resposta getTarefasPorTurma:', response);
-        
         const container = document.getElementById('tarefas-aluno-container');
         
-        // ✅ CORREÇÃO: Verificar se response.data existe e é um array
-        if (!response || !response.data || !Array.isArray(response.data)) {
-            console.error('❌ Resposta inválida:', response);
-            container.innerHTML = '<div class="text-center text-red-500 py-8">Erro: Dados de tarefas inválidos</div>';
-            return;
-        }
-        
-        const tarefasTurma = response.data;
-        console.log(`📚 Tarefas da turma carregadas:`, tarefasTurma);
-        
-        if (tarefasTurma.length === 0) {
+        if (!response.data || response.data.length === 0) {
             container.innerHTML = '<div class="text-center text-gray-500 py-8">Nenhuma tarefa disponível para sua turma.</div>';
             return;
         }
 
+        const tarefasTurma = response.data;
+        
         let entregas = [];
         try {
             const entregasResponse = await apiGet('getEntregasAluno', { ra: usuarioLogado.RA });
-            console.log('📦 Resposta getEntregasAluno:', entregasResponse);
             entregas = entregasResponse.data || [];
         } catch (error) {
-            console.error('❌ Erro ao carregar entregas:', error);
+            console.error('Erro ao carregar entregas:', error);
         }
 
-        // ✅ CORREÇÃO: Usar tarefasTurma em vez de response.data.map
         container.innerHTML = tarefasTurma.map(tarefa => {
-            const parte1 = tarefa.Parte1 || '';
-            const parte2 = tarefa.Parte2 || '';
-            const parte3 = tarefa.Parte3 || '';
-            const parte4 = tarefa.Parte4 || '';
-            
-            const contadores = calcularContadores(tarefa.DataAula);
             const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
 
             return `
@@ -882,25 +834,86 @@ async function carregarTarefasAluno() {
                         <p class="text-sm text-gray-600 mt-1">Data da aula: ${formatarData(tarefa.DataAula)}</p>
                         ${entrega && entrega.Nota ? `<p class="text-sm font-semibold text-green-600 mt-1">Nota: ${entrega.Nota}</p>` : ''}
                         
-                        ${parte1 ? renderParteTarefa(tarefa.ID, 1, parte1, contadores.parte1, entrega) : ''}
-                        ${parte2 ? renderParteTarefa(tarefa.ID, 2, parte2, contadores.parte2, entrega) : ''}
-                        ${parte3 ? renderParteTarefa(tarefa.ID, 3, parte3, contadores.parte3, entrega) : ''}
-                        ${parte4 ? renderParteTarefa(tarefa.ID, 4, parte4, contadores.parte4, entrega) : ''}
+                        <div class="mt-3 space-y-3">
+                            ${renderParteTarefa(tarefa.ID, 1, tarefa.Parte1, entrega)}
+                            ${renderParteTarefa(tarefa.ID, 2, tarefa.Parte2, entrega)}
+                            ${renderParteTarefa(tarefa.ID, 3, tarefa.Parte3, entrega)}
+                            ${renderParteTarefa(tarefa.ID, 4, tarefa.Parte4, entrega)}
+                        </div>
                     </div>
                 </div>
             </div>
             `;
         }).join('');
-        
-        console.log('✅ Tarefas do aluno carregadas com sucesso');
     } catch (error) {
-        console.error('❌ Erro ao carregar tarefas do aluno:', error);
         document.getElementById('tarefas-aluno-container').innerHTML = 
-            `<div class="text-center text-red-500 py-8">Erro ao carregar tarefas: ${error.message}</div>`;
+            `<div class="text-center text-red-500 py-8">Erro ao carregar tarefas</div>`;
     }
 }
 
-// ... (MANTENHA TODAS AS OUTRAS FUNÇÕES ORIGINAIS)
+function renderParteTarefa(idTarefa, numeroParte, conteudo, entrega) {
+    if (!conteudo) return '';
+    
+    const linkSalvo = entrega ? entrega[`Link${numeroParte}`] : '';
+    const inputId = `link-${idTarefa}-${numeroParte}`;
+    const temLinkSalvo = linkSalvo && linkSalvo.trim() !== '';
+
+    return `
+    <div class="p-3 bg-gray-50 rounded border">
+        <div class="flex justify-between items-center">
+            <strong>Parte ${numeroParte}:</strong>
+        </div>
+        <p class="mt-1">${conteudo}</p>
+        <div class="link-container">
+            <input type="text" 
+                   class="link-input ${temLinkSalvo ? 'link-salvo' : ''}" 
+                   placeholder="Cole o link da atividade aqui" 
+                   id="${inputId}"
+                   value="${linkSalvo || ''}"
+                   ${temLinkSalvo ? 'disabled' : ''}>
+            <button class="btn-primary btn-link" 
+                    onclick="salvarLink('${idTarefa}', ${numeroParte})"
+                    ${temLinkSalvo ? 'disabled' : ''}>
+                ${temLinkSalvo ? 'Salvo' : 'Salvar'}
+            </button>
+        </div>
+    </div>`;
+}
+
+async function salvarLink(idTarefa, parte) {
+    const input = document.getElementById(`link-${idTarefa}-${parte}`);
+    const link = input.value.trim();
+
+    if (!link) {
+        showModal('Atenção', 'Por favor, cole um link válido.');
+        return;
+    }
+
+    try {
+        await apiPost('entregarTarefa', {
+            ID_Tarefa: idTarefa,
+            RA_Aluno: usuarioLogado.RA,
+            NomeAluno: usuarioLogado.NomeCompleto,
+            Turma: usuarioLogado.Turma,
+            Parte: parte,
+            [`Link${parte}`]: link
+        });
+        
+        showModal('Sucesso', `Link da parte ${parte} salvo com sucesso!`);
+        await carregarTarefasAluno();
+    } catch (error) {
+        showModal('Erro', `Erro ao salvar link: ${error.message}`);
+    }
+}
+
+// --- FUNÇÕES DE RELATÓRIO (SIMPLIFICADAS) ---
+async function mostrarRelatorioProfessor() {
+    showModal('Info', 'Funcionalidade de relatório em desenvolvimento');
+}
+
+async function mostrarRelatorioAluno() {
+    showModal('Info', 'Funcionalidade de relatório em desenvolvimento');
+}
 
 // --- INICIALIZAÇÃO ---
 init();
@@ -912,16 +925,11 @@ window.mostrarPainelProfessor = mostrarPainelProfessor;
 window.mostrarPainelAluno = mostrarPainelAluno;
 window.mostrarRelatorioProfessor = mostrarRelatorioProfessor;
 window.mostrarRelatorioAluno = mostrarRelatorioAluno;
-window.carregarRelatorioTurma = carregarRelatorioTurma;
 window.salvarTarefa = salvarTarefa;
-window.atualizarTarefa = atualizarTarefa;
 window.excluirTarefa = excluirTarefa;
-window.solicitarExclusaoTarefa = solicitarExclusaoTarefa;
-window.editarTarefa = editarTarefa;
 window.limparFormulario = limparFormulario;
 window.closeModal = closeModal;
 window.salvarLink = salvarLink;
-window.excluirLink = excluirLink;
 </script>
 </body>
 </html>
