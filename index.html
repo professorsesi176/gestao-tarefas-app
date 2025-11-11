@@ -335,7 +335,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 6.3
+        Desenvolvido por Geovane Modena | Versão 6.4
     </footer>
 </div>
 
@@ -1129,6 +1129,7 @@ async function mostrarPainelProfessor() {
         </div>
     `).join("");
 
+    // CORREÇÃO: Preencher formulário imediatamente após renderizar
     if (tarefaEditando) {
         preencherFormularioEdicao();
     }
@@ -1224,24 +1225,6 @@ async function editarTarefa(idTarefa) {
 
     tarefaEditando = tarefa;
     await mostrarPainelProfessor();
-    
-    setTimeout(() => {
-        if (document.getElementById('tema')) {
-            document.getElementById('tema').value = tarefaEditando.Tema;
-            document.getElementById('dataAula').value = tarefaEditando.DataAula.split('T')[0];
-            document.getElementById('parte1').value = tarefaEditando.Parte1 || '';
-            document.getElementById('parte2').value = tarefaEditando.Parte2 || '';
-            document.getElementById('parte3').value = tarefaEditando.Parte3 || '';
-            document.getElementById('parte4').value = tarefaEditando.Parte4 || '';
-            
-            const checkboxes = document.querySelectorAll('#turmasCheckboxes input');
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = checkbox.value === tarefaEditando.Turma;
-            });
-            
-            window.scrollTo(0, 0);
-        }
-    }, 100);
 }
 
 async function salvarTarefa() {
