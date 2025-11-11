@@ -3,937 +3,1467 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SESI Education - Login</title>
+    <title>Gestão de Tarefas Escolar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
+    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
+        .card { background-color: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.2); }
+        .btn-primary { background-color: #CC0000; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; font-size: 14px; }
+        .btn-primary:hover { background-color: #A00000; }
+        .btn-secondary { background-color: #d1d5db; color: #1e1e1e; padding: 8px 16px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; }
+        .btn-secondary:hover { background-color: #9ca3af; }
+        .btn-small { padding: 6px 12px; font-size: 0.875rem; }
+        input, textarea, select {
+            border: 1px solid #d1d5db; padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box;
+            transition: border-color 0.2s; margin-top: 4px; margin-bottom: 8px;
         }
-
-        :root {
-            --primary: #e31837;
-            --primary-dark: #c1121f;
-            --secondary: #2c3e50;
-            --accent: #3498db;
-            --light: #f8f9fa;
-            --dark: #2c3e50;
-            --text: #333;
-            --text-light: #6c757d;
-            --success: #28a745;
-            --warning: #ffc107;
-            --danger: #dc3545;
+        input:focus, textarea:focus, select:focus { border-color: #CC0000; outline: none; }
+        [data-lucide] { width: 20px; height: 20px; display: inline-block; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #CC0000; color: white; }
+        tbody tr:nth-child(even) { background-color: #f9f9f9; }
+        .hidden { display: none; }
+        
+        .checkbox-group {
+            display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; padding: 10px;
+            background-color: #f9f9f9; border-radius: 8px;
         }
-
-        body {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            min-height: 100vh;
+        .checkbox-group label { font-weight: normal; display: flex; align-items: center; }
+        .checkbox-group input { width: auto; margin: 0 5px 0 0; }
+        
+        .form-row {
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 400px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            overflow: hidden;
-        }
-
-        .header {
-            background: var(--secondary);
-            color: white;
-            padding: 30px 20px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 1.8rem;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-
-        .header p {
-            opacity: 0.9;
-            font-size: 0.95rem;
-        }
-
-        .logo {
-            width: 80px;
-            height: 80px;
-            background: var(--primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 15px;
-            font-size: 2rem;
-            color: white;
-        }
-
-        .login-form {
-            padding: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--text);
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background: var(--light);
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: var(--accent);
-            background: white;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-        }
-
-        .btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            width: 100%;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(227, 24, 55, 0.3);
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-
-        .btn-warning {
-            background: var(--warning);
-            color: var(--dark);
-        }
-
-        .test-users {
-            margin-top: 25px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            border-left: 4px solid var(--accent);
-        }
-
-        .test-users h4 {
-            color: var(--secondary);
-            margin-bottom: 15px;
-            font-size: 1rem;
-            text-align: center;
-        }
-
-        .test-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
             gap: 10px;
+            margin-bottom: 15px;
         }
-
-        .test-btn {
-            padding: 10px;
-            font-size: 0.85rem;
+        .form-row label {
+            margin-bottom: 0;
+            min-width: 120px;
+        }
+        .form-row input, .form-row textarea {
+            flex: 1;
+            margin-top: 0;
+        }
+        
+        .compact-table th, .compact-table td {
+            padding: 12px 8px;
+        }
+        .turma-column {
+            width: 80px;
             text-align: center;
         }
-
-        .alert {
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-            font-size: 0.9rem;
+        .data-column {
+            width: 120px;
+            text-align: center;
+        }
+        .acoes-column {
+            width: 200px;
+            text-align: center;
+        }
+        
+        .contador {
+            display: inline-block;
+            padding: 4px 8px;
+            background-color: #f3f4f6;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+            min-width: 80px;
+            text-align: center;
+        }
+        .contador.disponivel {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .contador.urgente {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .contador.expirado {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .contador.aguardando {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+        
+        .link-container {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            align-items: center;
+        }
+        .link-input {
+            flex: 1;
+            padding: 8px;
+            font-size: 0.875rem;
+        }
+        .btn-link {
+            padding: 8px 12px;
+            font-size: 0.8rem;
         }
 
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        .btn-link:disabled {
+            background-color: #9ca3af !important;
+            color: #6b7280 !important;
+            cursor: not-allowed !important;
+            opacity: 0.6;
         }
 
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .btn-link:disabled:hover {
+            background-color: #9ca3af !important;
+            transform: none !important;
+        }
+
+        .link-salvo {
+            background-color: #f3f4f6 !important;
+            color: #6b7280 !important;
+            cursor: not-allowed !important;
+            border: 1px solid #d1d5db;
+        }
+
+        #login-form input {
+            height: 50px;
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 16px;
+        }
+
+        #login-form button {
+            padding: 10px 30px;
+            font-size: 16px;
+            width: auto;
+            margin: 10px auto 0 auto;
+            display: block;
+            height: auto;
+        }
+
+        #login {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .acoes-column button {
+            margin: 0 4px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        .btn-editar {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-editar:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-excluir {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-excluir:hover {
+            background-color: #dc2626;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-item label {
+            margin-bottom: 0;
+            min-width: auto;
+        }
+
+        .user-info-container {
+            text-align: center;
+            margin: 10px 0;
+            padding: 0 20px;
+            line-height: 1.5;
+        }
+
+        .user-info-text {
+            font-size: 14px;
+            color: #4b5563;
+        }
+
+        .user-info-name {
+            font-weight: 600;
+            color: #CC0000;
+        }
+
+        .header-content {
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .btn-relatorio {
+            background-color: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .btn-relatorio:hover {
+            background-color: #059669;
         }
 
         .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
+            opacity: 0.7;
+            pointer-events: none;
         }
 
-        .spinner {
-            width: 30px;
-            height: 30px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
-        }
-
-        .debug-panel {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: var(--dark);
+        .btn-turma {
+            background-color: #CC0000;
             color: white;
-            padding: 10px;
-            border-radius: 5px;
-            font-family: monospace;
-            font-size: 0.8rem;
-            max-width: 400px;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
-            z-index: 1000;
-        }
-
-        .debug-log {
-            margin-bottom: 3px;
-            padding: 2px 0;
-            border-bottom: 1px solid #34495e;
-        }
-
-        .debug-toggle {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: var(--dark);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            z-index: 1001;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Dashboard Styles */
-        .dashboard {
-            display: none;
-            width: 100%;
-            max-width: 1200px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            overflow: hidden;
-            min-height: 80vh;
-        }
-
-        .dashboard-header {
-            background: var(--secondary);
-            color: white;
-            padding: 20px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            background: var(--primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-
-        .main-content {
-            display: flex;
-            min-height: calc(80vh - 80px);
-        }
-
-        .sidebar {
-            width: 250px;
-            background: #f8f9fa;
-            padding: 20px;
-            border-right: 1px solid #dee2e6;
-        }
-
-        .nav-item {
-            padding: 12px 15px;
-            margin-bottom: 8px;
+            padding: 10px 20px;
             border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.2s;
             cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--text);
-            font-weight: 500;
+            margin: 5px;
         }
 
-        .nav-item:hover, .nav-item.active {
-            background: var(--primary);
-            color: white;
+        .btn-turma:hover {
+            background-color: #A00000;
         }
 
-        .content {
-            flex: 1;
-            padding: 25px;
-            background: white;
-        }
-
-        .content-section {
-            display: none;
-        }
-
-        .content-section.active {
-            display: block;
-        }
-
-        .section-title {
-            color: var(--secondary);
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            border-left: 4px solid var(--primary);
-        }
-
-        .card h3 {
-            color: var(--secondary);
-            margin-bottom: 10px;
-            font-size: 1.1rem;
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        .tarefa-item {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-left: 4px solid var(--accent);
-        }
-
-        .tarefa-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 10px;
-        }
-
-        .tarefa-title {
-            font-size: 1.2rem;
-            color: var(--secondary);
-            font-weight: 600;
-        }
-
-        .tarefa-meta {
-            color: var(--text-light);
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-        }
-
-        .btn-sm {
-            padding: 8px 15px;
-            font-size: 0.85rem;
+        .table-header-white th {
+            color: white !important;
+            background-color: #CC0000 !important;
         }
     </style>
 </head>
-<body>
-    <!-- Login Screen -->
-    <div class="container" id="loginContainer">
-        <div class="header">
-            <div class="logo">
-                <i class="fas fa-graduation-cap"></i>
+<body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
+
+<div id="app-container" class="w-full max-w-6xl bg-white shadow-xl rounded-2xl p-6 sm:p-8 transition-all duration-300">
+    <header class="mb-8 border-b pb-4">
+        <div class="header-content">
+            <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar</h1>
+            <div id="user-info" class="user-info-container"></div>
+            <div class="absolute top-0 right-0 flex space-x-2">
+                <button id="relatorioBtn" class="btn-relatorio hidden">Relatório</button>
+                <button onclick="logout()" id="logoutBtn" class="btn-secondary hidden">Sair</button>
             </div>
-            <h1>SESI Education</h1>
-            <p>Plataforma de Gestão Educacional</p>
         </div>
+    </header>
 
-        <div class="login-form">
-            <div class="alert alert-error" id="loginAlert"></div>
+    <div id="content-area"></div>
+
+    <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
+        Desenvolvido por Geovane Modena | Versão 5.9.4
+    </footer>
+</div>
+
+<!-- Modal para mensagens -->
+<div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg p-6 max-w-sm w-full shadow-2xl">
+        <h3 id="modal-title" class="text-xl font-bold mb-3 text-red-600"></h3>
+        <p id="modal-message" class="text-gray-700 mb-4 whitespace-pre-wrap"></p>
+        <button onclick="closeModal()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">OK</button>
+    </div>
+</div>
+
+<!-- Modal de confirmação para exclusão -->
+<div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg p-6 max-w-sm w-full shadow-2xl">
+        <h3 class="text-xl font-bold mb-3 text-red-600">Confirmar Exclusão</h3>
+        <p id="confirm-message" class="text-gray-700 mb-4">Tem certeza que deseja excluir esta tarefa?</p>
+        <div class="flex space-x-4">
+            <button id="confirm-cancel" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded transition">Cancelar</button>
+            <button id="confirm-delete" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">Excluir</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- CONFIGURAÇÃO ---
+const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
+const SECURITY_TOKEN = 'SESI_EDUCATION_2024';
+
+// --- ESTADO DA APLICAÇÃO ---
+let usuarios = [];
+let usuarioLogado = null;
+let tarefas = [];
+let jsonpCallbackId = 0;
+let tarefaParaExcluir = null;
+let contadoresAtivos = [];
+let tarefaEditando = null;
+
+// --- ELEMENTOS DOM ---
+const contentArea = document.getElementById('content-area');
+const userInfoDisplay = document.getElementById('user-info');
+const logoutBtn = document.getElementById('logoutBtn');
+const relatorioBtn = document.getElementById('relatorioBtn');
+const modalOverlay = document.getElementById('modal-overlay');
+const modalTitle = document.getElementById('modal-title');
+const modalMessage = document.getElementById('modal-message');
+const confirmModal = document.getElementById('confirm-modal');
+const confirmMessage = document.getElementById('confirm-message');
+const confirmCancel = document.getElementById('confirm-cancel');
+const confirmDelete = document.getElementById('confirm-delete');
+
+// --- FUNÇÕES UTILITÁRIAS ---
+const showModal = (title, message) => {
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    modalOverlay.classList.remove('hidden');
+    modalOverlay.classList.add('flex');
+};
+
+const closeModal = () => modalOverlay.classList.add('hidden');
+
+const showConfirmModal = (message, onConfirm) => {
+    confirmMessage.textContent = message;
+    confirmModal.classList.remove('hidden');
+    confirmModal.classList.add('flex');
+    
+    confirmCancel.onclick = () => {
+        confirmModal.classList.add('hidden');
+        tarefaParaExcluir = null;
+    };
+    
+    confirmDelete.onclick = () => {
+        confirmModal.classList.add('hidden');
+        if (onConfirm) onConfirm();
+        tarefaParaExcluir = null;
+    };
+};
+
+const renderIcons = () => window.lucide && window.lucide.createIcons();
+
+const formatarData = (dataISO) => {
+    if (!dataISO) return 'N/A';
+    
+    // Garantir que a data está no formato correto
+    let data = new Date(dataISO);
+    if (isNaN(data.getTime())) {
+        // Tentar parse manual se o Date falhar
+        const partes = dataISO.split('-');
+        if (partes.length === 3) {
+            data = new Date(partes[0], partes[1] - 1, partes[2]);
+        }
+    }
+    
+    return data.toLocaleDateString('pt-BR');
+};
+
+// Função para calcular contadores de tempo com liberação progressiva
+function calcularContadores(dataAula) {
+    const agora = new Date();
+    const dataAulaObj = new Date(dataAula);
+    
+    // Calcula as datas de liberação para cada parte
+    const parte1Liberacao = new Date(dataAulaObj);
+    parte1Liberacao.setHours(0, 0, 0, 0);
+    
+    const parte2Liberacao = new Date(dataAulaObj);
+    parte2Liberacao.setDate(parte2Liberacao.getDate() + 3);
+    
+    const parte3Liberacao = new Date(dataAulaObj);
+    parte3Liberacao.setDate(parte3Liberacao.getDate() + 7);
+    
+    const parte4Liberacao = new Date(dataAulaObj);
+    parte4Liberacao.setDate(parte4Liberacao.getDate() + 14);
+    
+    // Calcula as datas limites para cada parte
+    const parte1Limite = new Date(dataAulaObj);
+    parte1Limite.setHours(18, 0, 0, 0);
+    
+    const parte2Limite = new Date(dataAulaObj);
+    parte2Limite.setDate(parte2Limite.getDate() + 7);
+    
+    const parte3Limite = new Date(dataAulaObj);
+    parte3Limite.setDate(parte3Limite.getDate() + 14);
+    
+    const parte4Limite = new Date(dataAulaObj);
+    parte4Limite.setDate(parte4Limite.getDate() + 28);
+    
+    const calcularTempoRestante = (liberacao, limite) => {
+        const diffLiberacao = liberacao - agora;
+        const diffLimite = limite - agora;
+        
+        if (diffLiberacao > 0) {
+            const dias = Math.floor(diffLiberacao / (1000 * 60 * 60 * 24));
+            const horas = Math.floor((diffLiberacao % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutos = Math.floor((diffLiberacao % (1000 * 60 * 60)) / (1000 * 60));
+            const segundos = Math.floor((diffLiberacao % (1000 * 60)) / 1000);
             
-            <form id="loginForm">
-                <div class="form-group">
-                    <label for="email"><i class="fas fa-envelope"></i> E-mail</label>
-                    <input type="email" class="form-control" id="email" required 
-                           placeholder="seu.email@portalsesisp.org.br">
-                </div>
-                
-                <div class="form-group">
-                    <label for="ra"><i class="fas fa-id-card"></i> RA</label>
-                    <input type="text" class="form-control" id="ra" required 
-                           placeholder="Digite seu RA">
-                </div>
+            let texto = '';
+            if (dias > 0) {
+                texto = `Libera em ${dias}d ${horas}h`;
+            } else if (horas > 0) {
+                texto = `Libera em ${horas}h ${minutos}m`;
+            } else {
+                texto = `Libera em ${minutos}m ${segundos}s`;
+            }
+            
+            return { 
+                texto, 
+                classe: 'aguardando', 
+                liberada: false,
+                expirado: false
+            };
+        }
+        
+        if (diffLimite <= 0) {
+            return { 
+                texto: 'Expirado', 
+                classe: 'expirado', 
+                liberada: true,
+                expirado: true
+            };
+        }
+        
+        const dias = Math.floor(diffLimite / (1000 * 60 * 60 * 24));
+        const horas = Math.floor((diffLimite % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutos = Math.floor((diffLimite % (1000 * 60 * 60)) / (1000 * 60));
+        const segundos = Math.floor((diffLimite % (1000 * 60)) / 1000);
+        
+        let texto = '';
+        if (dias > 0) {
+            texto = `${dias}d ${horas}h ${minutos}m`;
+        } else if (horas > 0) {
+            texto = `${horas}h ${minutos}m ${segundos}s`;
+        } else {
+            texto = `${minutos}m ${segundos}s`;
+        }
+        
+        const classe = dias === 0 ? 'urgente' : 'disponivel';
+        
+        return { 
+            texto, 
+            classe, 
+            liberada: true,
+            expirado: false
+        };
+    };
+    
+    return {
+        parte1: calcularTempoRestante(parte1Liberacao, parte1Limite),
+        parte2: calcularTempoRestante(parte2Liberacao, parte2Limite),
+        parte3: calcularTempoRestante(parte3Liberacao, parte3Limite),
+        parte4: calcularTempoRestante(parte4Liberacao, parte4Limite)
+    };
+}
 
-                <button type="submit" class="btn btn-primary" id="loginBtn">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Entrar no Sistema
+function iniciarAtualizacaoContadores() {
+    contadoresAtivos.forEach(interval => clearInterval(interval));
+    contadoresAtivos = [];
+    
+    const interval = setInterval(() => {
+        if (usuarioLogado && usuarioLogado.Perfil === 'Aluno') {
+            atualizarContadoresAluno();
+        }
+    }, 1000);
+    
+    contadoresAtivos.push(interval);
+}
+
+function atualizarContadoresAluno() {
+    const containers = document.querySelectorAll('#tarefas-aluno-container > div');
+    containers.forEach(container => {
+        const tema = container.querySelector('h4').textContent;
+        const tarefa = tarefas.find(t => t.Tema === tema);
+        if (tarefa) {
+            const contadores = calcularContadores(tarefa.DataAula);
+            
+            [1, 2, 3, 4].forEach(parte => {
+                const contadorElement = container.querySelector(`.parte-${parte} .contador`);
+                if (contadorElement) {
+                    const contador = contadores[`parte${parte}`];
+                    contadorElement.textContent = contador.texto;
+                    contadorElement.className = `contador ${contador.classe}`;
+                }
+            });
+        }
+    });
+}
+
+// --- API REQUEST COM JSONP ---
+function apiRequestJSONP(url, callback) {
+    const callbackName = 'jsonp_callback_' + jsonpCallbackId++;
+    
+    window[callbackName] = function(data) {
+        delete window[callbackName];
+        document.body.removeChild(script);
+        callback(null, data);
+    };
+    
+    const script = document.createElement('script');
+    script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+    script.onerror = function() {
+        delete window[callbackName];
+        document.body.removeChild(script);
+        callback(new Error('Falha ao carregar o script'));
+    };
+    
+    document.body.appendChild(script);
+}
+
+async function apiGet(func, params = {}) {
+    return new Promise((resolve, reject) => {
+        let url = `${API_URL}?token=${SECURITY_TOKEN}`;
+        
+        if (func) {
+            url += `&func=${func}`;
+        }
+        
+        for (const key in params) {
+            if (params[key] !== undefined && params[key] !== null) {
+                url += `&${key}=${encodeURIComponent(params[key])}`;
+            }
+        }
+        
+        apiRequestJSONP(url, (error, data) => {
+            if (error) {
+                reject(error);
+            } else if (data && data.success === false) {
+                reject(new Error(data.error));
+            } else {
+                resolve(data);
+            }
+        });
+    });
+}
+
+async function apiPost(action, dados) {
+    return new Promise((resolve, reject) => {
+        let url = `${API_URL}?token=${SECURITY_TOKEN}&action=${action}`;
+        
+        for (const key in dados) {
+            if (dados[key] !== undefined && dados[key] !== null) {
+                if (Array.isArray(dados[key])) {
+                    url += `&${key}=${encodeURIComponent(JSON.stringify(dados[key]))}`;
+                } else {
+                    url += `&${key}=${encodeURIComponent(dados[key])}`;
+                }
+            }
+        }
+        
+        apiRequestJSONP(url, (error, data) => {
+            if (error) {
+                reject(error);
+            } else if (data && data.success === false) {
+                reject(new Error(data.error));
+            } else {
+                resolve(data);
+            }
+        });
+    });
+}
+
+// --- INICIALIZAÇÃO ---
+async function init() {
+    try {
+        const response = await apiGet('getUsers');
+        usuarios = response.data || [];
+    } catch (error) {
+        usuarios = [
+            { 
+                NomeCompleto: "Geovane Módena", 
+                Email: "geovane.modena@portalsesisp.org.br", 
+                RA: "9999", 
+                Turma: "", 
+                Perfil: "Professor" 
+            }
+        ];
+    }
+    
+    renderLogin();
+}
+
+// --- FUNÇÕES DE AUTENTICAÇÃO ---
+const renderLogin = () => {
+    contentArea.innerHTML = `
+        <div id="login" class="max-w-md mx-auto p-6">
+            <h2 class="text-2xl font-bold text-center text-red-700 mb-6">Login</h2>
+            <div id="loginErro" class="text-red-500 mb-4 hidden text-center font-semibold">Usuário ou RA incorretos!</div>
+
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
+                    <input type="email" id="email" name="email" required placeholder="seu.email@escola.com" class="w-full">
+                </div>
+                <div>
+                    <label for="ra" class="block text-sm font-medium text-gray-700 mb-2">RA</label>
+                    <input type="text" id="ra" name="ra" required placeholder="Apenas números" class="w-full">
+                </div>
+                <button type="submit" class="btn-primary">
+                    Entrar
                 </button>
             </form>
-
-            <div class="test-users">
-                <h4><i class="fas fa-flask"></i> Teste Rápido</h4>
-                <div class="test-buttons">
-                    <button type="button" class="btn btn-success test-btn" 
-                            onclick="fillTestCredentials('geovane.modena@portalsesisp.org.br', '9999')">
-                        <i class="fas fa-user-tie"></i> Professor
-                    </button>
-                    <button type="button" class="btn btn-warning test-btn" 
-                            onclick="fillTestCredentials('ana.mattos7@portalsesisp.org.br', '4386')">
-                        <i class="fas fa-user-graduate"></i> Aluno 1A
-                    </button>
-                    <button type="button" class="btn btn-warning test-btn" 
-                            onclick="fillTestCredentials('arthur.buani@portalsesisp.org.br', '421')">
-                        <i class="fas fa-user-graduate"></i> Aluno 1A
-                    </button>
-                    <button type="button" class="btn btn-warning test-btn" 
-                            onclick="fillTestCredentials('beatriz.manara@portalsesisp.org.br', '3635')">
-                        <i class="fas fa-user-graduate"></i> Aluno 1B
-                    </button>
-                </div>
-            </div>
-
-            <div class="loading" id="loginLoading">
-                <div class="spinner"></div>
-                <p>Conectando ao sistema...</p>
-            </div>
         </div>
-    </div>
+    `;
 
-    <!-- Dashboard -->
-    <div class="dashboard" id="dashboard">
-        <div class="dashboard-header">
-            <div>
-                <h1><i class="fas fa-graduation-cap"></i> SESI Education</h1>
-            </div>
-            <div class="user-info">
-                <div class="user-avatar" id="userAvatar">U</div>
-                <div>
-                    <div id="userName">Usuário</div>
-                    <div id="userProfile" style="font-size: 0.8rem; opacity: 0.8;">Perfil</div>
-                </div>
-                <button class="btn btn-primary btn-sm" onclick="logout()" style="width: auto;">
-                    <i class="fas fa-sign-out-alt"></i> Sair
-                </button>
-            </div>
-        </div>
+    document.getElementById('login-form').addEventListener('submit', login);
+};
 
-        <div class="main-content">
-            <div class="sidebar">
-                <div class="nav-item active" onclick="showSection('dashboard')">
-                    <i class="fas fa-home"></i>
-                    <span>Dashboard</span>
-                </div>
-                <div class="nav-item" onclick="showSection('tarefas')">
-                    <i class="fas fa-tasks"></i>
-                    <span>Tarefas</span>
-                </div>
-                <div class="nav-item" onclick="showSection('entregas')">
-                    <i class="fas fa-file-upload"></i>
-                    <span>Minhas Entregas</span>
-                </div>
-                <div class="nav-item" id="professorMenu" style="display: none;" onclick="showSection('gerenciar')">
-                    <i class="fas fa-cog"></i>
-                    <span>Gerenciar Tarefas</span>
-                </div>
-                <div class="nav-item" onclick="showSection('notificacoes')">
-                    <i class="fas fa-bell"></i>
-                    <span>Notificações</span>
-                </div>
-            </div>
-
-            <div class="content">
-                <!-- Dashboard -->
-                <div class="content-section active" id="dashboardSection">
-                    <h2 class="section-title">Dashboard</h2>
-                    <p>Bem-vindo, <span id="welcomeName">Usuário</span>!</p>
-                    
-                    <div class="cards-grid">
-                        <div class="card">
-                            <h3><i class="fas fa-tasks"></i> Tarefas Pendentes</h3>
-                            <div class="stat-number" id="tarefasPendentes">0</div>
-                            <p style="color: var(--text-light); font-size: 0.9rem;">Para fazer</p>
-                        </div>
-                        
-                        <div class="card">
-                            <h3><i class="fas fa-check-circle"></i> Entregas Realizadas</h3>
-                            <div class="stat-number" id="entregasRealizadas">0</div>
-                            <p style="color: var(--text-light); font-size: 0.9rem;">Concluídas</p>
-                        </div>
-                        
-                        <div class="card">
-                            <h3><i class="fas fa-chart-line"></i> Média de Notas</h3>
-                            <div class="stat-number" id="mediaNotas">0.0</div>
-                            <p style="color: var(--text-light); font-size: 0.9rem;">Desempenho</p>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <h3><i class="fas fa-clock"></i> Próximas Atividades</h3>
-                        <div id="proximasAtividades">
-                            <p style="text-align: center; color: var(--text-light); padding: 20px;">
-                                Carregando atividades...
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tarefas -->
-                <div class="content-section" id="tarefasSection">
-                    <h2 class="section-title">Tarefas da Turma</h2>
-                    <div id="listaTarefas">
-                        <div class="loading">
-                            <div class="spinner"></div>
-                            <p>Carregando tarefas...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Entregas -->
-                <div class="content-section" id="entregasSection">
-                    <h2 class="section-title">Minhas Entregas</h2>
-                    <div id="minhasEntregas">
-                        <p style="text-align: center; color: var(--text-light); padding: 40px;">
-                            Funcionalidade em desenvolvimento...
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Gerenciar -->
-                <div class="content-section" id="gerenciarSection">
-                    <h2 class="section-title">Gerenciar Tarefas</h2>
-                    <div id="gerenciarConteudo">
-                        <p style="text-align: center; color: var(--text-light); padding: 40px;">
-                            Painel do professor em desenvolvimento...
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Notificações -->
-                <div class="content-section" id="notificacoesSection">
-                    <h2 class="section-title">Notificações</h2>
-                    <div id="listaNotificacoes">
-                        <p style="text-align: center; color: var(--text-light); padding: 40px;">
-                            Sistema de notificações em desenvolvimento...
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Debug Panel -->
-    <button class="debug-toggle" onclick="toggleDebug()">
-        <i class="fas fa-bug"></i> Debug
-    </button>
+async function login(event) {
+    event.preventDefault(); 
+    const email = document.getElementById('email').value.trim();
+    const ra = document.getElementById('ra').value.trim();
     
-    <div class="debug-panel" id="debugPanel">
-        <div style="margin-bottom: 10px; font-weight: bold;">Logs do Sistema</div>
-        <div id="debugLogs"></div>
-    </div>
+    const loginErro = document.getElementById('loginErro'); 
+    
+    const user = usuarios.find(u => {
+        const userEmail = u.Email.toLowerCase().trim();
+        const userRA = String(u.RA).trim();
+        const inputEmail = email.toLowerCase().trim();
+        const inputRA = ra.trim();
+        
+        return userEmail === inputEmail && userRA === inputRA;
+    });
+    
+    if (!user) {
+        loginErro.style.display = 'block';
+        return;
+    }
+    
+    usuarioLogado = user;
+    loginErro.style.display = 'none';
+    
+    contentArea.innerHTML = `<div class="text-center text-gray-500 py-8">Carregando painel...</div>`;
+    logoutBtn.classList.remove('hidden');
+    relatorioBtn.classList.remove('hidden');
+    
+    // Ajustar informações do usuário conforme o perfil
+    if (user.Perfil === "Professor") {
+        userInfoDisplay.innerHTML = `
+            <div class="user-info-text">
+                Logado como: <span class="user-info-name">${user.NomeCompleto} (${user.Perfil})</span> | Professor
+            </div>
+        `;
+        relatorioBtn.onclick = mostrarRelatorioProfessor;
+    } else {
+        userInfoDisplay.innerHTML = `
+            <div class="user-info-text">
+                Logado como: <span class="user-info-name">${user.NomeCompleto} (${user.Perfil})</span> | Turma: ${user.Turma || 'N/A'}
+            </div>
+        `;
+        relatorioBtn.onclick = mostrarRelatorioAluno;
+    }
 
-    <script>
-        // Configurações
-        const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec';
-        const TOKEN = 'SESI_EDUCATION_2024';
+    try {
+        const response = await apiGet('getTarefas');
+        tarefas = response.data || [];
+    } catch (error) {
+        tarefas = [];
+    }
 
-        // Estado da aplicação
-        let currentUser = null;
-        let userTarefas = [];
-        let userEntregas = [];
+    if (user.Perfil === "Professor") {
+        await mostrarPainelProfessor();
+    } else {
+        await mostrarPainelAluno(); 
+    }
+}
 
-        // Debug functions
-        function logDebug(message) {
-            const timestamp = new Date().toLocaleTimeString();
-            const logElement = document.getElementById('debugLogs');
-            const logEntry = document.createElement('div');
-            logEntry.className = 'debug-log';
-            logEntry.textContent = `[${timestamp}] ${message}`;
-            logElement.appendChild(logEntry);
-            logElement.scrollTop = logElement.scrollHeight;
-            console.log(`[DEBUG] ${message}`);
+function logout() {
+    usuarioLogado = null;
+    tarefaEditando = null;
+    logoutBtn.classList.add('hidden');
+    relatorioBtn.classList.add('hidden');
+    userInfoDisplay.innerHTML = '';
+    contadoresAtivos.forEach(interval => clearInterval(interval));
+    contadoresAtivos = [];
+    renderLogin(); 
+}
+
+// --- FUNÇÕES DE RELATÓRIO ---
+async function mostrarRelatorioProfessor() {
+    const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
+    
+    let relatorioHTML = `
+        <div class="card p-6">
+            <h3 class="text-2xl font-bold text-red-700 mb-4">Relatório por Turma</h3>
+            <div class="mb-4">
+                <p class="block text-sm font-medium text-gray-700 mb-2">Selecione a Turma:</p>
+                <div class="flex flex-wrap gap-2 mb-6" id="botoes-turma">
+    `;
+    
+    // Botões para cada turma
+    turmas.forEach(turma => {
+        relatorioHTML += `
+            <button onclick="carregarRelatorioTurma('${turma}')" class="btn-turma">
+                Turma ${turma}
+            </button>
+        `;
+    });
+    
+    relatorioHTML += `
+                </div>
+            </div>
+            <div id="relatorio-turma-container" class="mt-4">
+                <p class="text-gray-500 text-center py-8">Selecione uma turma para visualizar o relatório</p>
+            </div>
+            <div class="mt-4 text-center">
+                <button onclick="mostrarPainelProfessor()" class="btn-secondary">Voltar ao Painel</button>
+            </div>
+        </div>
+    `;
+    
+    contentArea.innerHTML = relatorioHTML;
+}
+
+async function carregarRelatorioTurma(turmaSelecionada) {
+    console.log('Carregando relatório para turma:', turmaSelecionada);
+    const container = document.getElementById('relatorio-turma-container');
+    container.innerHTML = '<p class="text-gray-500 text-center py-4">Carregando relatório...</p>';
+    
+    try {
+        // Buscar todos os alunos da turma
+        const usersResponse = await apiGet('getUsers');
+        const alunosTurma = usersResponse.data.filter(user => user.Turma === turmaSelecionada && user.Perfil === 'Aluno');
+        
+        // Buscar todas as tarefas da turma
+        const tarefasResponse = await apiGet('getTarefasPorTurma', { turma: turmaSelecionada });
+        const tarefasTurma = tarefasResponse.data || [];
+        
+        if (alunosTurma.length === 0) {
+            container.innerHTML = `<p class="text-gray-500 text-center py-8">Nenhum aluno encontrado na turma ${turmaSelecionada}.</p>`;
+            return;
         }
-
-        function toggleDebug() {
-            const panel = document.getElementById('debugPanel');
-            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        
+        if (tarefasTurma.length === 0) {
+            container.innerHTML = `<p class="text-gray-500 text-center py-8">Nenhuma tarefa encontrada para a turma ${turmaSelecionada}.</p>`;
+            return;
         }
-
-        // Funções de UI
-        function showLoading(show) {
-            document.getElementById('loginLoading').style.display = show ? 'block' : 'none';
-            document.getElementById('loginBtn').style.display = show ? 'none' : 'flex';
-        }
-
-        function showAlert(message, type = 'error') {
-            const alert = document.getElementById('loginAlert');
-            alert.textContent = message;
-            alert.className = `alert alert-${type}`;
-            alert.style.display = 'block';
-            setTimeout(() => {
-                alert.style.display = 'none';
-            }, 5000);
-        }
-
-        function fillTestCredentials(email, ra) {
-            document.getElementById('email').value = email;
-            document.getElementById('ra').value = ra;
-            logDebug(`Credenciais preenchidas: ${email} / ${ra}`);
-        }
-
-        // Funções de Login
-        async function loginUser(email, ra) {
-            showLoading(true);
-            logDebug(`Iniciando login: ${email} / ${ra}`);
+        
+        let relatorioTurmaHTML = `
+            <h4 class="text-lg font-semibold mb-3 text-red-700">Relatório da Turma ${turmaSelecionada}</h4>
+            <div class="overflow-x-auto border rounded-lg">
+                <table class="min-w-full compact-table table-header-white">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold border-b">Aluno</th>
+        `;
+        
+        // Cabeçalho com as tarefas
+        tarefasTurma.forEach(tarefa => {
+            relatorioTurmaHTML += `<th class="px-4 py-3 text-center font-semibold border-b">${tarefa.Tema}</th>`;
+        });
+        
+        relatorioTurmaHTML += `
+                            <th class="px-4 py-3 text-center font-semibold border-b">Média</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        for (const aluno of alunosTurma) {
+            // Buscar entregas do aluno
+            const entregasResponse = await apiGet('getEntregasAluno', { ra: aluno.RA });
+            const entregasAluno = entregasResponse.data || [];
             
-            try {
-                const url = `${BACKEND_URL}?token=${TOKEN}&func=verifyLogin&email=${encodeURIComponent(email)}&ra=${encodeURIComponent(ra)}`;
-                logDebug(`URL da requisição: ${url}`);
+            let totalNotas = 0;
+            let countNotas = 0;
+            
+            relatorioTurmaHTML += `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 font-medium text-gray-900 border-b">${aluno.NomeCompleto}</td>
+            `;
+            
+            for (const tarefa of tarefasTurma) {
+                const entrega = entregasAluno.find(e => e.ID_Tarefa === tarefa.ID);
+                const nota = entrega && entrega.Nota ? parseFloat(entrega.Nota).toFixed(1) : '-';
                 
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                logDebug(`Resposta do backend: ${JSON.stringify(data)}`);
-                
-                if (data.success && data.user) {
-                    currentUser = data.user;
-                    logDebug(`Login bem-sucedido: ${currentUser.NomeCompleto} (${currentUser.Perfil})`);
-                    
-                    // Atualizar UI do usuário
-                    updateUserUI();
-                    
-                    // Mostrar dashboard
-                    document.getElementById('loginContainer').style.display = 'none';
-                    document.getElementById('dashboard').style.display = 'block';
-                    
-                    // Carregar dados iniciais
-                    await loadDashboardData();
-                    
-                    showAlert('Login realizado com sucesso!', 'success');
-                    
-                } else {
-                    throw new Error(data.message || 'Erro no login');
+                if (entrega && entrega.Nota) {
+                    totalNotas += parseFloat(entrega.Nota);
+                    countNotas++;
                 }
                 
-            } catch (error) {
-                logDebug(`Erro no login: ${error.message}`);
-                showAlert(error.message);
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        function updateUserUI() {
-            if (!currentUser) return;
-            
-            document.getElementById('userName').textContent = currentUser.NomeCompleto;
-            document.getElementById('userProfile').textContent = currentUser.Perfil;
-            document.getElementById('welcomeName').textContent = currentUser.NomeCompleto.split(' ')[0];
-            
-            // Avatar com iniciais
-            const initials = currentUser.NomeCompleto.split(' ').map(n => n[0]).join('').toUpperCase();
-            document.getElementById('userAvatar').textContent = initials;
-            
-            // Mostrar/ocultar menu do professor
-            if (currentUser.Perfil === 'Professor') {
-                document.getElementById('professorMenu').style.display = 'flex';
-            }
-        }
-
-        function logout() {
-            currentUser = null;
-            userTarefas = [];
-            userEntregas = [];
-            
-            document.getElementById('loginContainer').style.display = 'block';
-            document.getElementById('dashboard').style.display = 'none';
-            document.getElementById('loginForm').reset();
-            
-            logDebug('Usuário fez logout');
-        }
-
-        // Funções do Dashboard
-        async function loadDashboardData() {
-            if (!currentUser) return;
-            
-            try {
-                logDebug('Carregando dados do dashboard...');
-                
-                // Carregar tarefas da turma
-                const tarefasResponse = await fetch(`${BACKEND_URL}?token=${TOKEN}&func=getTarefasPorTurma&turma=${currentUser.Turma}`);
-                const tarefasData = await tarefasResponse.json();
-                
-                if (tarefasData.success) {
-                    userTarefas = tarefasData.data || [];
-                    logDebug(`Encontradas ${userTarefas.length} tarefas para a turma ${currentUser.Turma}`);
-                }
-                
-                // Carregar entregas do aluno (se for aluno)
-                if (currentUser.Perfil === 'Aluno') {
-                    const entregasResponse = await fetch(`${BACKEND_URL}?token=${TOKEN}&func=getEntregasAluno&ra=${currentUser.RA}`);
-                    const entregasData = await entregasResponse.json();
-                    
-                    if (entregasData.success) {
-                        userEntregas = entregasData.data || [];
-                        logDebug(`Encontradas ${userEntregas.length} entregas do aluno`);
+                // Cores para as notas (SESI: 7.5+ verde, abaixo vermelho)
+                let classeNota = 'text-gray-600';
+                if (entrega && entrega.Nota) {
+                    const notaNum = parseFloat(entrega.Nota);
+                    if (notaNum >= 7.5) {
+                        classeNota = 'text-green-600 font-semibold';
+                    } else {
+                        classeNota = 'text-red-600';
                     }
                 }
                 
-                updateDashboardStats();
-                updateProximasAtividades();
-                
-            } catch (error) {
-                logDebug(`Erro ao carregar dados do dashboard: ${error.message}`);
-            }
-        }
-
-        function updateDashboardStats() {
-            // Tarefas pendentes
-            const tarefasPendentes = userTarefas.length;
-            document.getElementById('tarefasPendentes').textContent = tarefasPendentes;
-            
-            // Entregas realizadas
-            const entregasRealizadas = userEntregas.length;
-            document.getElementById('entregasRealizadas').textContent = entregasRealizadas;
-            
-            // Média de notas
-            const notas = userEntregas.filter(e => e.Nota).map(e => parseFloat(e.Nota));
-            const media = notas.length > 0 ? (notas.reduce((a, b) => a + b, 0) / notas.length).toFixed(1) : '0.0';
-            document.getElementById('mediaNotas').textContent = media;
-            
-            logDebug(`Estatísticas atualizadas: ${tarefasPendentes} tarefas, ${entregasRealizadas} entregas, média ${media}`);
-        }
-
-        function updateProximasAtividades() {
-            const container = document.getElementById('proximasAtividades');
-            
-            if (userTarefas.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: var(--text-light); padding: 20px;">Nenhuma atividade pendente</p>';
-                return;
+                relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b ${classeNota}">${nota}</td>`;
             }
             
-            const atividadesHTML = userTarefas.slice(0, 3).map(tarefa => {
-                const entrega = userEntregas.find(e => e.ID_Tarefa === tarefa.ID);
-                const entregue = entrega ? ' (Entregue)' : '';
-                
-                return `
-                    <div style="padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong>${tarefa.Tema}${entregue}</strong>
-                            <div style="font-size: 0.9rem; color: var(--text-light);">
-                                ${new Date(tarefa.DataAula).toLocaleDateString('pt-BR')} - ${tarefa.Turma}
-                            </div>
-                        </div>
-                        ${!entrega ? `
-                            <button class="btn btn-primary btn-sm" onclick="entregarTarefa('${tarefa.ID}')" style="width: auto;">
-                                <i class="fas fa-paper-plane"></i> Entregar
-                            </button>
-                        ` : ''}
-                    </div>
-                `;
-            }).join('');
-            
-            container.innerHTML = atividadesHTML;
-        }
-
-        function showSection(sectionId) {
-            // Esconder todas as seções
-            document.querySelectorAll('.content-section').forEach(section => {
-                section.classList.remove('active');
-            });
-            
-            // Remover active de todos os itens do menu
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // Mostrar seção selecionada
-            document.getElementById(sectionId + 'Section').classList.add('active');
-            
-            // Ativar item do menu correspondente
-            const menuItems = document.querySelectorAll('.nav-item');
-            for (let item of menuItems) {
-                if (item.textContent.includes(
-                    document.getElementById(sectionId + 'Section').querySelector('.section-title').textContent
-                )) {
-                    item.classList.add('active');
-                    break;
+            const media = countNotas > 0 ? (totalNotas / countNotas).toFixed(1) : '-';
+            let classeMedia = 'text-gray-600';
+            if (media !== '-') {
+                const mediaNum = parseFloat(media);
+                if (mediaNum >= 7.5) {
+                    classeMedia = 'text-green-600 font-bold';
+                } else {
+                    classeMedia = 'text-red-600 font-semibold';
                 }
             }
-
-            // Carregar dados específicos da seção
-            switch(sectionId) {
-                case 'tarefas':
-                    loadTarefasSection();
-                    break;
-            }
             
-            logDebug(`Navegando para seção: ${sectionId}`);
+            relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b ${classeMedia}">${media}</td>`;
+            relatorioTurmaHTML += `</tr>`;
         }
+        
+        relatorioTurmaHTML += `
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4 text-sm text-gray-600">
+                <p>Total de alunos: ${alunosTurma.length} | Total de tarefas: ${tarefasTurma.length}</p>
+            </div>
+        `;
+        
+        container.innerHTML = relatorioTurmaHTML;
+    } catch (error) {
+        console.error('Erro ao carregar relatório:', error);
+        container.innerHTML = `<p class="text-red-500 text-center py-4">Erro ao carregar relatório: ${error.message}</p>`;
+    }
+}
 
-        async function loadTarefasSection() {
-            const container = document.getElementById('listaTarefas');
-            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Carregando tarefas...</p></div>';
+async function mostrarRelatorioAluno() {
+    try {
+        const entregasResponse = await apiGet('getEntregasAluno', { ra: usuarioLogado.RA });
+        const entregas = entregasResponse.data || [];
+        
+        let relatorioHTML = `
+            <div class="card p-6">
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Meu Relatório</h3>
+        `;
+        
+        if (entregas.length === 0) {
+            relatorioHTML += `
+                <p class="text-gray-500 text-center py-4">Nenhuma entrega registrada.</p>
+            `;
+        } else {
+            // Buscar informações das tarefas
+            const tarefasResponse = await apiGet('getTarefas');
+            const todasTarefas = tarefasResponse.data || [];
             
-            try {
-                if (userTarefas.length === 0) {
-                    await loadDashboardData();
+            let notaTotal = 0;
+            let countEntregas = 0;
+            
+            relatorioHTML += `
+                <div class="overflow-x-auto">
+                    <table class="min-w-full compact-table">
+                        <thead>
+                            <tr>
+                                <th>Tarefa</th>
+                                <th>Links Entregues</th>
+                                <th class="data-column">Data de Submissão</th>
+                                <th class="data-column">Nota</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            entregas.forEach(entrega => {
+                // Buscar a tarefa de forma mais robusta
+                let tarefa = todasTarefas.find(t => t.ID === entrega.ID_Tarefa);
+                
+                // Se não encontrou, tentar buscar por tema ou outros critérios
+                if (!tarefa) {
+                    // Tentar buscar a tarefa diretamente pelo ID
+                    console.log('Tarefa não encontrada para entrega:', entrega.ID_Tarefa);
+                    tarefa = { Tema: `Tarefa (ID: ${entrega.ID_Tarefa})` };
                 }
                 
-                renderTarefas();
+                const temaTarefa = tarefa ? tarefa.Tema : `Tarefa (ID: ${entrega.ID_Tarefa})`;
                 
-            } catch (error) {
-                container.innerHTML = `<p style="text-align: center; color: var(--danger); padding: 20px;">Erro ao carregar tarefas: ${error.message}</p>`;
-                logDebug(`Erro ao carregar tarefas: ${error.message}`);
-            }
-        }
-
-        function renderTarefas() {
-            const container = document.getElementById('listaTarefas');
-            
-            if (userTarefas.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: var(--text-light); padding: 40px;">Nenhuma tarefa encontrada para sua turma.</p>';
-                return;
-            }
-            
-            const tarefasHTML = userTarefas.map(tarefa => {
-                const entrega = userEntregas.find(e => e.ID_Tarefa === tarefa.ID);
-                const partes = [tarefa.Parte1, tarefa.Parte2, tarefa.Parte3, tarefa.Parte4].filter(p => p);
+                const linksEntregues = [];
+                if (entrega.Link1) linksEntregues.push('Parte 1');
+                if (entrega.Link2) linksEntregues.push('Parte 2');
+                if (entrega.Link3) linksEntregues.push('Parte 3');
+                if (entrega.Link4) linksEntregues.push('Parte 4');
                 
-                return `
-                    <div class="tarefa-item">
-                        <div class="tarefa-header">
-                            <div class="tarefa-title">${tarefa.Tema}</div>
-                            <div style="color: ${entrega ? 'var(--success)' : 'var(--warning)'}; font-weight: 600;">
-                                ${entrega ? 'ENTREGUE' : 'PENDENTE'}
-                            </div>
-                        </div>
-                        <div class="tarefa-meta">
-                            <i class="far fa-calendar"></i> ${new Date(tarefa.DataAula).toLocaleDateString('pt-BR')} | 
-                            <i class="fas fa-users"></i> ${tarefa.Turma} |
-                            <i class="fas fa-user"></i> ${tarefa.CriadoPor}
-                        </div>
-                        
-                        ${partes.length > 0 ? `
-                            <div style="margin: 15px 0;">
-                                <strong>Partes da tarefa:</strong>
-                                <ul style="margin: 10px 0; padding-left: 20px;">
-                                    ${partes.map((parte, index) => {
-                                        const parteEntregue = entrega && entrega[`Link${index + 1}`];
-                                        return `<li style="margin-bottom: 5px; color: ${parteEntregue ? 'var(--success)' : 'var(--text-light)'};">
-                                            ${parte} ${parteEntregue ? '✓' : ''}
-                                        </li>`;
-                                    }).join('')}
-                                </ul>
-                            </div>
-                        ` : ''}
-                        
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
-                            <button class="btn btn-primary btn-sm" onclick="entregarTarefa('${tarefa.ID}')" style="width: auto;">
-                                <i class="fas fa-paper-plane"></i> ${entrega ? 'Alterar Entrega' : 'Entregar Tarefa'}
-                            </button>
-                            ${entrega ? `
-                                <button class="btn btn-success btn-sm" onclick="verEntrega('${tarefa.ID}')" style="width: auto;">
-                                    <i class="fas fa-eye"></i> Ver Entrega
-                                </button>
-                            ` : ''}
+                // Corrigir cálculo da nota - garantir que está usando o valor correto
+                const notaEntrega = parseFloat(entrega.Nota) || 0;
+                if (notaEntrega > 0) {
+                    notaTotal += notaEntrega;
+                    countEntregas++;
+                }
+                
+                relatorioHTML += `
+                    <tr>
+                        <td>${temaTarefa}</td>
+                        <td>${linksEntregues.join(', ') || 'Nenhum'}</td>
+                        <td class="data-column">${formatarData(entrega.DataSubmissao)}</td>
+                        <td class="data-column font-semibold">${notaEntrega.toFixed(1)}</td>
+                    </tr>
+                `;
+            });
+            
+            const media = countEntregas > 0 ? (notaTotal / countEntregas).toFixed(1) : '0.0';
+            
+            relatorioHTML += `
+                        </tbody>
+                    </table>
+                    <div class="mt-4 p-3 bg-gray-50 rounded border">
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold">Média Geral:</span>
+                            <span class="text-lg font-bold ${parseFloat(media) >= 7.5 ? 'text-green-600' : 'text-red-600'}">${media}</span>
                         </div>
                     </div>
-                `;
-            }).join('');
+                </div>
+            `;
+        }
+        
+        relatorioHTML += `
+                <div class="mt-4 text-center">
+                    <button onclick="mostrarPainelAluno()" class="btn-secondary">Voltar ao Painel</button>
+                </div>
+            </div>
+        `;
+        
+        contentArea.innerHTML = relatorioHTML;
+    } catch (error) {
+        showModal('Erro', `Erro ao carregar relatório: ${error.message}`);
+    }
+}
+
+// --- PAINEL DO PROFESSOR ---
+async function mostrarPainelProfessor() {
+    contentArea.innerHTML = `
+        <div id="painelProfessor" class="space-y-6">
+            <div class="card p-6 border-t-4 border-red-600">
+                <h3 class="text-2xl font-bold mb-4 text-red-700" id="titulo-formulario">${tarefaEditando ? 'Editar Tarefa' : 'Criar Nova Tarefa'}</h3>
+                
+                <div class="form-row">
+                    <label class="block text-sm font-medium text-gray-700">Turmas:</label>
+                    <div class="checkbox-group" id="turmasCheckboxes"></div>
+                </div>
+                
+                <div class="form-row">
+                    <label for="tema" class="block text-sm font-medium text-gray-700">Tema da Tarefa</label>
+                    <input type="text" id="tema" placeholder="Ex: Matemática - Frações" class="mt-1" required>
+                </div>
+                
+                <div class="form-row">
+                    <label for="dataAula" class="block text-sm font-medium text-gray-700">Data da Aula</label>
+                    <input type="date" id="dataAula" class="mt-1" required>
+                </div>
+                
+                <div class="mt-4 space-y-4">
+                    <div>
+                        <label for="parte1" class="block text-sm font-medium text-gray-700 mb-2">Parte 1 (até 18h do dia)</label>
+                        <textarea id="parte1" placeholder="Descreva a parte 1 da tarefa" rows="3" required></textarea>
+                    </div>
+                    <div>
+                        <label for="parte2" class="block text-sm font-medium text-gray-700 mb-2">Parte 2 (3º-7º dia)</label>
+                        <textarea id="parte2" placeholder="Descreva a parte 2 da tarefa" rows="3" required></textarea>
+                    </div>
+                    <div>
+                        <label for="parte3" class="block text-sm font-medium text-gray-700 mb-2">Parte 3 (8º-14º dia)</label>
+                        <textarea id="parte3" placeholder="Descreva a parte 3 da tarefa" rows="3" required></textarea>
+                    </div>
+                    <div>
+                        <label for="parte4" class="block text-sm font-medium text-gray-700 mb-2">Parte 4 (15º-28º dia)</label>
+                        <textarea id="parte4" placeholder="Descreva a parte 4 da tarefa" rows="3" required></textarea>
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex space-x-4">
+                    <button onclick="${tarefaEditando ? 'atualizarTarefa()' : 'salvarTarefa()'}" class="btn-primary flex-1" id="btnSalvarTarefa">
+                        ${tarefaEditando ? 'Atualizar Tarefa' : 'Salvar Tarefa'}
+                    </button>
+                    <button onclick="limparFormulario()" class="btn-secondary flex-1">
+                        ${tarefaEditando ? 'Cancelar Edição' : 'Limpar'}
+                    </button>
+                </div>
+            </div>
+
+            <div class="card p-6">
+                <h3 class="text-2xl font-bold mb-4 text-red-700">Tarefas Criadas</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full compact-table">
+                        <thead>
+                            <tr>
+                                <th class="turma-column">Turma</th>
+                                <th>Tema e Partes</th>
+                                <th class="data-column">Data</th>
+                                <th class="acoes-column">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaTarefasBody">
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-gray-500">Carregando tarefas...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Popula checkboxes de turma
+    const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
+    document.getElementById('turmasCheckboxes').innerHTML = turmas.map(t => `
+        <div class="checkbox-item">
+            <input type="checkbox" value="${t}" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+            <label class="text-gray-700">${t}</label>
+        </div>
+    `).join("");
+
+    // Se está editando, preenche o formulário
+    if (tarefaEditando) {
+        preencherFormularioEdicao();
+    }
+
+    await carregarTarefasProfessor();
+}
+
+function preencherFormularioEdicao() {
+    if (!tarefaEditando) return;
+    
+    document.getElementById('titulo-formulario').textContent = 'Editar Tarefa';
+    document.getElementById('tema').value = tarefaEditando.Tema;
+    document.getElementById('dataAula').value = tarefaEditando.DataAula.split('T')[0];
+    document.getElementById('parte1').value = tarefaEditando.Parte1 || '';
+    document.getElementById('parte2').value = tarefaEditando.Parte2 || '';
+    document.getElementById('parte3').value = tarefaEditando.Parte3 || '';
+    document.getElementById('parte4').value = tarefaEditando.Parte4 || '';
+    
+    // Marcar a turma específica
+    const checkboxes = document.querySelectorAll('#turmasCheckboxes input');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = checkbox.value === tarefaEditando.Turma;
+    });
+    
+    // Rolar para o topo
+    window.scrollTo(0, 0);
+}
+
+// --- FUNÇÕES DO PROFESSOR ---
+async function carregarTarefasProfessor() {
+    try {
+        const response = await apiGet('getTarefas');
+        tarefas = response.data || [];
+        renderizarTabelaTarefas();
+    } catch (error) {
+        document.getElementById('tabelaTarefasBody').innerHTML = 
+            `<tr><td colspan="4" class="text-center py-4 text-red-500">Erro ao carregar tarefas: ${error.message}</td></tr>`;
+    }
+}
+
+function renderizarTabelaTarefas() {
+    const tbody = document.getElementById('tabelaTarefasBody');
+    
+    if (tarefas.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">Nenhuma tarefa criada</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = tarefas.map(tarefa => {
+        const parte1 = tarefa.Parte1 || '';
+        const parte2 = tarefa.Parte2 || '';
+        const parte3 = tarefa.Parte3 || '';
+        const parte4 = tarefa.Parte4 || '';
+
+        return `
+        <tr>
+            <td class="turma-column">${tarefa.Turma}</td>
+            <td class="px-4 py-2">
+                <div class="font-semibold text-gray-800 mb-2">${tarefa.Tema}</div>
+                ${parte1 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 1:</span> ${parte1}</div>` : ''}
+                ${parte2 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 2:</span> ${parte2}</div>` : ''}
+                ${parte3 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 3:</span> ${parte3}</div>` : ''}
+                ${parte4 ? `<div class="text-sm text-gray-600"><span class="font-medium">Parte 4:</span> ${parte4}</div>` : ''}
+            </td>
+            <td class="data-column">${formatarData(tarefa.DataAula)}</td>
+            <td class="acoes-column">
+                <div class="flex justify-center space-x-2">
+                    <button onclick="editarTarefa('${tarefa.ID}')" class="btn-editar">
+                        Editar
+                    </button>
+                    <button onclick="solicitarExclusaoTarefa('${tarefa.ID}')" class="btn-excluir">
+                        Excluir
+                    </button>
+                </div>
+            </td>
+        </tr>
+        `;
+    }).join('');
+}
+
+function solicitarExclusaoTarefa(idTarefa) {
+    const tarefa = tarefas.find(t => t.ID === idTarefa);
+    tarefaParaExcluir = idTarefa;
+    showConfirmModal(`Tem certeza que deseja excluir a tarefa "${tarefa?.Tema}" da turma ${tarefa?.Turma}?`, () => {
+        excluirTarefa(idTarefa);
+    });
+}
+
+async function editarTarefa(idTarefa) {
+    const tarefa = tarefas.find(t => t.ID === idTarefa);
+    if (!tarefa) {
+        showModal('Erro', 'Tarefa não encontrada.');
+        return;
+    }
+
+    tarefaEditando = tarefa;
+    
+    // Recarregar o painel do professor
+    await mostrarPainelProfessor();
+    
+    // Preencher o formulário após o DOM ser renderizado
+    setTimeout(() => {
+        if (document.getElementById('tema')) {
+            document.getElementById('tema').value = tarefaEditando.Tema;
+            document.getElementById('dataAula').value = tarefaEditando.DataAula.split('T')[0];
+            document.getElementById('parte1').value = tarefaEditando.Parte1 || '';
+            document.getElementById('parte2').value = tarefaEditando.Parte2 || '';
+            document.getElementById('parte3').value = tarefaEditando.Parte3 || '';
+            document.getElementById('parte4').value = tarefaEditando.Parte4 || '';
             
-            container.innerHTML = tarefasHTML;
-            logDebug(`Renderizadas ${userTarefas.length} tarefas`);
+            // Marcar apenas a turma específica
+            const checkboxes = document.querySelectorAll('#turmasCheckboxes input');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = checkbox.value === tarefaEditando.Turma;
+            });
+            
+            // Rolar para o topo
+            window.scrollTo(0, 0);
+        }
+    }, 100);
+}
+
+async function salvarTarefa() {
+    const btnSalvar = document.getElementById('btnSalvarTarefa');
+    const textoOriginal = btnSalvar.textContent;
+    
+    try {
+        btnSalvar.textContent = 'Salvando...';
+        btnSalvar.disabled = true;
+        btnSalvar.classList.add('loading');
+        
+        const turmasSelecionadas = Array.from(document.querySelectorAll('#turmasCheckboxes input:checked'))
+            .map(c => c.value);
+        
+        if (turmasSelecionadas.length === 0) {
+            showModal('Atenção', 'Selecione pelo menos uma turma.');
+            return;
         }
 
-        function entregarTarefa(tarefaId) {
-            alert(`Funcionalidade de entrega para tarefa ${tarefaId} em desenvolvimento!`);
-            logDebug(`Tentativa de entrega para tarefa: ${tarefaId}`);
+        const tema = document.getElementById('tema').value.trim();
+        const dataAula = document.getElementById('dataAula').value;
+
+        if (!tema || !dataAula) {
+            showModal('Atenção', 'Preencha o tema e a data da aula.');
+            return;
         }
 
-        function verEntrega(tarefaId) {
-            alert(`Visualização de entrega ${tarefaId} em desenvolvimento!`);
-            logDebug(`Tentativa de visualizar entrega: ${tarefaId}`);
+        const parte1 = document.getElementById('parte1').value.trim();
+        const parte2 = document.getElementById('parte2').value.trim();
+        const parte3 = document.getElementById('parte3').value.trim();
+        const parte4 = document.getElementById('parte4').value.trim();
+
+        if (!parte1 || !parte2 || !parte3 || !parte4) {
+            showModal('Atenção', 'Todas as partes da tarefa devem ser preenchidas.');
+            return;
         }
 
-        // Event Listeners
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const ra = document.getElementById('ra').value;
-            loginUser(email, ra);
+        const dados = {
+            Turmas: turmasSelecionadas,
+            Tema: tema,
+            Parte1: parte1,
+            Parte2: parte2,
+            Parte3: parte3,
+            Parte4: parte4,
+            DataAula: dataAula,
+            professor: usuarioLogado.NomeCompleto
+        };
+
+        const response = await apiPost('criarTarefa', dados);
+        showModal('Sucesso', 'Tarefa criada com sucesso!');
+        limparFormulario();
+        await carregarTarefasProfessor();
+    } catch (error) {
+        showModal('Erro', `Erro ao criar tarefa: ${error.message}`);
+    } finally {
+        btnSalvar.textContent = textoOriginal;
+        btnSalvar.disabled = false;
+        btnSalvar.classList.remove('loading');
+    }
+}
+
+async function atualizarTarefa() {
+    const btnSalvar = document.getElementById('btnSalvarTarefa');
+    const textoOriginal = btnSalvar.textContent;
+    
+    try {
+        btnSalvar.textContent = 'Atualizando...';
+        btnSalvar.disabled = true;
+        btnSalvar.classList.add('loading');
+        
+        if (!tarefaEditando) {
+            showModal('Erro', 'Nenhuma tarefa selecionada para edição.');
+            return;
+        }
+
+        const tema = document.getElementById('tema').value.trim();
+        const dataAula = document.getElementById('dataAula').value;
+        const turmaSelecionada = Array.from(document.querySelectorAll('#turmasCheckboxes input:checked'))
+            .map(c => c.value)[0];
+
+        if (!tema || !dataAula || !turmaSelecionada) {
+            showModal('Atenção', 'Preencha todos os campos obrigatórios.');
+            return;
+        }
+
+        const parte1 = document.getElementById('parte1').value.trim();
+        const parte2 = document.getElementById('parte2').value.trim();
+        const parte3 = document.getElementById('parte3').value.trim();
+        const parte4 = document.getElementById('parte4').value.trim();
+
+        if (!parte1 || !parte2 || !parte3 || !parte4) {
+            showModal('Atenção', 'Todas as partes da tarefa devem ser preenchidas.');
+            return;
+        }
+
+        const dados = {
+            ID: tarefaEditando.ID,
+            Tema: tema,
+            Parte1: parte1,
+            Parte2: parte2,
+            Parte3: parte3,
+            Parte4: parte4,
+            DataAula: dataAula
+        };
+
+        const response = await apiPost('editarTarefa', dados);
+        showModal('Sucesso', 'Tarefa atualizada com sucesso!');
+        
+        // Limpar formulário e recarregar lista
+        tarefaEditando = null;
+        limparFormulario();
+        
+    } catch (error) {
+        showModal('Erro', `Erro ao atualizar tarefa: ${error.message}`);
+    } finally {
+        btnSalvar.textContent = textoOriginal;
+        btnSalvar.disabled = false;
+        btnSalvar.classList.remove('loading');
+    }
+}
+
+async function excluirTarefa(idTarefa) {
+    try {
+        await apiPost('excluirTarefa', { ID: idTarefa });
+        showModal('Sucesso', 'Tarefa excluída com sucesso.');
+        await carregarTarefasProfessor();
+    } catch (error) {
+        showModal('Erro', `Erro ao excluir tarefa: ${error.message}`);
+    }
+}
+
+function limparFormulario() {
+    document.getElementById('tema').value = '';
+    document.getElementById('dataAula').value = '';
+    document.getElementById('parte1').value = '';
+    document.getElementById('parte2').value = '';
+    document.getElementById('parte3').value = '';
+    document.getElementById('parte4').value = '';
+    document.querySelectorAll('#turmasCheckboxes input:checked').forEach(c => c.checked = false);
+    
+    if (tarefaEditando) {
+        tarefaEditando = null;
+        document.getElementById('titulo-formulario').textContent = 'Criar Nova Tarefa';
+        document.getElementById('btnSalvarTarefa').textContent = 'Salvar Tarefa';
+        document.getElementById('btnSalvarTarefa').setAttribute('onclick', 'salvarTarefa()');
+        
+        // Recarregar a lista de tarefas para garantir que está atualizada
+        setTimeout(() => {
+            carregarTarefasProfessor();
+        }, 100);
+    }
+}
+
+// --- PAINEL DO ALUNO ---
+async function mostrarPainelAluno() {
+    contentArea.innerHTML = `
+        <div id="painelAluno" class="space-y-6">
+            <div class="card p-6">
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${usuarioLogado.Turma}</h3>
+                <div id="tarefas-aluno-container">
+                    <div class="text-center text-gray-500 py-8">Carregando tarefas...</div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    await carregarTarefasAluno();
+    iniciarAtualizacaoContadores();
+}
+
+async function carregarTarefasAluno() {
+    try {
+        const response = await apiGet('getTarefasPorTurma', { turma: usuarioLogado.Turma });
+        const container = document.getElementById('tarefas-aluno-container');
+        
+        if (!response.data || response.data.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-500 py-8">Nenhuma tarefa disponível para sua turma.</div>';
+            return;
+        }
+
+        let entregas = [];
+        try {
+            const entregasResponse = await apiGet('getEntregasAluno', { ra: usuarioLogado.RA });
+            entregas = entregasResponse.data || [];
+        } catch (error) {
+            console.error('Erro ao carregar entregas:', error);
+        }
+
+        container.innerHTML = response.data.map(tarefa => {
+            const parte1 = tarefa.Parte1 || '';
+            const parte2 = tarefa.Parte2 || '';
+            const parte3 = tarefa.Parte3 || '';
+            const parte4 = tarefa.Parte4 || '';
+            
+            const contadores = calcularContadores(tarefa.DataAula);
+            const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
+
+            return `
+            <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-lg text-gray-800">${tarefa.Tema}</h4>
+                        <p class="text-sm text-gray-600 mt-1">Data da aula: ${formatarData(tarefa.DataAula)}</p>
+                        ${entrega && entrega.Nota ? `<p class="text-sm font-semibold text-green-600 mt-1">Nota: ${entrega.Nota}</p>` : ''}
+                        
+                        ${parte1 ? renderParteTarefa(tarefa.ID, 1, parte1, contadores.parte1, entrega) : ''}
+                        ${parte2 ? renderParteTarefa(tarefa.ID, 2, parte2, contadores.parte2, entrega) : ''}
+                        ${parte3 ? renderParteTarefa(tarefa.ID, 3, parte3, contadores.parte3, entrega) : ''}
+                        ${parte4 ? renderParteTarefa(tarefa.ID, 4, parte4, contadores.parte4, entrega) : ''}
+                    </div>
+                </div>
+            </div>
+            `;
+        }).join('');
+    } catch (error) {
+        document.getElementById('tarefas-aluno-container').innerHTML = 
+            `<div class="text-center text-red-500 py-8">Erro ao carregar tarefas: ${error.message}</div>`;
+    }
+}
+
+function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
+    const linkSalvo = entrega ? entrega[`Link${numeroParte}`] : '';
+    const inputId = `link-${idTarefa}-${numeroParte}`;
+    const temLinkSalvo = linkSalvo && linkSalvo.trim() !== '';
+    
+    // Determinar se está disponível para edição
+    const disponivel = contador.liberada && !contador.expirado && !temLinkSalvo;
+    const expirado = contador.expirado;
+
+    return `
+    <div class="mt-3 p-3 bg-gray-50 rounded border parte-${numeroParte}">
+        <div class="flex justify-between items-center">
+            <strong>Parte ${numeroParte}:</strong>
+            <span class="contador ${contador.classe}">${contador.texto}</span>
+        </div>
+        <p class="mt-1">${conteudo}</p>
+        <div class="link-container">
+            <input type="text" 
+                   class="link-input ${temLinkSalvo ? 'link-salvo' : ''}" 
+                   placeholder="${!contador.liberada ? 'Aguardando liberação...' : (expirado ? 'Prazo expirado' : 'Cole o link da atividade aqui')}" 
+                   id="${inputId}"
+                   value="${linkSalvo || ''}"
+                   ${!disponivel ? 'disabled' : ''}>
+            <button class="btn-primary btn-link btn-salvar" 
+                    onclick="salvarLink('${idTarefa}', ${numeroParte})"
+                    ${!disponivel ? 'disabled' : ''}>
+                Salvar
+            </button>
+            <button class="btn-secondary btn-link btn-excluir" 
+                    onclick="excluirLink('${idTarefa}', ${numeroParte})"
+                    ${!temLinkSalvo || expirado ? 'disabled' : ''}>
+                Excluir
+            </button>
+        </div>
+        ${temLinkSalvo ? '<p class="text-green-600 text-sm mt-1">✓ Link salvo com sucesso</p>' : ''}
+    </div>`;
+}
+
+async function salvarLink(idTarefa, parte) {
+    const input = document.getElementById(`link-${idTarefa}-${parte}`);
+    const link = input.value.trim();
+
+    if (!link) {
+        showModal('Atenção', 'Por favor, cole um link válido.');
+        return;
+    }
+
+    try {
+        await apiPost('entregarTarefa', {
+            ID_Tarefa: idTarefa,
+            RA_Aluno: usuarioLogado.RA,
+            NomeAluno: usuarioLogado.NomeCompleto,
+            Turma: usuarioLogado.Turma,
+            Parte: parte,
+            [`Link${parte}`]: link
         });
+        
+        showModal('Sucesso', `Link da parte ${parte} salvo com sucesso!`);
+        await carregarTarefasAluno();
+    } catch (error) {
+        showModal('Erro', `Erro ao salvar link: ${error.message}`);
+    }
+}
 
-        // Inicialização
-        document.addEventListener('DOMContentLoaded', function() {
-            logDebug('Sistema SESI Education inicializado');
-            logDebug('Backend URL: ' + BACKEND_URL);
+async function excluirLink(idTarefa, parte) {
+    try {
+        await apiPost('excluirEntrega', {
+            ID_Tarefa: idTarefa,
+            RA_Aluno: usuarioLogado.RA,
+            Parte: parte
         });
-    </script>
+        
+        showModal('Sucesso', `Link da parte ${parte} excluído com sucesso!`);
+        await carregarTarefasAluno();
+    } catch (error) {
+        showModal('Erro', `Erro ao excluir link: ${error.message}`);
+    }
+}
 
-    <!-- Font Awesome -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+// --- INICIALIZAÇÃO ---
+init();
+
+// --- FUNÇÕES GLOBAIS ---
+window.login = login;
+window.logout = logout;
+window.mostrarPainelProfessor = mostrarPainelProfessor;
+window.mostrarPainelAluno = mostrarPainelAluno;
+window.mostrarRelatorioProfessor = mostrarRelatorioProfessor;
+window.mostrarRelatorioAluno = mostrarRelatorioAluno;
+window.carregarRelatorioTurma = carregarRelatorioTurma;
+window.salvarTarefa = salvarTarefa;
+window.atualizarTarefa = atualizarTarefa;
+window.excluirTarefa = excluirTarefa;
+window.solicitarExclusaoTarefa = solicitarExclusaoTarefa;
+window.editarTarefa = editarTarefa;
+window.limparFormulario = limparFormulario;
+window.closeModal = closeModal;
+window.salvarLink = salvarLink;
+window.excluirLink = excluirLink;
+</script>
 </body>
 </html>
