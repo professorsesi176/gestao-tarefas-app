@@ -316,6 +316,34 @@
             border-top-color: transparent;
             animation: spin 1s ease-in-out infinite;
         }
+
+        /* NOVOS ESTILOS VERSÃO 6.6 - CACHE INDICATOR */
+        .cache-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #10b981;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .cache-badge {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -323,7 +351,7 @@
 <div id="app-container" class="w-full max-w-6xl bg-white shadow-xl rounded-2xl p-6 sm:p-8 transition-all duration-300">
     <header class="mb-8 border-b pb-4">
         <div class="header-content">
-            <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar</h1>
+            <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar <span class="cache-badge">v6.6</span></h1>
             <div id="user-info" class="user-info-container"></div>
             <div class="absolute top-0 right-0 flex space-x-2">
                 <button id="relatorioBtn" class="btn-relatorio hidden">Relatório</button>
@@ -335,7 +363,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 6.5
+        Desenvolvido por Geovane Modena | Versão 6.6 - Com Sistema de Cache
     </footer>
 </div>
 
@@ -373,6 +401,91 @@ let jsonpCallbackId = 0;
 let tarefaParaExcluir = null;
 let contadoresAtivos = [];
 let tarefaEditando = null;
+
+// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 6.6 ---
+const frontendCache = {
+    get: (key) => {
+        try {
+            const item = localStorage.getItem(`task_${key}`);
+            if (item) {
+                const { data, expiry } = JSON.parse(item);
+                if (Date.now() > expiry) {
+                    localStorage.removeItem(`task_${key}`);
+                    return null;
+                }
+                console.log(`✅ Cache HIT: ${key}`);
+                return data;
+            }
+        } catch (e) {
+            console.warn('Erro ao acessar cache local:', e);
+        }
+        console.log(`❌ Cache MISS: ${key}`);
+        return null;
+    },
+    
+    set: (key, data, ttl = 5 * 60 * 1000) => { // 5 minutos default
+        try {
+            const item = {
+                data,
+                expiry: Date.now() + ttl
+            };
+            localStorage.setItem(`task_${key}`, JSON.stringify(item));
+            console.log(`💾 Cache SET: ${key} (${ttl/1000}s)`);
+            return true;
+        } catch (e) {
+            console.warn('LocalStorage não disponível:', e);
+            return false;
+        }
+    },
+    
+    remove: (key) => {
+        try {
+            localStorage.removeItem(`task_${key}`);
+            console.log(`🗑️ Cache REMOVED: ${key}`);
+        } catch (e) {
+            console.warn('Erro ao remover do cache local:', e);
+        }
+    },
+    
+    clear: () => {
+        try {
+            const keys = Object.keys(localStorage).filter(k => k.startsWith('task_'));
+            keys.forEach(k => localStorage.removeItem(k));
+            console.log(`🔥 Cache CLEARED: ${keys.length} itens`);
+        } catch (e) {
+            console.warn('Erro ao limpar cache local:', e);
+        }
+    },
+    
+    getSize: () => {
+        try {
+            let size = 0;
+            for (let key in localStorage) {
+                if (key.startsWith('task_')) {
+                    size += localStorage[key].length;
+                }
+            }
+            return (size / 1024).toFixed(2) + ' KB';
+        } catch (e) {
+            return 'N/A';
+        }
+    }
+};
+
+// --- DEBOUNCE FUNCTION - VERSÃO 6.6 ---
+function debounce(func, wait, immediate = false) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            timeout = null;
+            if (!immediate) func(...args);
+        };
+        const callNow = immediate && !timeout;
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+        if (callNow) func(...args);
+    };
+}
 
 // --- ELEMENTOS DOM ---
 const contentArea = document.getElementById('content-area');
@@ -619,7 +732,7 @@ function atualizarContadoresAluno() {
     });
 }
 
-// --- API REQUEST COM JSONP ---
+// --- API REQUEST COM JSONP E CACHE ---
 function apiRequestJSONP(url, callback) {
     const callbackName = 'jsonp_callback_' + jsonpCallbackId++;
     
@@ -640,7 +753,18 @@ function apiRequestJSONP(url, callback) {
     document.body.appendChild(script);
 }
 
+// --- API COM CACHE - VERSÃO 6.6 ---
 async function apiGet(func, params = {}) {
+    // Criar chave de cache única para esta requisição
+    const cacheKey = `api_${func}_${JSON.stringify(params)}`;
+    
+    // Verificar cache primeiro
+    const cached = frontendCache.get(cacheKey);
+    if (cached) {
+        console.log(`📦 Retornando do cache: ${func}`);
+        return cached;
+    }
+    
     return new Promise((resolve, reject) => {
         let url = `${API_URL}?token=${SECURITY_TOKEN}`;
         
@@ -660,6 +784,8 @@ async function apiGet(func, params = {}) {
             } else if (data && data.success === false) {
                 reject(new Error(data.error));
             } else {
+                // Salvar no cache por 2 minutos
+                frontendCache.set(cacheKey, data, 2 * 60 * 1000);
                 resolve(data);
             }
         });
@@ -732,13 +858,19 @@ const renderLogin = () => {
                     <span id="login-text">Entrar</span>
                 </button>
             </form>
+            
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg text-xs text-gray-600">
+                <strong>Cache Status:</strong> ${frontendCache.getSize()} utilizados
+                <button onclick="frontendCache.clear()" class="ml-2 text-red-600 hover:text-red-800">Limpar Cache</button>
+            </div>
         </div>
     `;
 
     document.getElementById('login-form').addEventListener('submit', login);
 };
 
-async function login(event) {
+// --- LOGIN COM DEBOUNCE - VERSÃO 6.6 ---
+const login = debounce(async function(event) {
     event.preventDefault(); 
     const email = document.getElementById('email').value.trim();
     const ra = document.getElementById('ra').value.trim();
@@ -773,7 +905,7 @@ async function login(event) {
     logoutBtn.classList.remove('hidden');
     relatorioBtn.classList.remove('hidden');
     
-    // VERSÃO 6.5 - Exibição correta baseada no perfil
+    // VERSÃO 6.6 - Exibição correta baseada no perfil
     if (user.Perfil === "Professor") {
         userInfoDisplay.innerHTML = `
             <div class="user-info-text">
@@ -802,7 +934,7 @@ async function login(event) {
     } else {
         await mostrarPainelAluno(); 
     }
-}
+}, 500);
 
 function logout() {
     usuarioLogado = null;
@@ -812,6 +944,7 @@ function logout() {
     userInfoDisplay.innerHTML = '';
     contadoresAtivos.forEach(interval => clearInterval(interval));
     contadoresAtivos = [];
+    // NÃO limpar cache no logout para manter performance
     renderLogin(); 
 }
 
@@ -850,7 +983,18 @@ async function mostrarRelatorioProfessor() {
     contentArea.innerHTML = relatorioHTML;
 }
 
-async function carregarRelatorioTurma(turmaSelecionada) {
+// --- CARREGAR RELATÓRIO COM CACHE - VERSÃO 6.6 ---
+const carregarRelatorioTurma = debounce(async function(turmaSelecionada) {
+    const cacheKey = `relatorio_${turmaSelecionada}`;
+    const cached = frontendCache.get(cacheKey);
+    
+    if (cached) {
+        console.log(`✅ Relatório da turma ${turmaSelecionada} carregado do cache`);
+        document.getElementById('relatorio-turma-container').innerHTML = cached;
+        mostrarConclusaoRelatorio();
+        return;
+    }
+    
     mostrarLoadingRelatorio();
     
     try {
@@ -861,14 +1005,16 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         const tarefasTurma = tarefasResponse.data || [];
         
         if (alunosTurma.length === 0) {
-            document.getElementById('relatorio-turma-container').innerHTML = 
-                `<p class="text-gray-500 text-center py-8">Nenhum aluno encontrado na turma ${turmaSelecionada}.</p>`;
+            const html = `<p class="text-gray-500 text-center py-8">Nenhum aluno encontrado na turma ${turmaSelecionada}.</p>`;
+            document.getElementById('relatorio-turma-container').innerHTML = html;
+            frontendCache.set(cacheKey, html, 10 * 60 * 1000); // 10 minutos
             return;
         }
         
         if (tarefasTurma.length === 0) {
-            document.getElementById('relatorio-turma-container').innerHTML = 
-                `<p class="text-gray-500 text-center py-8">Nenhuma tarefa encontrada para a turma ${turmaSelecionada}.</p>`;
+            const html = `<p class="text-gray-500 text-center py-8">Nenhuma tarefa encontrada para a turma ${turmaSelecionada}.</p>`;
+            document.getElementById('relatorio-turma-container').innerHTML = html;
+            frontendCache.set(cacheKey, html, 10 * 60 * 1000);
             return;
         }
         
@@ -951,15 +1097,25 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         `;
         
         document.getElementById('relatorio-turma-container').innerHTML = relatorioTurmaHTML;
+        frontendCache.set(cacheKey, relatorioTurmaHTML, 10 * 60 * 1000); // 10 minutos
         mostrarConclusaoRelatorio();
         
     } catch (error) {
-        document.getElementById('relatorio-turma-container').innerHTML = 
-            `<p class="text-red-500 text-center py-4">Erro ao carregar relatório: ${error.message}</p>`;
+        const errorHtml = `<p class="text-red-500 text-center py-4">Erro ao carregar relatório: ${error.message}</p>`;
+        document.getElementById('relatorio-turma-container').innerHTML = errorHtml;
     }
-}
+}, 300);
 
 async function mostrarRelatorioAluno() {
+    const cacheKey = `relatorio_aluno_${usuarioLogado.RA}`;
+    const cached = frontendCache.get(cacheKey);
+    
+    if (cached) {
+        console.log('✅ Relatório do aluno carregado do cache');
+        contentArea.innerHTML = cached;
+        return;
+    }
+    
     try {
         const entregasResponse = await apiGet('getEntregasAluno', { ra: usuarioLogado.RA });
         const entregas = entregasResponse.data || [];
@@ -1043,13 +1199,28 @@ async function mostrarRelatorioAluno() {
         `;
         
         contentArea.innerHTML = relatorioHTML;
+        frontendCache.set(cacheKey, relatorioHTML, 5 * 60 * 1000); // 5 minutos
     } catch (error) {
         showModal('Erro', `Erro ao carregar relatório: ${error.message}`);
     }
 }
 
-// --- PAINEL DO PROFESSOR ---
+// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 6.6 ---
 async function mostrarPainelProfessor() {
+    const cacheKey = 'painel_professor';
+    const cached = frontendCache.get(cacheKey);
+    
+    if (cached) {
+        console.log('✅ Painel do professor carregado do cache');
+        contentArea.innerHTML = cached;
+        // Preencher formulário se estiver editando
+        if (tarefaEditando) {
+            preencherFormularioEdicao();
+        }
+        await carregarTarefasProfessor();
+        return;
+    }
+    
     contentArea.innerHTML = `
         <div id="painelProfessor" class="space-y-6">
             <div class="card p-6 border-t-4 border-red-600">
@@ -1136,6 +1307,9 @@ async function mostrarPainelProfessor() {
     }
 
     await carregarTarefasProfessor();
+    
+    // Salvar no cache após carregar
+    frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000); // 2 minutos
 }
 
 function preencherFormularioEdicao() {
@@ -1157,11 +1331,22 @@ function preencherFormularioEdicao() {
     window.scrollTo(0, 0);
 }
 
-// --- FUNÇÕES DO PROFESSOR ---
+// --- FUNÇÕES DO PROFESSOR COM CACHE ---
 async function carregarTarefasProfessor() {
+    const cacheKey = 'tarefas_professor_lista';
+    const cached = frontendCache.get(cacheKey);
+    
+    if (cached) {
+        console.log('✅ Lista de tarefas do professor carregada do cache');
+        tarefas = cached;
+        renderizarTabelaTarefas();
+        return;
+    }
+    
     try {
         const response = await apiGet('getTarefas');
         tarefas = response.data || [];
+        frontendCache.set(cacheKey, tarefas, 2 * 60 * 1000); // 2 minutos
         renderizarTabelaTarefas();
     } catch (error) {
         document.getElementById('tabelaTarefasBody').innerHTML = 
@@ -1225,10 +1410,14 @@ async function editarTarefa(idTarefa) {
     }
 
     tarefaEditando = tarefa;
+    // Invalidar cache do painel para forçar recarregamento
+    frontendCache.remove('painel_professor');
+    frontendCache.remove('tarefas_professor_lista');
     await mostrarPainelProfessor();
 }
 
-async function salvarTarefa() {
+// --- SALVAR TAREFA COM DEBOUNCE - VERSÃO 6.6 ---
+const salvarTarefa = debounce(async function() {
     const btnSalvar = document.getElementById('btnSalvarTarefa');
     
     try {
@@ -1273,6 +1462,15 @@ async function salvarTarefa() {
 
         const response = await apiPost('criarTarefa', dados);
         showModal('Sucesso', 'Tarefa criada com sucesso!');
+        
+        // Invalidar caches relevantes
+        frontendCache.remove('painel_professor');
+        frontendCache.remove('tarefas_professor_lista');
+        turmasSelecionadas.forEach(turma => {
+            frontendCache.remove(`api_getTarefasPorTurma_${JSON.stringify({turma: turma})}`);
+            frontendCache.remove(`relatorio_${turma}`);
+        });
+        
         limparFormulario();
         await carregarTarefasProfessor();
     } catch (error) {
@@ -1280,9 +1478,9 @@ async function salvarTarefa() {
     } finally {
         setButtonLoading(btnSalvar, false);
     }
-}
+}, 500);
 
-async function atualizarTarefa() {
+const atualizarTarefa = debounce(async function() {
     const btnSalvar = document.getElementById('btnSalvarTarefa');
     
     try {
@@ -1326,6 +1524,12 @@ async function atualizarTarefa() {
         const response = await apiPost('editarTarefa', dados);
         showModal('Sucesso', 'Tarefa atualizada com sucesso!');
         
+        // Invalidar caches
+        frontendCache.remove('painel_professor');
+        frontendCache.remove('tarefas_professor_lista');
+        frontendCache.remove(`api_getTarefasPorTurma_${JSON.stringify({turma: turmaSelecionada})}`);
+        frontendCache.remove(`relatorio_${turmaSelecionada}`);
+        
         tarefaEditando = null;
         limparFormulario();
         
@@ -1334,12 +1538,22 @@ async function atualizarTarefa() {
     } finally {
         setButtonLoading(btnSalvar, false);
     }
-}
+}, 500);
 
 async function excluirTarefa(idTarefa) {
     try {
         await apiPost('excluirTarefa', { ID: idTarefa });
         showModal('Sucesso', 'Tarefa excluída com sucesso.');
+        
+        // Invalidar caches
+        frontendCache.remove('painel_professor');
+        frontendCache.remove('tarefas_professor_lista');
+        // Nota: Não sabemos a turma específica, então invalidamos todas
+        ['1A', '1B', '2A', '2B', '3A', '3B'].forEach(turma => {
+            frontendCache.remove(`api_getTarefasPorTurma_${JSON.stringify({turma: turma})}`);
+            frontendCache.remove(`relatorio_${turma}`);
+        });
+        
         await carregarTarefasProfessor();
     } catch (error) {
         showModal('Erro', `Erro ao excluir tarefa: ${error.message}`);
@@ -1367,8 +1581,18 @@ function limparFormulario() {
     }
 }
 
-// --- PAINEL DO ALUNO ---
+// --- PAINEL DO ALUNO COM CACHE - VERSÃO 6.6 ---
 async function mostrarPainelAluno() {
+    const cacheKey = `painel_aluno_${usuarioLogado.RA}`;
+    const cached = frontendCache.get(cacheKey);
+    
+    if (cached) {
+        console.log('✅ Painel do aluno carregado do cache');
+        contentArea.innerHTML = cached;
+        iniciarAtualizacaoContadores();
+        return;
+    }
+    
     contentArea.innerHTML = `
         <div id="painelAluno" class="space-y-6">
             <div class="card p-6">
@@ -1382,9 +1606,22 @@ async function mostrarPainelAluno() {
 
     await carregarTarefasAluno();
     iniciarAtualizacaoContadores();
+    
+    // Salvar no cache após carregar
+    frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000); // 2 minutos
 }
 
+// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 6.6 ---
 async function carregarTarefasAluno() {
+    const cacheKey = `tarefas_aluno_${usuarioLogado.RA}_dados`;
+    const cached = frontendCache.get(cacheKey);
+    
+    if (cached) {
+        console.log('✅ Dados de tarefas do aluno carregados do cache');
+        renderTarefasAlunoFromCache(cached.tarefas, cached.entregas);
+        return;
+    }
+
     mostrarLoadingTarefasAluno();
     
     try {
@@ -1393,6 +1630,7 @@ async function carregarTarefasAluno() {
         
         if (!response.data || response.data.length === 0) {
             container.innerHTML = '<div class="text-center text-gray-500 py-8">Nenhuma tarefa disponível para sua turma.</div>';
+            frontendCache.set(cacheKey, {tarefas: [], entregas: []}, 2 * 60 * 1000);
             return;
         }
 
@@ -1404,57 +1642,120 @@ async function carregarTarefasAluno() {
             console.error('Erro ao carregar entregas:', error);
         }
 
-        container.innerHTML = '';
+        // Salvar no cache
+        frontendCache.set(cacheKey, {tarefas: response.data, entregas: entregas}, 2 * 60 * 1000);
         
-        for (let i = 0; i < response.data.length; i++) {
-            const tarefa = response.data[i];
-            
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            const parte1 = tarefa.Parte1 || '';
-            const parte2 = tarefa.Parte2 || '';
-            const parte3 = tarefa.Parte3 || '';
-            const parte4 = tarefa.Parte4 || '';
-            
-            const contadores = calcularContadores(tarefa.DataAula);
-            const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
-
-            const tarefaHTML = `
-            <div class="border border-gray-200 rounded-lg p-4 mb-4">
-                <div class="flex justify-between items-start">
-                    <div class="flex-1">
-                        <h4 class="font-semibold text-lg text-gray-800">${tarefa.Tema}</h4>
-                        <p class="text-sm text-gray-600 mt-1">Data da aula: ${formatarData(tarefa.DataAula)}</p>
-                        ${entrega && entrega.Nota ? `<p class="text-sm font-semibold text-green-600 mt-1">Nota: ${entrega.Nota}</p>` : ''}
-                        
-                        ${parte1 ? renderParteTarefa(tarefa.ID, 1, parte1, contadores.parte1, entrega) : ''}
-                        ${parte2 ? renderParteTarefa(tarefa.ID, 2, parte2, contadores.parte2, entrega) : ''}
-                        ${parte3 ? renderParteTarefa(tarefa.ID, 3, parte3, contadores.parte3, entrega) : ''}
-                        ${parte4 ? renderParteTarefa(tarefa.ID, 4, parte4, contadores.parte4, entrega) : ''}
-                    </div>
-                </div>
-            </div>
-            `;
-            
-            container.innerHTML += tarefaHTML;
-            atualizarContadoresAluno();
-        }
-        
-        const conclusao = document.createElement('div');
-        conclusao.className = 'text-green-600 text-center mt-4 p-3 bg-green-50 rounded border border-green-200';
-        conclusao.innerHTML = '<strong>✓ Todas as tarefas foram carregadas!</strong>';
-        container.appendChild(conclusao);
-        
-        setTimeout(() => {
-            if (conclusao.parentNode) {
-                conclusao.remove();
-            }
-        }, 3000);
+        renderTarefasAlunoGradualmente(response.data, entregas, container);
         
     } catch (error) {
         document.getElementById('tarefas-aluno-container').innerHTML = 
             `<div class="text-center text-red-500 py-8">Erro ao carregar tarefas: ${error.message}</div>`;
     }
+}
+
+function renderTarefasAlunoFromCache(tarefas, entregas) {
+    const container = document.getElementById('tarefas-aluno-container');
+    container.innerHTML = '';
+    
+    if (tarefas.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-500 py-8">Nenhuma tarefa disponível para sua turma.</div>';
+        return;
+    }
+
+    container.innerHTML = tarefas.map(tarefa => {
+        const parte1 = tarefa.Parte1 || '';
+        const parte2 = tarefa.Parte2 || '';
+        const parte3 = tarefa.Parte3 || '';
+        const parte4 = tarefa.Parte4 || '';
+        
+        const contadores = calcularContadores(tarefa.DataAula);
+        const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
+
+        return `
+        <div class="border border-gray-200 rounded-lg p-4 mb-4 relative">
+            <div class="cache-indicator">CACHE</div>
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <h4 class="font-semibold text-lg text-gray-800">${tarefa.Tema}</h4>
+                    <p class="text-sm text-gray-600 mt-1">Data da aula: ${formatarData(tarefa.DataAula)}</p>
+                    ${entrega && entrega.Nota ? `<p class="text-sm font-semibold text-green-600 mt-1">Nota: ${entrega.Nota}</p>` : ''}
+                    
+                    ${parte1 ? renderParteTarefa(tarefa.ID, 1, parte1, contadores.parte1, entrega) : ''}
+                    ${parte2 ? renderParteTarefa(tarefa.ID, 2, parte2, contadores.parte2, entrega) : ''}
+                    ${parte3 ? renderParteTarefa(tarefa.ID, 3, parte3, contadores.parte3, entrega) : ''}
+                    ${parte4 ? renderParteTarefa(tarefa.ID, 4, parte4, contadores.parte4, entrega) : ''}
+                </div>
+            </div>
+        </div>
+        `;
+    }).join('');
+    
+    const conclusao = document.createElement('div');
+    conclusao.className = 'text-green-600 text-center mt-4 p-3 bg-green-50 rounded border border-green-200';
+    conclusao.innerHTML = '<strong>✓ Todas as tarefas carregadas do cache!</strong>';
+    container.appendChild(conclusao);
+    
+    setTimeout(() => {
+        if (conclusao.parentNode) {
+            conclusao.remove();
+        }
+    }, 3000);
+}
+
+async function renderTarefasAlunoGradualmente(tarefas, entregas, container) {
+    container.innerHTML = '';
+    
+    for (let i = 0; i < tarefas.length; i++) {
+        // Permitir que o navegador respire a cada 2 tarefas
+        if (i % 2 === 0 && i > 0) {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
+        
+        const tarefa = tarefas[i];
+        const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
+        
+        const tarefaHTML = renderTarefaItem(tarefa, entrega);
+        container.innerHTML += tarefaHTML;
+    }
+    
+    const conclusao = document.createElement('div');
+    conclusao.className = 'text-green-600 text-center mt-4 p-3 bg-green-50 rounded border border-green-200';
+    conclusao.innerHTML = '<strong>✓ Todas as tarefas foram carregadas!</strong>';
+    container.appendChild(conclusao);
+    
+    setTimeout(() => {
+        if (conclusao.parentNode) {
+            conclusao.remove();
+        }
+    }, 3000);
+    
+    atualizarContadoresAluno();
+}
+
+function renderTarefaItem(tarefa, entrega) {
+    const parte1 = tarefa.Parte1 || '';
+    const parte2 = tarefa.Parte2 || '';
+    const parte3 = tarefa.Parte3 || '';
+    const parte4 = tarefa.Parte4 || '';
+    
+    const contadores = calcularContadores(tarefa.DataAula);
+
+    return `
+    <div class="border border-gray-200 rounded-lg p-4 mb-4">
+        <div class="flex justify-between items-start">
+            <div class="flex-1">
+                <h4 class="font-semibold text-lg text-gray-800">${tarefa.Tema}</h4>
+                <p class="text-sm text-gray-600 mt-1">Data da aula: ${formatarData(tarefa.DataAula)}</p>
+                ${entrega && entrega.Nota ? `<p class="text-sm font-semibold text-green-600 mt-1">Nota: ${entrega.Nota}</p>` : ''}
+                
+                ${parte1 ? renderParteTarefa(tarefa.ID, 1, parte1, contadores.parte1, entrega) : ''}
+                ${parte2 ? renderParteTarefa(tarefa.ID, 2, parte2, contadores.parte2, entrega) : ''}
+                ${parte3 ? renderParteTarefa(tarefa.ID, 3, parte3, contadores.parte3, entrega) : ''}
+                ${parte4 ? renderParteTarefa(tarefa.ID, 4, parte4, contadores.parte4, entrega) : ''}
+            </div>
+        </div>
+    </div>
+    `;
 }
 
 function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
@@ -1494,7 +1795,8 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     </div>`;
 }
 
-async function salvarLink(idTarefa, parte) {
+// --- SALVAR LINK COM DEBOUNCE - VERSÃO 6.6 ---
+const salvarLink = debounce(async function(idTarefa, parte) {
     const input = document.getElementById(`link-${idTarefa}-${parte}`);
     const link = input.value.trim();
 
@@ -1514,13 +1816,20 @@ async function salvarLink(idTarefa, parte) {
         });
         
         showModal('Sucesso', `Link da parte ${parte} salvo com sucesso!`);
+        
+        // Invalidar caches relevantes
+        frontendCache.remove(`painel_aluno_${usuarioLogado.RA}`);
+        frontendCache.remove(`tarefas_aluno_${usuarioLogado.RA}_dados`);
+        frontendCache.remove(`relatorio_aluno_${usuarioLogado.RA}`);
+        frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({ra: usuarioLogado.RA})}`);
+        
         await carregarTarefasAluno();
     } catch (error) {
         showModal('Erro', `Erro ao salvar link: ${error.message}`);
     }
-}
+}, 500);
 
-async function excluirLink(idTarefa, parte) {
+const excluirLink = debounce(async function(idTarefa, parte) {
     try {
         await apiPost('excluirEntrega', {
             ID_Tarefa: idTarefa,
@@ -1529,11 +1838,18 @@ async function excluirLink(idTarefa, parte) {
         });
         
         showModal('Sucesso', `Link da parte ${parte} excluído com sucesso!`);
+        
+        // Invalidar caches relevantes
+        frontendCache.remove(`painel_aluno_${usuarioLogado.RA}`);
+        frontendCache.remove(`tarefas_aluno_${usuarioLogado.RA}_dados`);
+        frontendCache.remove(`relatorio_aluno_${usuarioLogado.RA}`);
+        frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({ra: usuarioLogado.RA})}`);
+        
         await carregarTarefasAluno();
     } catch (error) {
         showModal('Erro', `Erro ao excluir link: ${error.message}`);
     }
-}
+}, 500);
 
 // --- INICIALIZAÇÃO ---
 init();
@@ -1555,6 +1871,7 @@ window.limparFormulario = limparFormulario;
 window.closeModal = closeModal;
 window.salvarLink = salvarLink;
 window.excluirLink = excluirLink;
+window.frontendCache = frontendCache; // Para debug
 </script>
 </body>
 </html>
