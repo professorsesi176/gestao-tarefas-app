@@ -256,6 +256,76 @@
             color: white !important;
             background-color: #CC0000 !important;
         }
+
+        /* NOVOS ESTILOS PARA LOADING */
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 2px solid #CC0000;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #6b7280;
+        }
+
+        .pulse-loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        .tarefa-loading {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: linear-gradient(90deg, #f9fafb 25%, #f3f4f6 50%, #f9fafb 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .btn-loading {
+            position: relative;
+            color: transparent;
+        }
+
+        .btn-loading::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin-left: -10px;
+            margin-top: -10px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -275,7 +345,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 5.9.4
+        Desenvolvido por Geovane Modena | Versão 6.1
     </footer>
 </div>
 
@@ -359,10 +429,8 @@ const renderIcons = () => window.lucide && window.lucide.createIcons();
 const formatarData = (dataISO) => {
     if (!dataISO) return 'N/A';
     
-    // Garantir que a data está no formato correto
     let data = new Date(dataISO);
     if (isNaN(data.getTime())) {
-        // Tentar parse manual se o Date falhar
         const partes = dataISO.split('-');
         if (partes.length === 3) {
             data = new Date(partes[0], partes[1] - 1, partes[2]);
@@ -372,12 +440,70 @@ const formatarData = (dataISO) => {
     return data.toLocaleDateString('pt-BR');
 };
 
-// Função para calcular contadores de tempo com liberação progressiva
+// --- FUNÇÕES DE LOADING ---
+function setButtonLoading(button, isLoading) {
+    if (isLoading) {
+        button.disabled = true;
+        button.classList.add('btn-loading');
+    } else {
+        button.disabled = false;
+        button.classList.remove('btn-loading');
+    }
+}
+
+function mostrarLoadingTarefasAluno() {
+    const container = document.getElementById('tarefas-aluno-container');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="space-y-4">
+            <div class="tarefa-loading" style="height: 120px;"></div>
+            <div class="tarefa-loading" style="height: 120px;"></div>
+            <div class="tarefa-loading" style="height: 120px;"></div>
+            <div class="loading-text">
+                <div class="spinner"></div>
+                Carregando tarefas...
+            </div>
+        </div>
+    `;
+}
+
+function mostrarLoadingRelatorio() {
+    const container = document.getElementById('relatorio-turma-container');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="loading-text py-8">
+            <div class="spinner"></div>
+            Carregando relatório...
+        </div>
+    `;
+}
+
+function mostrarConclusaoRelatorio() {
+    const container = document.getElementById('relatorio-turma-container');
+    if (!container) return;
+    
+    const mensagem = document.createElement('div');
+    mensagem.className = 'text-green-600 text-center mt-4 p-3 bg-green-50 rounded border border-green-200';
+    mensagem.innerHTML = '<strong>✓ Relatório carregado com sucesso!</strong>';
+    
+    // Adiciona a mensagem no final do container
+    container.appendChild(mensagem);
+    
+    // Remove a mensagem após 3 segundos
+    setTimeout(() => {
+        if (mensagem.parentNode) {
+            mensagem.remove();
+        }
+    }, 3000);
+}
+
+// --- FUNÇÕES DE TEMPO ---
 function calcularContadores(dataAula) {
     const agora = new Date();
     const dataAulaObj = new Date(dataAula);
     
-    // Calcula as datas de liberação para cada parte
     const parte1Liberacao = new Date(dataAulaObj);
     parte1Liberacao.setHours(0, 0, 0, 0);
     
@@ -390,7 +516,6 @@ function calcularContadores(dataAula) {
     const parte4Liberacao = new Date(dataAulaObj);
     parte4Liberacao.setDate(parte4Liberacao.getDate() + 14);
     
-    // Calcula as datas limites para cada parte
     const parte1Limite = new Date(dataAulaObj);
     parte1Limite.setHours(18, 0, 0, 0);
     
@@ -487,7 +612,9 @@ function iniciarAtualizacaoContadores() {
 function atualizarContadoresAluno() {
     const containers = document.querySelectorAll('#tarefas-aluno-container > div');
     containers.forEach(container => {
-        const tema = container.querySelector('h4').textContent;
+        const tema = container.querySelector('h4')?.textContent;
+        if (!tema) return;
+        
         const tarefa = tarefas.find(t => t.Tema === tema);
         if (tarefa) {
             const contadores = calcularContadores(tarefa.DataAula);
@@ -613,8 +740,8 @@ const renderLogin = () => {
                     <label for="ra" class="block text-sm font-medium text-gray-700 mb-2">RA</label>
                     <input type="text" id="ra" name="ra" required placeholder="Apenas números" class="w-full">
                 </div>
-                <button type="submit" class="btn-primary">
-                    Entrar
+                <button type="submit" class="btn-primary" id="login-button">
+                    <span id="login-text">Entrar</span>
                 </button>
             </form>
         </div>
@@ -629,6 +756,12 @@ async function login(event) {
     const ra = document.getElementById('ra').value.trim();
     
     const loginErro = document.getElementById('loginErro'); 
+    const loginButton = document.getElementById('login-button');
+    const loginText = document.getElementById('login-text');
+    
+    // Ativar estado de loading no botão
+    setButtonLoading(loginButton, true);
+    loginText.textContent = "Entrando...";
     
     const user = usuarios.find(u => {
         const userEmail = u.Email.toLowerCase().trim();
@@ -641,6 +774,8 @@ async function login(event) {
     
     if (!user) {
         loginErro.style.display = 'block';
+        setButtonLoading(loginButton, false);
+        loginText.textContent = "Entrar";
         return;
     }
     
@@ -731,8 +866,9 @@ async function mostrarRelatorioProfessor() {
 
 async function carregarRelatorioTurma(turmaSelecionada) {
     console.log('Carregando relatório para turma:', turmaSelecionada);
-    const container = document.getElementById('relatorio-turma-container');
-    container.innerHTML = '<p class="text-gray-500 text-center py-4">Carregando relatório...</p>';
+    
+    // Mostrar loading
+    mostrarLoadingRelatorio();
     
     try {
         // Buscar todos os alunos da turma
@@ -744,12 +880,14 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         const tarefasTurma = tarefasResponse.data || [];
         
         if (alunosTurma.length === 0) {
-            container.innerHTML = `<p class="text-gray-500 text-center py-8">Nenhum aluno encontrado na turma ${turmaSelecionada}.</p>`;
+            document.getElementById('relatorio-turma-container').innerHTML = 
+                `<p class="text-gray-500 text-center py-8">Nenhum aluno encontrado na turma ${turmaSelecionada}.</p>`;
             return;
         }
         
         if (tarefasTurma.length === 0) {
-            container.innerHTML = `<p class="text-gray-500 text-center py-8">Nenhuma tarefa encontrada para a turma ${turmaSelecionada}.</p>`;
+            document.getElementById('relatorio-turma-container').innerHTML = 
+                `<p class="text-gray-500 text-center py-8">Nenhuma tarefa encontrada para a turma ${turmaSelecionada}.</p>`;
             return;
         }
         
@@ -834,10 +972,15 @@ async function carregarRelatorioTurma(turmaSelecionada) {
             </div>
         `;
         
-        container.innerHTML = relatorioTurmaHTML;
+        document.getElementById('relatorio-turma-container').innerHTML = relatorioTurmaHTML;
+        
+        // Mostrar mensagem de conclusão
+        mostrarConclusaoRelatorio();
+        
     } catch (error) {
         console.error('Erro ao carregar relatório:', error);
-        container.innerHTML = `<p class="text-red-500 text-center py-4">Erro ao carregar relatório: ${error.message}</p>`;
+        document.getElementById('relatorio-turma-container').innerHTML = 
+            `<p class="text-red-500 text-center py-4">Erro ao carregar relatório: ${error.message}</p>`;
     }
 }
 
@@ -878,16 +1021,7 @@ async function mostrarRelatorioAluno() {
             `;
             
             entregas.forEach(entrega => {
-                // Buscar a tarefa de forma mais robusta
                 let tarefa = todasTarefas.find(t => t.ID === entrega.ID_Tarefa);
-                
-                // Se não encontrou, tentar buscar por tema ou outros critérios
-                if (!tarefa) {
-                    // Tentar buscar a tarefa diretamente pelo ID
-                    console.log('Tarefa não encontrada para entrega:', entrega.ID_Tarefa);
-                    tarefa = { Tema: `Tarefa (ID: ${entrega.ID_Tarefa})` };
-                }
-                
                 const temaTarefa = tarefa ? tarefa.Tema : `Tarefa (ID: ${entrega.ID_Tarefa})`;
                 
                 const linksEntregues = [];
@@ -896,7 +1030,6 @@ async function mostrarRelatorioAluno() {
                 if (entrega.Link3) linksEntregues.push('Parte 3');
                 if (entrega.Link4) linksEntregues.push('Parte 4');
                 
-                // Corrigir cálculo da nota - garantir que está usando o valor correto
                 const notaEntrega = parseFloat(entrega.Nota) || 0;
                 if (notaEntrega > 0) {
                     notaTotal += notaEntrega;
@@ -1149,12 +1282,9 @@ async function editarTarefa(idTarefa) {
 
 async function salvarTarefa() {
     const btnSalvar = document.getElementById('btnSalvarTarefa');
-    const textoOriginal = btnSalvar.textContent;
     
     try {
-        btnSalvar.textContent = 'Salvando...';
-        btnSalvar.disabled = true;
-        btnSalvar.classList.add('loading');
+        setButtonLoading(btnSalvar, true);
         
         const turmasSelecionadas = Array.from(document.querySelectorAll('#turmasCheckboxes input:checked'))
             .map(c => c.value);
@@ -1200,20 +1330,15 @@ async function salvarTarefa() {
     } catch (error) {
         showModal('Erro', `Erro ao criar tarefa: ${error.message}`);
     } finally {
-        btnSalvar.textContent = textoOriginal;
-        btnSalvar.disabled = false;
-        btnSalvar.classList.remove('loading');
+        setButtonLoading(btnSalvar, false);
     }
 }
 
 async function atualizarTarefa() {
     const btnSalvar = document.getElementById('btnSalvarTarefa');
-    const textoOriginal = btnSalvar.textContent;
     
     try {
-        btnSalvar.textContent = 'Atualizando...';
-        btnSalvar.disabled = true;
-        btnSalvar.classList.add('loading');
+        setButtonLoading(btnSalvar, true);
         
         if (!tarefaEditando) {
             showModal('Erro', 'Nenhuma tarefa selecionada para edição.');
@@ -1260,9 +1385,7 @@ async function atualizarTarefa() {
     } catch (error) {
         showModal('Erro', `Erro ao atualizar tarefa: ${error.message}`);
     } finally {
-        btnSalvar.textContent = textoOriginal;
-        btnSalvar.disabled = false;
-        btnSalvar.classList.remove('loading');
+        setButtonLoading(btnSalvar, false);
     }
 }
 
@@ -1316,6 +1439,9 @@ async function mostrarPainelAluno() {
 }
 
 async function carregarTarefasAluno() {
+    // Mostrar loading inicial
+    mostrarLoadingTarefasAluno();
+    
     try {
         const response = await apiGet('getTarefasPorTurma', { turma: usuarioLogado.Turma });
         const container = document.getElementById('tarefas-aluno-container');
@@ -1333,7 +1459,15 @@ async function carregarTarefasAluno() {
             console.error('Erro ao carregar entregas:', error);
         }
 
-        container.innerHTML = response.data.map(tarefa => {
+        // Renderizar tarefas uma por uma para efeito de carregamento progressivo
+        container.innerHTML = '';
+        
+        for (let i = 0; i < response.data.length; i++) {
+            const tarefa = response.data[i];
+            
+            // Adicionar um pequeno delay para simular carregamento progressivo
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             const parte1 = tarefa.Parte1 || '';
             const parte2 = tarefa.Parte2 || '';
             const parte3 = tarefa.Parte3 || '';
@@ -1342,7 +1476,7 @@ async function carregarTarefasAluno() {
             const contadores = calcularContadores(tarefa.DataAula);
             const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
 
-            return `
+            const tarefaHTML = `
             <div class="border border-gray-200 rounded-lg p-4 mb-4">
                 <div class="flex justify-between items-start">
                     <div class="flex-1">
@@ -1358,7 +1492,26 @@ async function carregarTarefasAluno() {
                 </div>
             </div>
             `;
-        }).join('');
+            
+            container.innerHTML += tarefaHTML;
+            
+            // Atualizar contadores para a tarefa recém-adicionada
+            atualizarContadoresAluno();
+        }
+        
+        // Adicionar mensagem de conclusão
+        const conclusao = document.createElement('div');
+        conclusao.className = 'text-green-600 text-center mt-4 p-3 bg-green-50 rounded border border-green-200';
+        conclusao.innerHTML = '<strong>✓ Todas as tarefas foram carregadas!</strong>';
+        container.appendChild(conclusao);
+        
+        // Remover a mensagem após 3 segundos
+        setTimeout(() => {
+            if (conclusao.parentNode) {
+                conclusao.remove();
+            }
+        }, 3000);
+        
     } catch (error) {
         document.getElementById('tarefas-aluno-container').innerHTML = 
             `<div class="text-center text-red-500 py-8">Erro ao carregar tarefas: ${error.message}</div>`;
