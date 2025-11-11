@@ -317,7 +317,7 @@
             animation: spin 1s ease-in-out infinite;
         }
 
-        /* NOVOS ESTILOS VERSÃO 6.6 - CACHE INDICATOR */
+        /* NOVOS ESTILOS VERSÃO 6.7 - CARREGAMENTO GRADUAL */
         .cache-indicator {
             position: absolute;
             top: 10px;
@@ -334,6 +334,42 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #10b981;
+            transition: width 0.3s ease;
+        }
+
+        .aluno-loading {
+            background: linear-gradient(90deg, #f9fafb 25%, #f3f4f6 50%, #f9fafb 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        .nota-loading {
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+            background-color: #f3f4f6;
+            border-radius: 4px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
         }
     </style>
 </head>
@@ -354,7 +390,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 6.6 - Com Sistema de Cache
+        Desenvolvido por Geovane Modena | Versão 6.7
     </footer>
 </div>
 
@@ -393,7 +429,7 @@ let tarefaParaExcluir = null;
 let contadoresAtivos = [];
 let tarefaEditando = null;
 
-// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 6.6 ---
+// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 6.7 ---
 const frontendCache = {
     get: (key) => {
         try {
@@ -414,7 +450,7 @@ const frontendCache = {
         return null;
     },
     
-    set: (key, data, ttl = 5 * 60 * 1000) => { // 5 minutos default
+    set: (key, data, ttl = 5 * 60 * 1000) => {
         try {
             const item = {
                 data,
@@ -446,24 +482,10 @@ const frontendCache = {
         } catch (e) {
             console.warn('Erro ao limpar cache local:', e);
         }
-    },
-    
-    getSize: () => {
-        try {
-            let size = 0;
-            for (let key in localStorage) {
-                if (key.startsWith('task_')) {
-                    size += localStorage[key].length;
-                }
-            }
-            return (size / 1024).toFixed(2) + ' KB';
-        } catch (e) {
-            return 'N/A';
-        }
     }
 };
 
-// --- DEBOUNCE FUNCTION - VERSÃO 6.6 ---
+// --- DEBOUNCE FUNCTION - VERSÃO 6.7 ---
 function debounce(func, wait, immediate = false) {
     let timeout;
     return function executedFunction(...args) {
@@ -591,59 +613,44 @@ function mostrarConclusaoRelatorio() {
     }, 3000);
 }
 
-// --- FUNÇÕES DE TEMPO ---
-function calcularContadores(dataAula) {
+// --- FUNÇÕES DE TEMPO OTIMIZADAS - VERSÃO 6.7 ---
+function calcularContadoresOtimizado(dataAula) {
     const agora = new Date();
     const dataAulaObj = new Date(dataAula);
     
-    const parte1Liberacao = new Date(dataAulaObj);
-    parte1Liberacao.setHours(0, 0, 0, 0);
-    
-    const parte2Liberacao = new Date(dataAulaObj);
-    parte2Liberacao.setDate(parte2Liberacao.getDate() + 3);
-    
-    const parte3Liberacao = new Date(dataAulaObj);
-    parte3Liberacao.setDate(parte3Liberacao.getDate() + 7);
-    
-    const parte4Liberacao = new Date(dataAulaObj);
-    parte4Liberacao.setDate(parte4Liberacao.getDate() + 14);
-    
-    const parte1Limite = new Date(dataAulaObj);
-    parte1Limite.setHours(18, 0, 0, 0);
-    
-    const parte2Limite = new Date(dataAulaObj);
-    parte2Limite.setDate(parte2Limite.getDate() + 7);
-    
-    const parte3Limite = new Date(dataAulaObj);
-    parte3Limite.setDate(parte3Limite.getDate() + 14);
-    
-    const parte4Limite = new Date(dataAulaObj);
-    parte4Limite.setDate(parte4Limite.getDate() + 28);
-    
-    const calcularTempoRestante = (liberacao, limite) => {
+    const calcularTempoRestante = (diasAdicionais, horasLimite = 18) => {
+        const liberacao = new Date(dataAulaObj);
+        liberacao.setDate(liberacao.getDate() + diasAdicionais);
+        if (diasAdicionais === 0) liberacao.setHours(0, 0, 0, 0);
+        
+        const limite = new Date(dataAulaObj);
+        limite.setDate(limite.getDate() + (diasAdicionais === 0 ? 0 : 
+                         diasAdicionais === 3 ? 7 : 
+                         diasAdicionais === 7 ? 14 : 28));
+        if (diasAdicionais === 0) limite.setHours(horasLimite, 0, 0, 0);
+        
         const diffLiberacao = liberacao - agora;
         const diffLimite = limite - agora;
         
         if (diffLiberacao > 0) {
             const dias = Math.floor(diffLiberacao / (1000 * 60 * 60 * 24));
             const horas = Math.floor((diffLiberacao % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutos = Math.floor((diffLiberacao % (1000 * 60 * 60)) / (1000 * 60));
-            const segundos = Math.floor((diffLiberacao % (1000 * 60)) / 1000);
             
             let texto = '';
             if (dias > 0) {
                 texto = `Libera em ${dias}d ${horas}h`;
             } else if (horas > 0) {
-                texto = `Libera em ${horas}h ${minutos}m`;
+                texto = `Libera em ${horas}h`;
             } else {
-                texto = `Libera em ${minutos}m ${segundos}s`;
+                texto = `Libera em <1h`;
             }
             
             return { 
                 texto, 
                 classe: 'aguardando', 
                 liberada: false,
-                expirado: false
+                expirado: false,
+                timestamp: liberacao.getTime()
             };
         }
         
@@ -652,22 +659,21 @@ function calcularContadores(dataAula) {
                 texto: 'Expirado', 
                 classe: 'expirado', 
                 liberada: true,
-                expirado: true
+                expirado: true,
+                timestamp: limite.getTime()
             };
         }
         
         const dias = Math.floor(diffLimite / (1000 * 60 * 60 * 24));
         const horas = Math.floor((diffLimite % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutos = Math.floor((diffLimite % (1000 * 60 * 60)) / (1000 * 60));
-        const segundos = Math.floor((diffLimite % (1000 * 60)) / 1000);
         
         let texto = '';
         if (dias > 0) {
-            texto = `${dias}d ${horas}h ${minutos}m`;
+            texto = `${dias}d ${horas}h`;
         } else if (horas > 0) {
-            texto = `${horas}h ${minutos}m ${segundos}s`;
+            texto = `${horas}h`;
         } else {
-            texto = `${minutos}m ${segundos}s`;
+            texto = `<1h`;
         }
         
         const classe = dias === 0 ? 'urgente' : 'disponivel';
@@ -676,51 +682,68 @@ function calcularContadores(dataAula) {
             texto, 
             classe, 
             liberada: true,
-            expirado: false
+            expirado: false,
+            timestamp: limite.getTime()
         };
     };
     
     return {
-        parte1: calcularTempoRestante(parte1Liberacao, parte1Limite),
-        parte2: calcularTempoRestante(parte2Liberacao, parte2Limite),
-        parte3: calcularTempoRestante(parte3Liberacao, parte3Limite),
-        parte4: calcularTempoRestante(parte4Liberacao, parte4Limite)
+        parte1: calcularTempoRestante(0, 18),
+        parte2: calcularTempoRestante(3),
+        parte3: calcularTempoRestante(7),
+        parte4: calcularTempoRestante(14)
     };
 }
 
-function iniciarAtualizacaoContadores() {
+// --- CONTADORES OTIMIZADOS - VERSÃO 6.7 ---
+function iniciarAtualizacaoContadoresOtimizada() {
     contadoresAtivos.forEach(interval => clearInterval(interval));
     contadoresAtivos = [];
     
     const interval = setInterval(() => {
         if (usuarioLogado && usuarioLogado.Perfil === 'Aluno') {
-            atualizarContadoresAluno();
+            atualizarContadoresAlunoOtimizado();
         }
-    }, 1000);
+    }, 2000);
     
     contadoresAtivos.push(interval);
 }
 
-function atualizarContadoresAluno() {
+function atualizarContadoresAlunoOtimizado() {
     const containers = document.querySelectorAll('#tarefas-aluno-container > div');
+    
     containers.forEach(container => {
+        if (!isElementInViewport(container)) return;
+        
         const tema = container.querySelector('h4')?.textContent;
         if (!tema) return;
         
         const tarefa = tarefas.find(t => t.Tema === tema);
         if (tarefa) {
-            const contadores = calcularContadores(tarefa.DataAula);
+            const contadores = calcularContadoresOtimizado(tarefa.DataAula);
             
             [1, 2, 3, 4].forEach(parte => {
                 const contadorElement = container.querySelector(`.parte-${parte} .contador`);
                 if (contadorElement) {
                     const contador = contadores[`parte${parte}`];
-                    contadorElement.textContent = contador.texto;
-                    contadorElement.className = `contador ${contador.classe}`;
+                    if (contadorElement.textContent !== contador.texto) {
+                        contadorElement.textContent = contador.texto;
+                        contadorElement.className = `contador ${contador.classe}`;
+                    }
                 }
             });
         }
     });
+}
+
+function isElementInViewport(el) {
+    const rect = el.getBoundingClientRect();
+    return (
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
 }
 
 // --- API REQUEST COM JSONP E CACHE ---
@@ -744,12 +767,10 @@ function apiRequestJSONP(url, callback) {
     document.body.appendChild(script);
 }
 
-// --- API COM CACHE - VERSÃO 6.6 ---
+// --- API COM CACHE - VERSÃO 6.7 ---
 async function apiGet(func, params = {}) {
-    // Criar chave de cache única para esta requisição
     const cacheKey = `api_${func}_${JSON.stringify(params)}`;
     
-    // Verificar cache primeiro
     const cached = frontendCache.get(cacheKey);
     if (cached) {
         console.log(`📦 Retornando do cache: ${func}`);
@@ -775,7 +796,6 @@ async function apiGet(func, params = {}) {
             } else if (data && data.success === false) {
                 reject(new Error(data.error));
             } else {
-                // Salvar no cache por 2 minutos
                 frontendCache.set(cacheKey, data, 2 * 60 * 1000);
                 resolve(data);
             }
@@ -815,15 +835,8 @@ async function init() {
         const response = await apiGet('getUsers');
         usuarios = response.data || [];
     } catch (error) {
-        usuarios = [
-            { 
-                NomeCompleto: "Geovane Módena", 
-                Email: "geovane.modena@portalsesisp.org.br", 
-                RA: "9999", 
-                Turma: "Professor", 
-                Perfil: "Professor" 
-            }
-        ];
+        console.error('Erro ao carregar usuários:', error);
+        usuarios = [];
     }
     
     renderLogin();
@@ -843,7 +856,7 @@ const renderLogin = () => {
                 </div>
                 <div>
                     <label for="ra" class="block text-sm font-medium text-gray-700 mb-2">RA</label>
-                    <input type="text" id="ra" name="ra" required placeholder="Apenas números" class="w-full">
+                    <input type="text" id="ra" name="ra" required placeholder="Digite seu RA" class="w-full">
                 </div>
                 <button type="submit" class="btn-primary" id="login-button">
                     <span id="login-text">Entrar</span>
@@ -870,7 +883,6 @@ async function login(event) {
     setButtonLoading(loginButton, true);
     loginText.textContent = "Entrando...";
     
-    // Pequena pausa para garantir que o UI atualize
     await new Promise(resolve => setTimeout(resolve, 100));
     
     const user = usuarios.find(u => {
@@ -896,7 +908,6 @@ async function login(event) {
     logoutBtn.classList.remove('hidden');
     relatorioBtn.classList.remove('hidden');
     
-    // VERSÃO 6.6 - Exibição correta baseada no perfil
     if (user.Perfil === "Professor") {
         userInfoDisplay.innerHTML = `
             <div class="user-info-text">
@@ -938,11 +949,10 @@ function logout() {
     userInfoDisplay.innerHTML = '';
     contadoresAtivos.forEach(interval => clearInterval(interval));
     contadoresAtivos = [];
-    // NÃO limpar cache no logout para manter performance
     renderLogin(); 
 }
 
-// --- FUNÇÕES DE RELATÓRIO ---
+// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 6.7 ---
 async function mostrarRelatorioProfessor() {
     const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
     
@@ -956,7 +966,7 @@ async function mostrarRelatorioProfessor() {
     
     turmas.forEach(turma => {
         relatorioHTML += `
-            <button onclick="carregarRelatorioTurma('${turma}')" class="btn-turma">
+            <button onclick="carregarRelatorioTurmaOtimizado('${turma}')" class="btn-turma">
                 Turma ${turma}
             </button>
         `;
@@ -977,8 +987,8 @@ async function mostrarRelatorioProfessor() {
     contentArea.innerHTML = relatorioHTML;
 }
 
-// --- CARREGAR RELATÓRIO COM CACHE - VERSÃO 6.6 ---
-const carregarRelatorioTurma = debounce(async function(turmaSelecionada) {
+// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 6.7 ---
+const carregarRelatorioTurmaOtimizado = debounce(async function(turmaSelecionada) {
     const cacheKey = `relatorio_${turmaSelecionada}`;
     const cached = frontendCache.get(cacheKey);
     
@@ -989,19 +999,39 @@ const carregarRelatorioTurma = debounce(async function(turmaSelecionada) {
         return;
     }
     
-    mostrarLoadingRelatorio();
+    document.getElementById('relatorio-turma-container').innerHTML = `
+        <div class="text-center py-8">
+            <div class="spinner"></div>
+            <p class="mt-4 text-gray-600">Carregando relatório da turma ${turmaSelecionada}...</p>
+            <div class="progress-bar mt-4">
+                <div class="progress-fill" style="width: 0%" id="progress-bar-fill"></div>
+            </div>
+            <p class="text-sm text-gray-500 mt-2" id="progress-text">Iniciando carregamento...</p>
+        </div>
+    `;
+    
+    const progressBar = document.getElementById('progress-bar-fill');
+    const progressText = document.getElementById('progress-text');
     
     try {
-        const usersResponse = await apiGet('getUsers');
-        const alunosTurma = usersResponse.data.filter(user => user.Turma === turmaSelecionada && user.Perfil === 'Aluno');
+        progressBar.style.width = '10%';
+        progressText.textContent = 'Carregando informações da turma...';
         
-        const tarefasResponse = await apiGet('getTarefasPorTurma', { turma: turmaSelecionada });
+        const [usersResponse, tarefasResponse] = await Promise.all([
+            apiGet('getUsers'),
+            apiGet('getTarefasPorTurma', { turma: turmaSelecionada })
+        ]);
+        
+        const alunosTurma = usersResponse.data.filter(user => user.Turma === turmaSelecionada && user.Perfil === 'Aluno');
         const tarefasTurma = tarefasResponse.data || [];
+        
+        progressBar.style.width = '30%';
+        progressText.textContent = `Turma carregada: ${alunosTurma.length} alunos, ${tarefasTurma.length} tarefas`;
         
         if (alunosTurma.length === 0) {
             const html = `<p class="text-gray-500 text-center py-8">Nenhum aluno encontrado na turma ${turmaSelecionada}.</p>`;
             document.getElementById('relatorio-turma-container').innerHTML = html;
-            frontendCache.set(cacheKey, html, 10 * 60 * 1000); // 10 minutos
+            frontendCache.set(cacheKey, html, 10 * 60 * 1000);
             return;
         }
         
@@ -1029,57 +1059,22 @@ const carregarRelatorioTurma = debounce(async function(turmaSelecionada) {
                             <th class="px-4 py-3 text-center font-semibold border-b">Média</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="relatorio-tbody">
         `;
         
-        for (const aluno of alunosTurma) {
-            const entregasResponse = await apiGet('getEntregasAluno', { ra: aluno.RA });
-            const entregasAluno = entregasResponse.data || [];
-            
-            let totalNotas = 0;
-            let countNotas = 0;
-            
+        alunosTurma.forEach((aluno, index) => {
             relatorioTurmaHTML += `
-                <tr class="hover:bg-gray-50">
+                <tr class="aluno-loading">
                     <td class="px-4 py-3 font-medium text-gray-900 border-b">${aluno.NomeCompleto}</td>
             `;
             
-            for (const tarefa of tarefasTurma) {
-                const entrega = entregasAluno.find(e => e.ID_Tarefa === tarefa.ID);
-                const nota = entrega && entrega.Nota ? parseFloat(entrega.Nota).toFixed(1) : '-';
-                
-                if (entrega && entrega.Nota) {
-                    totalNotas += parseFloat(entrega.Nota);
-                    countNotas++;
-                }
-                
-                let classeNota = 'text-gray-600';
-                if (entrega && entrega.Nota) {
-                    const notaNum = parseFloat(entrega.Nota);
-                    if (notaNum >= 7.5) {
-                        classeNota = 'text-green-600 font-semibold';
-                    } else {
-                        classeNota = 'text-red-600';
-                    }
-                }
-                
-                relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b ${classeNota}">${nota}</td>`;
-            }
+            tarefasTurma.forEach(() => {
+                relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b"><div class="nota-loading"></div></td>`;
+            });
             
-            const media = countNotas > 0 ? (totalNotas / countNotas).toFixed(1) : '-';
-            let classeMedia = 'text-gray-600';
-            if (media !== '-') {
-                const mediaNum = parseFloat(media);
-                if (mediaNum >= 7.5) {
-                    classeMedia = 'text-green-600 font-bold';
-                } else {
-                    classeMedia = 'text-red-600 font-semibold';
-                }
-            }
-            
-            relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b ${classeMedia}">${media}</td>`;
+            relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b"><div class="nota-loading"></div></td>`;
             relatorioTurmaHTML += `</tr>`;
-        }
+        });
         
         relatorioTurmaHTML += `
                     </tbody>
@@ -1087,12 +1082,100 @@ const carregarRelatorioTurma = debounce(async function(turmaSelecionada) {
             </div>
             <div class="mt-4 text-sm text-gray-600">
                 <p>Total de alunos: ${alunosTurma.length} | Total de tarefas: ${tarefasTurma.length}</p>
+                <p class="mt-2 text-blue-600" id="carregamento-status">Carregando notas dos alunos...</p>
             </div>
         `;
         
         document.getElementById('relatorio-turma-container').innerHTML = relatorioTurmaHTML;
-        frontendCache.set(cacheKey, relatorioTurmaHTML, 10 * 60 * 1000); // 10 minutos
-        mostrarConclusaoRelatorio();
+        
+        const carregamentoStatus = document.getElementById('carregamento-status');
+        const tbody = document.getElementById('relatorio-tbody');
+        
+        let alunosProcessados = 0;
+        
+        const processarLoteAlunos = async (inicio, fim) => {
+            const lotes = [];
+            
+            for (let i = inicio; i < fim && i < alunosTurma.length; i++) {
+                const aluno = alunosTurma[i];
+                lotes.push(
+                    apiGet('getEntregasAluno', { ra: aluno.RA })
+                        .then(entregasResponse => {
+                            const entregasAluno = entregasResponse.data || [];
+                            return { aluno, entregas: entregasAluno, index: i };
+                        })
+                );
+            }
+            
+            const resultados = await Promise.allSettled(lotes);
+            
+            for (const resultado of resultados) {
+                if (resultado.status === 'fulfilled') {
+                    const { aluno, entregas, index } = resultado.value;
+                    const linha = tbody.rows[index];
+                    
+                    if (linha) {
+                        let totalNotas = 0;
+                        let countNotas = 0;
+                        
+                        for (let j = 0; j < tarefasTurma.length; j++) {
+                            const tarefa = tarefasTurma[j];
+                            const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
+                            const nota = entrega && entrega.Nota ? parseFloat(entrega.Nota).toFixed(1) : '-';
+                            
+                            if (entrega && entrega.Nota) {
+                                totalNotas += parseFloat(entrega.Nota);
+                                countNotas++;
+                            }
+                            
+                            let classeNota = 'text-gray-600';
+                            if (entrega && entrega.Nota) {
+                                const notaNum = parseFloat(entrega.Nota);
+                                if (notaNum >= 7.5) {
+                                    classeNota = 'text-green-600 font-semibold';
+                                } else {
+                                    classeNota = 'text-red-600';
+                                }
+                            }
+                            
+                            linha.cells[j + 1].innerHTML = `<span class="${classeNota}">${nota}</span>`;
+                        }
+                        
+                        const media = countNotas > 0 ? (totalNotas / countNotas).toFixed(1) : '-';
+                        let classeMedia = 'text-gray-600';
+                        if (media !== '-') {
+                            const mediaNum = parseFloat(media);
+                            if (mediaNum >= 7.5) {
+                                classeMedia = 'text-green-600 font-bold';
+                            } else {
+                                classeMedia = 'text-red-600 font-semibold';
+                            }
+                        }
+                        
+                        linha.cells[tarefasTurma.length + 1].innerHTML = `<span class="${classeMedia}">${media}</span>`;
+                        linha.classList.remove('aluno-loading');
+                    }
+                    
+                    alunosProcessados++;
+                    const progresso = 30 + (alunosProcessados / alunosTurma.length) * 60;
+                    progressBar.style.width = `${progresso}%`;
+                    carregamentoStatus.textContent = `Carregando aluno ${alunosProcessados} de ${alunosTurma.length}...`;
+                }
+            }
+        };
+        
+        const tamanhoLote = 3;
+        for (let i = 0; i < alunosTurma.length; i += tamanhoLote) {
+            await processarLoteAlunos(i, i + tamanhoLote);
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        progressBar.style.width = '100%';
+        carregamentoStatus.textContent = 'Relatório completo!';
+        carregamentoStatus.className = 'mt-2 text-green-600';
+        
+        const relatorioCompletoHTML = document.getElementById('relatorio-turma-container').innerHTML;
+        frontendCache.set(cacheKey, relatorioCompletoHTML, 10 * 60 * 1000);
         
     } catch (error) {
         const errorHtml = `<p class="text-red-500 text-center py-4">Erro ao carregar relatório: ${error.message}</p>`;
@@ -1193,13 +1276,13 @@ async function mostrarRelatorioAluno() {
         `;
         
         contentArea.innerHTML = relatorioHTML;
-        frontendCache.set(cacheKey, relatorioHTML, 5 * 60 * 1000); // 5 minutos
+        frontendCache.set(cacheKey, relatorioHTML, 5 * 60 * 1000);
     } catch (error) {
         showModal('Erro', `Erro ao carregar relatório: ${error.message}`);
     }
 }
 
-// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 6.6 ---
+// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 6.7 ---
 async function mostrarPainelProfessor() {
     const cacheKey = 'painel_professor';
     const cached = frontendCache.get(cacheKey);
@@ -1207,7 +1290,6 @@ async function mostrarPainelProfessor() {
     if (cached) {
         console.log('✅ Painel do professor carregado do cache');
         contentArea.innerHTML = cached;
-        // Preencher formulário se estiver editando
         if (tarefaEditando) {
             preencherFormularioEdicao();
         }
@@ -1295,15 +1377,13 @@ async function mostrarPainelProfessor() {
         </div>
     `).join("");
 
-    // CORREÇÃO: Preencher formulário imediatamente após renderizar
     if (tarefaEditando) {
         preencherFormularioEdicao();
     }
 
     await carregarTarefasProfessor();
     
-    // Salvar no cache após carregar
-    frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000); // 2 minutos
+    frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000);
 }
 
 function preencherFormularioEdicao() {
@@ -1340,7 +1420,7 @@ async function carregarTarefasProfessor() {
     try {
         const response = await apiGet('getTarefas');
         tarefas = response.data || [];
-        frontendCache.set(cacheKey, tarefas, 2 * 60 * 1000); // 2 minutos
+        frontendCache.set(cacheKey, tarefas, 2 * 60 * 1000);
         renderizarTabelaTarefas();
     } catch (error) {
         document.getElementById('tabelaTarefasBody').innerHTML = 
@@ -1404,13 +1484,12 @@ async function editarTarefa(idTarefa) {
     }
 
     tarefaEditando = tarefa;
-    // Invalidar cache do painel para forçar recarregamento
     frontendCache.remove('painel_professor');
     frontendCache.remove('tarefas_professor_lista');
     await mostrarPainelProfessor();
 }
 
-// --- SALVAR TAREFA COM DEBOUNCE - VERSÃO 6.6 ---
+// --- SALVAR TAREFA COM DEBOUNCE - VERSÃO 6.7 ---
 const salvarTarefa = debounce(async function() {
     const btnSalvar = document.getElementById('btnSalvarTarefa');
     
@@ -1457,7 +1536,6 @@ const salvarTarefa = debounce(async function() {
         const response = await apiPost('criarTarefa', dados);
         showModal('Sucesso', 'Tarefa criada com sucesso!');
         
-        // Invalidar caches relevantes
         frontendCache.remove('painel_professor');
         frontendCache.remove('tarefas_professor_lista');
         turmasSelecionadas.forEach(turma => {
@@ -1518,7 +1596,6 @@ const atualizarTarefa = debounce(async function() {
         const response = await apiPost('editarTarefa', dados);
         showModal('Sucesso', 'Tarefa atualizada com sucesso!');
         
-        // Invalidar caches
         frontendCache.remove('painel_professor');
         frontendCache.remove('tarefas_professor_lista');
         frontendCache.remove(`api_getTarefasPorTurma_${JSON.stringify({turma: turmaSelecionada})}`);
@@ -1539,10 +1616,8 @@ async function excluirTarefa(idTarefa) {
         await apiPost('excluirTarefa', { ID: idTarefa });
         showModal('Sucesso', 'Tarefa excluída com sucesso.');
         
-        // Invalidar caches
         frontendCache.remove('painel_professor');
         frontendCache.remove('tarefas_professor_lista');
-        // Nota: Não sabemos a turma específica, então invalidamos todas
         ['1A', '1B', '2A', '2B', '3A', '3B'].forEach(turma => {
             frontendCache.remove(`api_getTarefasPorTurma_${JSON.stringify({turma: turma})}`);
             frontendCache.remove(`relatorio_${turma}`);
@@ -1575,7 +1650,7 @@ function limparFormulario() {
     }
 }
 
-// --- PAINEL DO ALUNO COM CACHE - VERSÃO 6.6 ---
+// --- PAINEL DO ALUNO COM CACHE - VERSÃO 6.7 ---
 async function mostrarPainelAluno() {
     const cacheKey = `painel_aluno_${usuarioLogado.RA}`;
     const cached = frontendCache.get(cacheKey);
@@ -1583,7 +1658,7 @@ async function mostrarPainelAluno() {
     if (cached) {
         console.log('✅ Painel do aluno carregado do cache');
         contentArea.innerHTML = cached;
-        iniciarAtualizacaoContadores();
+        iniciarAtualizacaoContadoresOtimizada();
         return;
     }
     
@@ -1599,13 +1674,12 @@ async function mostrarPainelAluno() {
     `;
 
     await carregarTarefasAluno();
-    iniciarAtualizacaoContadores();
+    iniciarAtualizacaoContadoresOtimizada();
     
-    // Salvar no cache após carregar
-    frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000); // 2 minutos
+    frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000);
 }
 
-// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 6.6 ---
+// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 6.7 ---
 async function carregarTarefasAluno() {
     const cacheKey = `tarefas_aluno_${usuarioLogado.RA}_dados`;
     const cached = frontendCache.get(cacheKey);
@@ -1636,7 +1710,6 @@ async function carregarTarefasAluno() {
             console.error('Erro ao carregar entregas:', error);
         }
 
-        // Salvar no cache
         frontendCache.set(cacheKey, {tarefas: response.data, entregas: entregas}, 2 * 60 * 1000);
         
         renderTarefasAlunoGradualmente(response.data, entregas, container);
@@ -1662,7 +1735,7 @@ function renderTarefasAlunoFromCache(tarefas, entregas) {
         const parte3 = tarefa.Parte3 || '';
         const parte4 = tarefa.Parte4 || '';
         
-        const contadores = calcularContadores(tarefa.DataAula);
+        const contadores = calcularContadoresOtimizado(tarefa.DataAula);
         const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
 
         return `
@@ -1700,7 +1773,6 @@ async function renderTarefasAlunoGradualmente(tarefas, entregas, container) {
     container.innerHTML = '';
     
     for (let i = 0; i < tarefas.length; i++) {
-        // Permitir que o navegador respire a cada 2 tarefas
         if (i % 2 === 0 && i > 0) {
             await new Promise(resolve => setTimeout(resolve, 0));
         }
@@ -1723,7 +1795,7 @@ async function renderTarefasAlunoGradualmente(tarefas, entregas, container) {
         }
     }, 3000);
     
-    atualizarContadoresAluno();
+    atualizarContadoresAlunoOtimizado();
 }
 
 function renderTarefaItem(tarefa, entrega) {
@@ -1732,7 +1804,7 @@ function renderTarefaItem(tarefa, entrega) {
     const parte3 = tarefa.Parte3 || '';
     const parte4 = tarefa.Parte4 || '';
     
-    const contadores = calcularContadores(tarefa.DataAula);
+    const contadores = calcularContadoresOtimizado(tarefa.DataAula);
 
     return `
     <div class="border border-gray-200 rounded-lg p-4 mb-4">
@@ -1789,7 +1861,7 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     </div>`;
 }
 
-// --- SALVAR LINK COM DEBOUNCE - VERSÃO 6.6 ---
+// --- SALVAR LINK COM DEBOUNCE - VERSÃO 6.7 ---
 const salvarLink = debounce(async function(idTarefa, parte) {
     const input = document.getElementById(`link-${idTarefa}-${parte}`);
     const link = input.value.trim();
@@ -1811,7 +1883,6 @@ const salvarLink = debounce(async function(idTarefa, parte) {
         
         showModal('Sucesso', `Link da parte ${parte} salvo com sucesso!`);
         
-        // Invalidar caches relevantes
         frontendCache.remove(`painel_aluno_${usuarioLogado.RA}`);
         frontendCache.remove(`tarefas_aluno_${usuarioLogado.RA}_dados`);
         frontendCache.remove(`relatorio_aluno_${usuarioLogado.RA}`);
@@ -1833,7 +1904,6 @@ const excluirLink = debounce(async function(idTarefa, parte) {
         
         showModal('Sucesso', `Link da parte ${parte} excluído com sucesso!`);
         
-        // Invalidar caches relevantes
         frontendCache.remove(`painel_aluno_${usuarioLogado.RA}`);
         frontendCache.remove(`tarefas_aluno_${usuarioLogado.RA}_dados`);
         frontendCache.remove(`relatorio_aluno_${usuarioLogado.RA}`);
@@ -1855,7 +1925,7 @@ window.mostrarPainelProfessor = mostrarPainelProfessor;
 window.mostrarPainelAluno = mostrarPainelAluno;
 window.mostrarRelatorioProfessor = mostrarRelatorioProfessor;
 window.mostrarRelatorioAluno = mostrarRelatorioAluno;
-window.carregarRelatorioTurma = carregarRelatorioTurma;
+window.carregarRelatorioTurma = carregarRelatorioTurmaOtimizado;
 window.salvarTarefa = salvarTarefa;
 window.atualizarTarefa = atualizarTarefa;
 window.excluirTarefa = excluirTarefa;
@@ -1865,7 +1935,6 @@ window.limparFormulario = limparFormulario;
 window.closeModal = closeModal;
 window.salvarLink = salvarLink;
 window.excluirLink = excluirLink;
-window.frontendCache = frontendCache; // Para debug
 </script>
 </body>
 </html>
