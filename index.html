@@ -335,15 +335,6 @@
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        .cache-badge {
-            background: #d1fae5;
-            color: #065f46;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            margin-left: 8px;
-        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -351,7 +342,7 @@
 <div id="app-container" class="w-full max-w-6xl bg-white shadow-xl rounded-2xl p-6 sm:p-8 transition-all duration-300">
     <header class="mb-8 border-b pb-4">
         <div class="header-content">
-            <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar <span class="cache-badge">v6.6</span></h1>
+            <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar</h1>
             <div id="user-info" class="user-info-container"></div>
             <div class="absolute top-0 right-0 flex space-x-2">
                 <button id="relatorioBtn" class="btn-relatorio hidden">Relatório</button>
@@ -858,19 +849,16 @@ const renderLogin = () => {
                     <span id="login-text">Entrar</span>
                 </button>
             </form>
-            
-            <div class="mt-6 p-4 bg-gray-50 rounded-lg text-xs text-gray-600">
-                <strong>Cache Status:</strong> ${frontendCache.getSize()} utilizados
-                <button onclick="frontendCache.clear()" class="ml-2 text-red-600 hover:text-red-800">Limpar Cache</button>
-            </div>
         </div>
     `;
 
-    document.getElementById('login-form').addEventListener('submit', login);
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        login(e);
+    });
 };
 
-// --- LOGIN COM DEBOUNCE - VERSÃO 6.6 ---
-const login = debounce(async function(event) {
+async function login(event) {
     event.preventDefault(); 
     const email = document.getElementById('email').value.trim();
     const ra = document.getElementById('ra').value.trim();
@@ -881,6 +869,9 @@ const login = debounce(async function(event) {
     
     setButtonLoading(loginButton, true);
     loginText.textContent = "Entrando...";
+    
+    // Pequena pausa para garantir que o UI atualize
+    await new Promise(resolve => setTimeout(resolve, 100));
     
     const user = usuarios.find(u => {
         const userEmail = u.Email.toLowerCase().trim();
@@ -934,7 +925,10 @@ const login = debounce(async function(event) {
     } else {
         await mostrarPainelAluno(); 
     }
-}, 500);
+    
+    setButtonLoading(loginButton, false);
+    loginText.textContent = "Entrar";
+}
 
 function logout() {
     usuarioLogado = null;
