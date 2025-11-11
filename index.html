@@ -282,16 +282,6 @@
             color: #6b7280;
         }
 
-        .pulse-loading {
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; }
-            100% { opacity: 0.6; }
-        }
-
         .tarefa-loading {
             border: 1px solid #e5e7eb;
             border-radius: 8px;
@@ -488,10 +478,8 @@ function mostrarConclusaoRelatorio() {
     mensagem.className = 'text-green-600 text-center mt-4 p-3 bg-green-50 rounded border border-green-200';
     mensagem.innerHTML = '<strong>✓ Relatório carregado com sucesso!</strong>';
     
-    // Adiciona a mensagem no final do container
     container.appendChild(mensagem);
     
-    // Remove a mensagem após 3 segundos
     setTimeout(() => {
         if (mensagem.parentNode) {
             mensagem.remove();
@@ -759,7 +747,6 @@ async function login(event) {
     const loginButton = document.getElementById('login-button');
     const loginText = document.getElementById('login-text');
     
-    // Ativar estado de loading no botão
     setButtonLoading(loginButton, true);
     loginText.textContent = "Entrando...";
     
@@ -786,7 +773,6 @@ async function login(event) {
     logoutBtn.classList.remove('hidden');
     relatorioBtn.classList.remove('hidden');
     
-    // Ajustar informações do usuário conforme o perfil
     if (user.Perfil === "Professor") {
         userInfoDisplay.innerHTML = `
             <div class="user-info-text">
@@ -840,7 +826,6 @@ async function mostrarRelatorioProfessor() {
                 <div class="flex flex-wrap gap-2 mb-6" id="botoes-turma">
     `;
     
-    // Botões para cada turma
     turmas.forEach(turma => {
         relatorioHTML += `
             <button onclick="carregarRelatorioTurma('${turma}')" class="btn-turma">
@@ -865,17 +850,12 @@ async function mostrarRelatorioProfessor() {
 }
 
 async function carregarRelatorioTurma(turmaSelecionada) {
-    console.log('Carregando relatório para turma:', turmaSelecionada);
-    
-    // Mostrar loading
     mostrarLoadingRelatorio();
     
     try {
-        // Buscar todos os alunos da turma
         const usersResponse = await apiGet('getUsers');
         const alunosTurma = usersResponse.data.filter(user => user.Turma === turmaSelecionada && user.Perfil === 'Aluno');
         
-        // Buscar todas as tarefas da turma
         const tarefasResponse = await apiGet('getTarefasPorTurma', { turma: turmaSelecionada });
         const tarefasTurma = tarefasResponse.data || [];
         
@@ -900,7 +880,6 @@ async function carregarRelatorioTurma(turmaSelecionada) {
                             <th class="px-4 py-3 text-left font-semibold border-b">Aluno</th>
         `;
         
-        // Cabeçalho com as tarefas
         tarefasTurma.forEach(tarefa => {
             relatorioTurmaHTML += `<th class="px-4 py-3 text-center font-semibold border-b">${tarefa.Tema}</th>`;
         });
@@ -913,7 +892,6 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         `;
         
         for (const aluno of alunosTurma) {
-            // Buscar entregas do aluno
             const entregasResponse = await apiGet('getEntregasAluno', { ra: aluno.RA });
             const entregasAluno = entregasResponse.data || [];
             
@@ -934,7 +912,6 @@ async function carregarRelatorioTurma(turmaSelecionada) {
                     countNotas++;
                 }
                 
-                // Cores para as notas (SESI: 7.5+ verde, abaixo vermelho)
                 let classeNota = 'text-gray-600';
                 if (entrega && entrega.Nota) {
                     const notaNum = parseFloat(entrega.Nota);
@@ -973,12 +950,9 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         `;
         
         document.getElementById('relatorio-turma-container').innerHTML = relatorioTurmaHTML;
-        
-        // Mostrar mensagem de conclusão
         mostrarConclusaoRelatorio();
         
     } catch (error) {
-        console.error('Erro ao carregar relatório:', error);
         document.getElementById('relatorio-turma-container').innerHTML = 
             `<p class="text-red-500 text-center py-4">Erro ao carregar relatório: ${error.message}</p>`;
     }
@@ -999,7 +973,6 @@ async function mostrarRelatorioAluno() {
                 <p class="text-gray-500 text-center py-4">Nenhuma entrega registrada.</p>
             `;
         } else {
-            // Buscar informações das tarefas
             const tarefasResponse = await apiGet('getTarefas');
             const todasTarefas = tarefasResponse.data || [];
             
@@ -1148,7 +1121,6 @@ async function mostrarPainelProfessor() {
         </div>
     `;
 
-    // Popula checkboxes de turma
     const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
     document.getElementById('turmasCheckboxes').innerHTML = turmas.map(t => `
         <div class="checkbox-item">
@@ -1157,7 +1129,6 @@ async function mostrarPainelProfessor() {
         </div>
     `).join("");
 
-    // Se está editando, preenche o formulário
     if (tarefaEditando) {
         preencherFormularioEdicao();
     }
@@ -1176,13 +1147,11 @@ function preencherFormularioEdicao() {
     document.getElementById('parte3').value = tarefaEditando.Parte3 || '';
     document.getElementById('parte4').value = tarefaEditando.Parte4 || '';
     
-    // Marcar a turma específica
     const checkboxes = document.querySelectorAll('#turmasCheckboxes input');
     checkboxes.forEach(checkbox => {
         checkbox.checked = checkbox.value === tarefaEditando.Turma;
     });
     
-    // Rolar para o topo
     window.scrollTo(0, 0);
 }
 
@@ -1254,11 +1223,8 @@ async function editarTarefa(idTarefa) {
     }
 
     tarefaEditando = tarefa;
-    
-    // Recarregar o painel do professor
     await mostrarPainelProfessor();
     
-    // Preencher o formulário após o DOM ser renderizado
     setTimeout(() => {
         if (document.getElementById('tema')) {
             document.getElementById('tema').value = tarefaEditando.Tema;
@@ -1268,13 +1234,11 @@ async function editarTarefa(idTarefa) {
             document.getElementById('parte3').value = tarefaEditando.Parte3 || '';
             document.getElementById('parte4').value = tarefaEditando.Parte4 || '';
             
-            // Marcar apenas a turma específica
             const checkboxes = document.querySelectorAll('#turmasCheckboxes input');
             checkboxes.forEach(checkbox => {
                 checkbox.checked = checkbox.value === tarefaEditando.Turma;
             });
             
-            // Rolar para o topo
             window.scrollTo(0, 0);
         }
     }, 100);
@@ -1378,7 +1342,6 @@ async function atualizarTarefa() {
         const response = await apiPost('editarTarefa', dados);
         showModal('Sucesso', 'Tarefa atualizada com sucesso!');
         
-        // Limpar formulário e recarregar lista
         tarefaEditando = null;
         limparFormulario();
         
@@ -1414,7 +1377,6 @@ function limparFormulario() {
         document.getElementById('btnSalvarTarefa').textContent = 'Salvar Tarefa';
         document.getElementById('btnSalvarTarefa').setAttribute('onclick', 'salvarTarefa()');
         
-        // Recarregar a lista de tarefas para garantir que está atualizada
         setTimeout(() => {
             carregarTarefasProfessor();
         }, 100);
@@ -1439,7 +1401,6 @@ async function mostrarPainelAluno() {
 }
 
 async function carregarTarefasAluno() {
-    // Mostrar loading inicial
     mostrarLoadingTarefasAluno();
     
     try {
@@ -1459,13 +1420,11 @@ async function carregarTarefasAluno() {
             console.error('Erro ao carregar entregas:', error);
         }
 
-        // Renderizar tarefas uma por uma para efeito de carregamento progressivo
         container.innerHTML = '';
         
         for (let i = 0; i < response.data.length; i++) {
             const tarefa = response.data[i];
             
-            // Adicionar um pequeno delay para simular carregamento progressivo
             await new Promise(resolve => setTimeout(resolve, 100));
             
             const parte1 = tarefa.Parte1 || '';
@@ -1494,18 +1453,14 @@ async function carregarTarefasAluno() {
             `;
             
             container.innerHTML += tarefaHTML;
-            
-            // Atualizar contadores para a tarefa recém-adicionada
             atualizarContadoresAluno();
         }
         
-        // Adicionar mensagem de conclusão
         const conclusao = document.createElement('div');
         conclusao.className = 'text-green-600 text-center mt-4 p-3 bg-green-50 rounded border border-green-200';
         conclusao.innerHTML = '<strong>✓ Todas as tarefas foram carregadas!</strong>';
         container.appendChild(conclusao);
         
-        // Remover a mensagem após 3 segundos
         setTimeout(() => {
             if (conclusao.parentNode) {
                 conclusao.remove();
@@ -1523,7 +1478,6 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     const inputId = `link-${idTarefa}-${numeroParte}`;
     const temLinkSalvo = linkSalvo && linkSalvo.trim() !== '';
     
-    // Determinar se está disponível para edição
     const disponivel = contador.liberada && !contador.expirado && !temLinkSalvo;
     const expirado = contador.expirado;
 
