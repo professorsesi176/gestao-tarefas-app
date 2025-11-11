@@ -335,7 +335,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 6.4
+        Desenvolvido por Geovane Modena | Versão 6.5
     </footer>
 </div>
 
@@ -703,7 +703,7 @@ async function init() {
                 NomeCompleto: "Geovane Módena", 
                 Email: "geovane.modena@portalsesisp.org.br", 
                 RA: "9999", 
-                Turma: "", 
+                Turma: "Professor", 
                 Perfil: "Professor" 
             }
         ];
@@ -773,10 +773,11 @@ async function login(event) {
     logoutBtn.classList.remove('hidden');
     relatorioBtn.classList.remove('hidden');
     
+    // VERSÃO 6.5 - Exibição correta baseada no perfil
     if (user.Perfil === "Professor") {
         userInfoDisplay.innerHTML = `
             <div class="user-info-text">
-                Logado como: <span class="user-info-name">${user.NomeCompleto} (${user.Perfil})</span> | Professor
+                Logado como: <span class="user-info-name">${user.NomeCompleto} (${user.Perfil})</span>
             </div>
         `;
         relatorioBtn.onclick = mostrarRelatorioProfessor;
