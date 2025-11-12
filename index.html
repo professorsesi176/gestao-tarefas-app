@@ -561,24 +561,6 @@
             margin-bottom: 4px;
         }
         
-        .instrucoes-formatacao {
-            background-color: #f0f9ff;
-            border: 1px solid #bae6fd;
-            border-radius: 6px;
-            padding: 10px;
-            margin-top: 8px;
-            font-size: 0.8rem;
-        }
-        
-        .instrucoes-formatacao ul {
-            margin-left: 15px;
-            margin-top: 5px;
-        }
-        
-        .instrucoes-formatacao li {
-            margin-bottom: 3px;
-        }
-        
         .btn-formatacao {
             background-color: #f3f4f6;
             border: 1px solid #d1d5db;
@@ -612,7 +594,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 7.3 - Formatação Melhorada
+        Desenvolvido por Geovane Modena | Versão 7.3
     </footer>
 </div>
 
@@ -803,9 +785,17 @@ function adicionarFormatacao(parteId, tipo) {
     let novoFim = fim;
     
     switch(tipo) {
-        case 'quebra':
-            textoFormatado = '\n\n';
-            novoFim = inicio + 2;
+        case 'urls':
+            // Transforma URLs em links clicáveis
+            if (textoSelecionado) {
+                // Se há texto selecionado, verificar se é uma URL
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                textoFormatado = textoSelecionado.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
+            } else {
+                // Se não há texto selecionado, inserir exemplo de URL
+                textoFormatado = 'https://exemplo.com';
+                novoFim = inicio + 19;
+            }
             break;
         case 'lista':
             if (textoSelecionado) {
@@ -841,17 +831,10 @@ function adicionarFormatacao(parteId, tipo) {
 
 function criarBotoesFormatacao(parteId) {
     return `
-        <div class="instrucoes-formatacao">
-            <strong>Dicas de formatação:</strong>
-            <ul>
-                <li>Use "Enter" para criar parágrafos e quebras de linha</li>
-                <li>Use os botões abaixo para adicionar listas</li>
-            </ul>
-            <div class="mt-2">
-                <button type="button" class="btn-formatacao" onclick="adicionarFormatacao('${parteId}', 'quebra')">Quebra de Linha</button>
-                <button type="button" class="btn-formatacao" onclick="adicionarFormatacao('${parteId}', 'lista')">Lista com Marcadores</button>
-                <button type="button" class="btn-formatacao" onclick="adicionarFormatacao('${parteId}', 'numerada')">Lista Numerada</button>
-            </div>
+        <div class="mt-2">
+            <button type="button" class="btn-formatacao" onclick="adicionarFormatacao('${parteId}', 'urls')">Transformar URLs em Links</button>
+            <button type="button" class="btn-formatacao" onclick="adicionarFormatacao('${parteId}', 'lista')">Lista com Marcadores</button>
+            <button type="button" class="btn-formatacao" onclick="adicionarFormatacao('${parteId}', 'numerada')">Lista Numerada</button>
         </div>
     `;
 }
@@ -1633,22 +1616,22 @@ async function mostrarPainelProfessor() {
                     <div>
                         <label for="parte1" class="block text-sm font-medium text-gray-700 mb-2">Parte 1 (até 23h59 do dia) <span class="retencao-aviso retencao-50">50% retenção</span></label>
                         ${criarBotoesFormatacao('parte1')}
-                        <textarea id="parte1" placeholder="Descreva a parte 1 da tarefa. Use Enter para criar parágrafos e os botões acima para listas." rows="5" required></textarea>
+                        <textarea id="parte1" placeholder="Descreva a parte 1 da tarefa. Use Enter para criar parágrafos." rows="5" required></textarea>
                     </div>
                     <div>
                         <label for="parte2" class="block text-sm font-medium text-gray-700 mb-2">Parte 2 (7º-8º dia) <span class="retencao-aviso retencao-25">25% retenção</span></label>
                         ${criarBotoesFormatacao('parte2')}
-                        <textarea id="parte2" placeholder="Descreva a parte 2 da tarefa. Use Enter para criar parágrafos e os botões acima para listas." rows="5" required></textarea>
+                        <textarea id="parte2" placeholder="Descreva a parte 2 da tarefa. Use Enter para criar parágrafos." rows="5" required></textarea>
                     </div>
                     <div>
                         <label for="parte3" class="block text-sm font-medium text-gray-700 mb-2">Parte 3 (14º-15º dia) <span class="retencao-aviso retencao-15">15% retenção</span></label>
                         ${criarBotoesFormatacao('parte3')}
-                        <textarea id="parte3" placeholder="Descreva a parte 3 da tarefa. Use Enter para criar parágrafos e os botões acima para listas." rows="5" required></textarea>
+                        <textarea id="parte3" placeholder="Descreva a parte 3 da tarefa. Use Enter para criar parágrafos." rows="5" required></textarea>
                     </div>
                     <div>
                         <label for="parte4" class="block text-sm font-medium text-gray-700 mb-2">Parte 4 (28º-30º dia) <span class="retencao-aviso retencao-10">9.99% retenção</span></label>
                         ${criarBotoesFormatacao('parte4')}
-                        <textarea id="parte4" placeholder="Descreva a parte 4 da tarefa. Use Enter para criar parágrafos e os botões acima para listas." rows="5" required></textarea>
+                        <textarea id="parte4" placeholder="Descreva a parte 4 da tarefa. Use Enter para criar parágrafos." rows="5" required></textarea>
                     </div>
                 </div>
                 
