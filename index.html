@@ -633,7 +633,7 @@ let tarefaParaExcluir = null;
 let contadoresAtivos = [];
 let tarefaEditando = null;
 
-// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 7.2 ---
+// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 7.3 ATUALIZADO ---
 const frontendCache = {
     get: (key) => {
         try {
@@ -1043,7 +1043,7 @@ function isElementInViewport(el) {
     );
 }
 
-// --- API REQUEST COM JSONP E CACHE ---
+// --- API REQUEST COM JSONP E CACHE - VERSÃO 7.3 ATUALIZADO ---
 function apiRequestJSONP(url, callback) {
     const callbackName = 'jsonp_callback_' + jsonpCallbackId++;
     
@@ -1064,14 +1064,17 @@ function apiRequestJSONP(url, callback) {
     document.body.appendChild(script);
 }
 
-// --- API COM CACHE - VERSÃO 7.2 ---
-async function apiGet(func, params = {}) {
+// --- API COM CACHE - VERSÃO 7.3 ATUALIZADO ---
+async function apiGet(func, params = {}, forceRefresh = false) {
     const cacheKey = `api_${func}_${JSON.stringify(params)}`;
     
-    const cached = frontendCache.get(cacheKey);
-    if (cached) {
-        console.log(`📦 Retornando do cache: ${func}`);
-        return cached;
+    // Se não for forçado a atualizar, verifica o cache
+    if (!forceRefresh) {
+        const cached = frontendCache.get(cacheKey);
+        if (cached) {
+            console.log(`📦 Retornando do cache: ${func}`);
+            return cached;
+        }
     }
     
     return new Promise((resolve, reject) => {
@@ -1085,6 +1088,11 @@ async function apiGet(func, params = {}) {
             if (params[key] !== undefined && params[key] !== null) {
                 url += `&${key}=${encodeURIComponent(params[key])}`;
             }
+        }
+        
+        // Adiciona timestamp para evitar cache do navegador quando forçado
+        if (forceRefresh) {
+            url += `&_=${Date.now()}`;
         }
         
         apiRequestJSONP(url, (error, data) => {
@@ -1249,7 +1257,7 @@ function logout() {
     renderLogin(); 
 }
 
-// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 7.3 ---
+// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 7.3 CORRIGIDO ---
 async function mostrarRelatorioProfessor() {
     const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
     
@@ -1284,10 +1292,19 @@ async function mostrarRelatorioProfessor() {
     contentArea.innerHTML = relatorioHTML;
 }
 
-// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 7.3 ---
+// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 7.3 CORRIGIDO ---
 async function carregarRelatorioTurmaOtimizado(turmaSelecionada) {
-    // VERSÃO 7.3: SEMPRE invalidar o cache para forçar atualização
+    // VERSÃO 7.3 CORREÇÃO: SEMPRE invalidar o cache para forçar atualização
     frontendCache.remove(`relatorio_${turmaSelecionada}`);
+    
+    // VERSÃO 7.3 CORREÇÃO: Invalidar também o cache das entregas dos alunos
+    const usersResponse = await apiGet('getUsers', {}, true); // forceRefresh = true
+    const alunosTurma = usersResponse.data.filter(user => user.Turma === turmaSelecionada && user.Perfil === 'Aluno');
+    
+    // Invalidar cache de entregas de cada aluno
+    alunosTurma.forEach(aluno => {
+        frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: aluno.RM})}`);
+    });
     
     document.getElementById('relatorio-turma-container').innerHTML = `
         <div class="text-center py-8">
@@ -1307,18 +1324,18 @@ async function carregarRelatorioTurmaOtimizado(turmaSelecionada) {
         progressBar.style.width = '10%';
         progressText.textContent = 'Carregando informações da turma...';
         
-        const [usersResponse, tarefasResponse] = await Promise.all([
-            apiGet('getUsers'),
-            apiGet('getTarefasPorTurma', { turma: turmaSelecionada })
+        const [usersResponseFinal, tarefasResponse] = await Promise.all([
+            apiGet('getUsers', {}, true), // forceRefresh = true
+            apiGet('getTarefasPorTurma', { turma: turmaSelecionada }, true) // forceRefresh = true
         ]);
         
-        const alunosTurma = usersResponse.data.filter(user => user.Turma === turmaSelecionada && user.Perfil === 'Aluno');
+        const alunosTurmaFinal = usersResponseFinal.data.filter(user => user.Turma === turmaSelecionada && user.Perfil === 'Aluno');
         const tarefasTurma = tarefasResponse.data || [];
         
         progressBar.style.width = '30%';
-        progressText.textContent = `Turma carregada: ${alunosTurma.length} alunos, ${tarefasTurma.length} tarefas`;
+        progressText.textContent = `Turma carregada: ${alunosTurmaFinal.length} alunos, ${tarefasTurma.length} tarefas`;
         
-        if (alunosTurma.length === 0) {
+        if (alunosTurmaFinal.length === 0) {
             const html = `<p class="text-gray-500 text-center py-8">Nenhum aluno encontrado na turma ${turmaSelecionada}.</p>`;
             document.getElementById('relatorio-turma-container').innerHTML = html;
             frontendCache.set(`relatorio_${turmaSelecionada}`, html, 10 * 60 * 1000);
@@ -1335,13 +1352,16 @@ async function carregarRelatorioTurmaOtimizado(turmaSelecionada) {
         let relatorioTurmaHTML = `
             <div class="relatorio-header">
                 <h4 class="text-lg font-semibold text-red-700">Relatório da Turma ${turmaSelecionada}</h4>
+                <button onclick="carregarRelatorioTurmaOtimizado('${turmaSelecionada}')" class="btn-primary btn-small">
+                    Atualizar Dados
+                </button>
             </div>
             <div class="relatorio-status" id="carregamento-status">
                 <div class="spinner"></div>
                 Carregando notas dos alunos...
             </div>
             <div class="relatorio-info">
-                Total de alunos: ${alunosTurma.length} | Total de tarefas: ${tarefasTurma.length}
+                Total de alunos: ${alunosTurmaFinal.length} | Total de tarefas: ${tarefasTurma.length} | Última atualização: ${new Date().toLocaleTimeString()}
             </div>
             <div class="overflow-x-auto border rounded-lg mt-4">
                 <table class="min-w-full compact-table table-header-white">
@@ -1361,7 +1381,7 @@ async function carregarRelatorioTurmaOtimizado(turmaSelecionada) {
                     <tbody id="relatorio-tbody">
         `;
         
-        alunosTurma.forEach((aluno, index) => {
+        alunosTurmaFinal.forEach((aluno, index) => {
             relatorioTurmaHTML += `
                 <tr class="aluno-loading">
                     <td class="px-4 py-3 font-medium text-gray-900 border-b">${aluno.NomeCompleto}</td>
@@ -1391,10 +1411,10 @@ async function carregarRelatorioTurmaOtimizado(turmaSelecionada) {
         const processarLoteAlunos = async (inicio, fim) => {
             const lotes = [];
             
-            for (let i = inicio; i < fim && i < alunosTurma.length; i++) {
-                const aluno = alunosTurma[i];
+            for (let i = inicio; i < fim && i < alunosTurmaFinal.length; i++) {
+                const aluno = alunosTurmaFinal[i];
                 lotes.push(
-                    apiGet('getEntregasAluno', { rm: aluno.RM })
+                    apiGet('getEntregasAluno', { rm: aluno.RM }, true) // VERSÃO 7.3 CORREÇÃO: forceRefresh = true
                         .then(entregasResponse => {
                             const entregasAluno = entregasResponse.data || [];
                             return { aluno, entregas: entregasAluno, index: i };
@@ -1452,15 +1472,15 @@ async function carregarRelatorioTurmaOtimizado(turmaSelecionada) {
                     }
                     
                     alunosProcessados++;
-                    const progresso = 30 + (alunosProcessados / alunosTurma.length) * 60;
+                    const progresso = 30 + (alunosProcessados / alunosTurmaFinal.length) * 60;
                     progressBar.style.width = `${progresso}%`;
-                    carregamentoStatus.innerHTML = `<div class="spinner"></div> Carregando aluno ${alunosProcessados} de ${alunosTurma.length}...`;
+                    carregamentoStatus.innerHTML = `<div class="spinner"></div> Carregando aluno ${alunosProcessados} de ${alunosTurmaFinal.length}...`;
                 }
             }
         };
         
         const tamanhoLote = 3;
-        for (let i = 0; i < alunosTurma.length; i += tamanhoLote) {
+        for (let i = 0; i < alunosTurmaFinal.length; i += tamanhoLote) {
             await processarLoteAlunos(i, i + tamanhoLote);
             await new Promise(resolve => setTimeout(resolve, 100));
         }
@@ -2285,10 +2305,14 @@ const salvarLink = debounce(async function(idTarefa, parte) {
         
         showModal('Sucesso', `Link da parte ${parte} salvo com sucesso!`);
         
+        // VERSÃO 7.3 CORREÇÃO: Invalidar cache mais abrangente
         frontendCache.remove(`painel_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`tarefas_aluno_${usuarioLogado.RM}_dados`);
         frontendCache.remove(`relatorio_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: usuarioLogado.RM})}`);
+        
+        // VERSÃO 7.3 CORREÇÃO: Invalidar também o cache do relatório do professor
+        frontendCache.remove(`relatorio_${usuarioLogado.Turma}`);
         
         await carregarTarefasAluno();
     } catch (error) {
@@ -2306,10 +2330,14 @@ const excluirLink = debounce(async function(idTarefa, parte) {
         
         showModal('Sucesso', `Link da parte ${parte} excluído com sucesso!`);
         
+        // VERSÃO 7.3 CORREÇÃO: Invalidar cache mais abrangente
         frontendCache.remove(`painel_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`tarefas_aluno_${usuarioLogado.RM}_dados`);
         frontendCache.remove(`relatorio_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: usuarioLogado.RM})}`);
+        
+        // VERSÃO 7.3 CORREÇÃO: Invalidar também o cache do relatório do professor
+        frontendCache.remove(`relatorio_${usuarioLogado.Turma}`);
         
         await carregarTarefasAluno();
     } catch (error) {
