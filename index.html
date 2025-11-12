@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Tarefas Escolar</title>
+    <title>Gestão de Tarefas Escolar - Versão 7.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
     
@@ -543,6 +543,56 @@
             margin-top: 4px;
             font-style: italic;
         }
+        
+        /* VERSÃO 7.3 - NOVOS ESTILOS PARA FORMATAÇÃO DE TEXTO */
+        .conteudo-formatado {
+            white-space: pre-line;
+            line-height: 1.6;
+            margin-top: 8px;
+        }
+        
+        .conteudo-formatado ul, .conteudo-formatado ol {
+            margin-left: 20px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .conteudo-formatado li {
+            margin-bottom: 4px;
+        }
+        
+        .instrucoes-formatacao {
+            background-color: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 8px;
+            font-size: 0.8rem;
+        }
+        
+        .instrucoes-formatacao ul {
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+        
+        .instrucoes-formatacao li {
+            margin-bottom: 3px;
+        }
+        
+        .btn-formatacao {
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        
+        .btn-formatacao:hover {
+            background-color: #e5e7eb;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -562,7 +612,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 7.2
+        Desenvolvido por Geovane Modena | Versão 7.3 - Formatação Melhorada
     </footer>
 </div>
 
@@ -727,6 +777,84 @@ const formatarData = (dataISO) => {
     
     return data.toLocaleDateString('pt-BR');
 };
+
+// --- FUNÇÕES DE FORMATAÇÃO - VERSÃO 7.3 ---
+function formatarConteudoParaExibicao(texto) {
+    if (!texto) return '';
+    
+    // Usar white-space: pre-line para preservar quebras de linha
+    // E criar elementos HTML seguros
+    return texto
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function adicionarFormatacao(parteId, tipo) {
+    const textarea = document.getElementById(parteId);
+    const inicio = textarea.selectionStart;
+    const fim = textarea.selectionEnd;
+    const textoSelecionado = textarea.value.substring(inicio, fim);
+    
+    let textoFormatado = '';
+    let novoInicio = inicio;
+    let novoFim = fim;
+    
+    switch(tipo) {
+        case 'quebra':
+            textoFormatado = '\n\n';
+            novoFim = inicio + 2;
+            break;
+        case 'lista':
+            if (textoSelecionado) {
+                // Se há texto selecionado, transformar em lista
+                const linhas = textoSelecionado.split('\n');
+                textoFormatado = linhas.map(linha => linha.trim() ? `• ${linha}` : '').join('\n');
+            } else {
+                // Se não há texto selecionado, inserir marcador
+                textoFormatado = '• ';
+                novoFim = inicio + 2;
+            }
+            break;
+        case 'numerada':
+            if (textoSelecionado) {
+                // Se há texto selecionado, transformar em lista numerada
+                const linhas = textoSelecionado.split('\n');
+                textoFormatado = linhas.map((linha, index) => linha.trim() ? `${index + 1}. ${linha}` : '').join('\n');
+            } else {
+                // Se não há texto selecionado, inserir número
+                textoFormatado = '1. ';
+                novoFim = inicio + 3;
+            }
+            break;
+    }
+    
+    // Substituir o texto selecionado ou inserir no cursor
+    textarea.value = textarea.value.substring(0, inicio) + textoFormatado + textarea.value.substring(fim);
+    
+    // Reposicionar o cursor
+    textarea.focus();
+    textarea.setSelectionRange(novoInicio, novoFim);
+}
+
+function criarBotoesFormatacao(parteId) {
+    return `
+        <div class="instrucoes-formatacao">
+            <strong>Dicas de formatação:</strong>
+            <ul>
+                <li>Use "Enter" para criar parágrafos e quebras de linha</li>
+                <li>Use os botões abaixo para adicionar listas</li>
+            </ul>
+            <div class="mt-2">
+                <button type="button" class="btn-formatacao" onclick="adicionarFormatacao('${parteId}', 'quebra')">Quebra de Linha</button>
+                <button type="button" class="btn-formatacao" onclick="adicionarFormatacao('${parteId}', 'lista')">Lista com Marcadores</button>
+                <button type="button" class="btn-formatacao" onclick="adicionarFormatacao('${parteId}', 'numerada')">Lista Numerada</button>
+            </div>
+        </div>
+    `;
+}
 
 // --- FUNÇÕES DE LOADING ---
 function setButtonLoading(button, isLoading) {
@@ -1028,7 +1156,7 @@ async function init() {
     renderLogin();
 }
 
-// --- FUNÇões DE AUTENTICAÇÃO ---
+// --- FUNÇÕES DE AUTENTICAÇÃO ---
 const renderLogin = () => {
     contentArea.innerHTML = `
         <div id="login" class="max-w-md mx-auto p-6">
@@ -1138,7 +1266,7 @@ function logout() {
     renderLogin(); 
 }
 
-// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 7.2 ---
+// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 7.3 ---
 async function mostrarRelatorioProfessor() {
     const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
     
@@ -1173,17 +1301,10 @@ async function mostrarRelatorioProfessor() {
     contentArea.innerHTML = relatorioHTML;
 }
 
-// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 7.2 ---
-const carregarRelatorioTurmaOtimizado = debounce(async function(turmaSelecionada) {
-    const cacheKey = `relatorio_${turmaSelecionada}`;
-    const cached = frontendCache.get(cacheKey);
-    
-    if (cached) {
-        console.log(`✅ Relatório da turma ${turmaSelecionada} carregado do cache`);
-        document.getElementById('relatorio-turma-container').innerHTML = cached;
-        mostrarConclusaoRelatorio();
-        return;
-    }
+// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 7.3 ---
+async function carregarRelatorioTurmaOtimizado(turmaSelecionada) {
+    // VERSÃO 7.3: SEMPRE invalidar o cache para forçar atualização
+    frontendCache.remove(`relatorio_${turmaSelecionada}`);
     
     document.getElementById('relatorio-turma-container').innerHTML = `
         <div class="text-center py-8">
@@ -1217,14 +1338,14 @@ const carregarRelatorioTurmaOtimizado = debounce(async function(turmaSelecionada
         if (alunosTurma.length === 0) {
             const html = `<p class="text-gray-500 text-center py-8">Nenhum aluno encontrado na turma ${turmaSelecionada}.</p>`;
             document.getElementById('relatorio-turma-container').innerHTML = html;
-            frontendCache.set(cacheKey, html, 10 * 60 * 1000);
+            frontendCache.set(`relatorio_${turmaSelecionada}`, html, 10 * 60 * 1000);
             return;
         }
         
         if (tarefasTurma.length === 0) {
             const html = `<p class="text-gray-500 text-center py-8">Nenhuma tarefa encontrada para a turma ${turmaSelecionada}.</p>`;
             document.getElementById('relatorio-turma-container').innerHTML = html;
-            frontendCache.set(cacheKey, html, 10 * 60 * 1000);
+            frontendCache.set(`relatorio_${turmaSelecionada}`, html, 10 * 60 * 1000);
             return;
         }
         
@@ -1366,13 +1487,13 @@ const carregarRelatorioTurmaOtimizado = debounce(async function(turmaSelecionada
         carregamentoStatus.className = 'relatorio-status bg-green-50 text-green-700 border-l-green-500';
         
         const relatorioCompletoHTML = document.getElementById('relatorio-turma-container').innerHTML;
-        frontendCache.set(cacheKey, relatorioCompletoHTML, 10 * 60 * 1000);
+        frontendCache.set(`relatorio_${turmaSelecionada}`, relatorioCompletoHTML, 10 * 60 * 1000);
         
     } catch (error) {
         const errorHtml = `<p class="text-red-500 text-center py-4">Erro ao carregar relatório: ${error.message}</p>`;
         document.getElementById('relatorio-turma-container').innerHTML = errorHtml;
     }
-}, 300);
+}
 
 async function mostrarRelatorioAluno() {
     const cacheKey = `relatorio_aluno_${usuarioLogado.RM}`;
@@ -1473,7 +1594,7 @@ async function mostrarRelatorioAluno() {
     }
 }
 
-// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 7.2 ---
+// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 7.3 ---
 async function mostrarPainelProfessor() {
     const cacheKey = 'painel_professor';
     const cached = frontendCache.get(cacheKey);
@@ -1511,19 +1632,23 @@ async function mostrarPainelProfessor() {
                 <div class="mt-4 space-y-4">
                     <div>
                         <label for="parte1" class="block text-sm font-medium text-gray-700 mb-2">Parte 1 (até 23h59 do dia) <span class="retencao-aviso retencao-50">50% retenção</span></label>
-                        <textarea id="parte1" placeholder="Descreva a parte 1 da tarefa" rows="3" required></textarea>
+                        ${criarBotoesFormatacao('parte1')}
+                        <textarea id="parte1" placeholder="Descreva a parte 1 da tarefa. Use Enter para criar parágrafos e os botões acima para listas." rows="5" required></textarea>
                     </div>
                     <div>
                         <label for="parte2" class="block text-sm font-medium text-gray-700 mb-2">Parte 2 (7º-8º dia) <span class="retencao-aviso retencao-25">25% retenção</span></label>
-                        <textarea id="parte2" placeholder="Descreva a parte 2 da tarefa" rows="3" required></textarea>
+                        ${criarBotoesFormatacao('parte2')}
+                        <textarea id="parte2" placeholder="Descreva a parte 2 da tarefa. Use Enter para criar parágrafos e os botões acima para listas." rows="5" required></textarea>
                     </div>
                     <div>
                         <label for="parte3" class="block text-sm font-medium text-gray-700 mb-2">Parte 3 (14º-15º dia) <span class="retencao-aviso retencao-15">15% retenção</span></label>
-                        <textarea id="parte3" placeholder="Descreva a parte 3 da tarefa" rows="3" required></textarea>
+                        ${criarBotoesFormatacao('parte3')}
+                        <textarea id="parte3" placeholder="Descreva a parte 3 da tarefa. Use Enter para criar parágrafos e os botões acima para listas." rows="5" required></textarea>
                     </div>
                     <div>
                         <label for="parte4" class="block text-sm font-medium text-gray-700 mb-2">Parte 4 (28º-30º dia) <span class="retencao-aviso retencao-10">9.99% retenção</span></label>
-                        <textarea id="parte4" placeholder="Descreva a parte 4 da tarefa" rows="3" required></textarea>
+                        ${criarBotoesFormatacao('parte4')}
+                        <textarea id="parte4" placeholder="Descreva a parte 4 da tarefa. Use Enter para criar parágrafos e os botões acima para listas." rows="5" required></textarea>
                     </div>
                 </div>
                 
@@ -1633,15 +1758,23 @@ function renderizarTabelaTarefas() {
         const parte3 = tarefa.Parte3 || '';
         const parte4 = tarefa.Parte4 || '';
 
+        // VERSÃO 7.3: Formatar o conteúdo para exibição na tabela
+        const formatarParaTabela = (texto) => {
+            if (!texto) return '';
+            // Limitar a 100 caracteres e adicionar reticências se necessário
+            const textoLimitado = texto.length > 100 ? texto.substring(0, 100) + '...' : texto;
+            return formatarConteudoParaExibicao(textoLimitado);
+        };
+
         return `
         <tr>
             <td class="turma-column">${tarefa.Turma}</td>
             <td class="px-4 py-2">
                 <div class="font-semibold text-gray-800 mb-2">${tarefa.Tema}</div>
-                ${parte1 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 1:</span> ${parte1} <span class="retencao-aviso retencao-50">50% retenção</span></div>` : ''}
-                ${parte2 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 2:</span> ${parte2} <span class="retencao-aviso retencao-25">25% retenção</span></div>` : ''}
-                ${parte3 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 3:</span> ${parte3} <span class="retencao-aviso retencao-15">15% retenção</span></div>` : ''}
-                ${parte4 ? `<div class="text-sm text-gray-600"><span class="font-medium">Parte 4:</span> ${parte4} <span class="retencao-aviso retencao-10">9.99% retenção</span></div>` : ''}
+                ${parte1 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 1:</span> <span class="conteudo-formatado">${formatarParaTabela(parte1)}</span> <span class="retencao-aviso retencao-50">50% retenção</span></div>` : ''}
+                ${parte2 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 2:</span> <span class="conteudo-formatado">${formatarParaTabela(parte2)}</span> <span class="retencao-aviso retencao-25">25% retenção</span></div>` : ''}
+                ${parte3 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 3:</span> <span class="conteudo-formatado">${formatarParaTabela(parte3)}</span> <span class="retencao-aviso retencao-15">15% retenção</span></div>` : ''}
+                ${parte4 ? `<div class="text-sm text-gray-600"><span class="font-medium">Parte 4:</span> <span class="conteudo-formatado">${formatarParaTabela(parte4)}</span> <span class="retencao-aviso retencao-10">9.99% retenção</span></div>` : ''}
             </td>
             <td class="data-column">${formatarData(tarefa.DataAula)}</td>
             <td class="acoes-column">
@@ -1841,7 +1974,7 @@ function limparFormulario() {
     }
 }
 
-// --- PAINEL DO ALUNO COM CACHE - VERSÃO 7.2 ---
+// --- PAINEL DO ALUNO COM CACHE - VERSÃO 7.3 ---
 async function mostrarPainelAluno() {
     const cacheKey = `painel_aluno_${usuarioLogado.RM}`;
     const cached = frontendCache.get(cacheKey);
@@ -1872,7 +2005,7 @@ async function mostrarPainelAluno() {
                     <div class="text-center text-gray-500 py-8">Carregando tarefas...</div>
                 </div>
                 
-                <!-- FUNDAMENTO CIENTÍFICO ADICIONADO AQUI - VERSÃO 7.2: TÍTULO VISÍVEL -->
+                <!-- FUNDAMENTO CIENTÍFICO ADICIONADO AQUI - VERSÃO 7.3: TÍTULO VISÍVEL -->
                 <div class="fundamento-cientifico">
                     <div class="fundamento-title" onclick="toggleFundamentoCientifico()">
                         <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1919,7 +2052,7 @@ async function mostrarPainelAluno() {
     frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000);
 }
 
-// --- FUNÇÃO PARA EXPANDIR/RECOLHER FUNDAMENTO CIENTÍFICO - VERSÃO 7.2 ---
+// --- FUNÇÃO PARA EXPANDIR/RECOLHER FUNDAMENTO CIENTÍFICO - VERSÃO 7.3 ---
 function toggleFundamentoCientifico() {
     const conteudo = document.getElementById('conteudo-fundamento');
     const icon = document.querySelector('.expand-icon');
@@ -1933,7 +2066,7 @@ function toggleFundamentoCientifico() {
     }
 }
 
-// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 7.2 ---
+// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 7.3 ---
 async function carregarTarefasAluno() {
     const cacheKey = `tarefas_aluno_${usuarioLogado.RM}_dados`;
     const cached = frontendCache.get(cacheKey);
@@ -2078,7 +2211,7 @@ function renderTarefaItem(tarefa, entrega) {
     `;
 }
 
-// --- VERSÃO 7.2: FUNÇÃO ATUALIZADA COM MINUTOS E INFORMAÇÃO DE NOTA ---
+// --- VERSÃO 7.3: FUNÇÃO ATUALIZADA COM FORMATAÇÃO ---
 function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     const linkSalvo = entrega ? entrega[`Link${numeroParte}`] : '';
     const inputId = `link-${idTarefa}-${numeroParte}`;
@@ -2087,20 +2220,20 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     const disponivel = contador.liberada && !contador.expirado && !temLinkSalvo;
     const expirado = contador.expirado;
     
-    // VERSÃO 7.2: Adicionar avisos de retenção
+    // VERSÃO 7.3: Adicionar avisos de retenção
     let retencaoAviso = '';
     if (numeroParte === 1) retencaoAviso = '<span class="retencao-aviso retencao-50">50% retenção</span>';
     else if (numeroParte === 2) retencaoAviso = '<span class="retencao-aviso retencao-25">25% retenção</span>';
     else if (numeroParte === 3) retencaoAviso = '<span class="retencao-aviso retencao-15">15% retenção</span>';
     else if (numeroParte === 4) retencaoAviso = '<span class="retencao-aviso retencao-10">9.99% retenção</span>';
 
-    // VERSÃO 7.2: Informação sobre nota da parte 1
+    // VERSÃO 7.3: Informação sobre nota da parte 1
     let infoNota = '';
     if (numeroParte === 1) {
         infoNota = '<div class="info-nota">Nota: 2.5 até 18h | 2.0 até 23h59</div>';
     }
 
-    // VERSÃO 7.2: Mostrar conteúdo apenas quando liberado
+    // VERSÃO 7.3: Mostrar conteúdo apenas quando liberado
     if (!contador.liberada) {
         return `
         <div class="mt-3 p-3 bg-gray-50 rounded border parte-${numeroParte}">
@@ -2114,13 +2247,16 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
         </div>`;
     }
 
+    // VERSÃO 7.3: Exibir conteúdo formatado com quebras de linha
+    const conteudoFormatado = formatarConteudoParaExibicao(conteudo);
+
     return `
     <div class="mt-3 p-3 bg-gray-50 rounded border parte-${numeroParte}">
         <div class="flex justify-between items-center">
             <strong>Parte ${numeroParte}: ${retencaoAviso}</strong>
             <span class="contador ${contador.classe}">${contador.texto}</span>
         </div>
-        <p class="mt-1">${conteudo}</p>
+        <div class="conteudo-formatado">${conteudoFormatado}</div>
         ${infoNota}
         <div class="link-container">
             <input type="text" 
@@ -2144,7 +2280,7 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     </div>`;
 }
 
-// --- SALVAR LINK COM DEBOUNCE - VERSÃO 7.2 ---
+// --- SALVAR LINK COM DEBOUNCE - VERSÃO 7.3 ---
 const salvarLink = debounce(async function(idTarefa, parte) {
     const input = document.getElementById(`link-${idTarefa}-${parte}`);
     const link = input.value.trim();
@@ -2208,7 +2344,7 @@ window.mostrarPainelProfessor = mostrarPainelProfessor;
 window.mostrarPainelAluno = mostrarPainelAluno;
 window.mostrarRelatorioProfessor = mostrarRelatorioProfessor;
 window.mostrarRelatorioAluno = mostrarRelatorioAluno;
-window.carregarRelatorioTurma = carregarRelatorioTurmaOtimizado;
+window.carregarRelatorioTurmaOtimizado = carregarRelatorioTurmaOtimizado;
 window.salvarTarefa = salvarTarefa;
 window.atualizarTarefa = atualizarTarefa;
 window.excluirTarefa = excluirTarefa;
@@ -2219,6 +2355,7 @@ window.closeModal = closeModal;
 window.salvarLink = salvarLink;
 window.excluirLink = excluirLink;
 window.toggleFundamentoCientifico = toggleFundamentoCientifico;
+window.adicionarFormatacao = adicionarFormatacao;
 </script>
 </body>
 </html>
