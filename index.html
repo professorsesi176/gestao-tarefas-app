@@ -395,6 +395,45 @@
             margin-bottom: 15px;
             border-left: 4px solid #3b82f6;
         }
+        
+        /* VERSÃO 6.9 - NOVOS ESTILOS PARA RETENÇÃO E CONTEÚDO CONDICIONAL */
+        .retencao-aviso {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .retencao-50 {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .retencao-25 {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .retencao-15 {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .retencao-10 {
+            background-color: #e0e7ff;
+            color: #3730a3;
+        }
+        
+        .conteudo-bloqueado {
+            color: #6b7280;
+            font-style: italic;
+            padding: 8px;
+            background-color: #f9fafb;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -414,7 +453,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 6.8
+        Desenvolvido por Geovane Modena | Versão 6.9
     </footer>
 </div>
 
@@ -453,7 +492,7 @@ let tarefaParaExcluir = null;
 let contadoresAtivos = [];
 let tarefaEditando = null;
 
-// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 6.8 ---
+// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 6.9 ---
 const frontendCache = {
     get: (key) => {
         try {
@@ -509,7 +548,7 @@ const frontendCache = {
     }
 };
 
-// --- DEBOUNCE FUNCTION - VERSÃO 6.8 ---
+// --- DEBOUNCE FUNCTION - VERSÃO 6.9 ---
 function debounce(func, wait, immediate = false) {
     let timeout;
     return function executedFunction(...args) {
@@ -637,12 +676,12 @@ function mostrarConclusaoRelatorio() {
     }, 3000);
 }
 
-// --- FUNÇÕES DE TEMPO OTIMIZADAS - VERSÃO 6.8 ---
+// --- FUNÇÕES DE TEMPO OTIMIZADAS - VERSÃO 6.9 ---
 function calcularContadoresOtimizado(dataAula) {
     const agora = new Date();
     const dataAulaObj = new Date(dataAula);
     
-    // VERSÃO 6.8: Alteração dos prazos conforme solicitado
+    // VERSÃO 6.9: Alteração dos prazos conforme solicitado
     const calcularTempoRestante = (diasAdicionais, horasLimite = 19) => { // Parte 1 até 19h
         const liberacao = new Date(dataAulaObj);
         liberacao.setDate(liberacao.getDate() + diasAdicionais);
@@ -650,7 +689,7 @@ function calcularContadoresOtimizado(dataAula) {
         
         const limite = new Date(dataAulaObj);
         
-        // VERSÃO 6.8: Ajuste dos prazos conforme solicitado
+        // VERSÃO 6.9: Ajuste dos prazos conforme solicitado
         if (diasAdicionais === 0) {
             limite.setHours(horasLimite, 0, 0, 0); // Parte 1: até 19h do mesmo dia
         } else if (diasAdicionais === 7) { // Parte 2: 7º ao 8º dia
@@ -720,14 +759,14 @@ function calcularContadoresOtimizado(dataAula) {
     };
     
     return {
-        parte1: calcularTempoRestante(0, 19), // VERSÃO 6.8: Parte 1 até 19h
-        parte2: calcularTempoRestante(7), // VERSÃO 6.8: Parte 2 do 7º ao 8º dia
-        parte3: calcularTempoRestante(14), // VERSÃO 6.8: Parte 3 do 14º ao 15º dia
-        parte4: calcularTempoRestante(28) // VERSÃO 6.8: Parte 4 do 28º ao 30º dia
+        parte1: calcularTempoRestante(0, 19), // VERSÃO 6.9: Parte 1 até 19h
+        parte2: calcularTempoRestante(7), // VERSÃO 6.9: Parte 2 do 7º ao 8º dia
+        parte3: calcularTempoRestante(14), // VERSÃO 6.9: Parte 3 do 14º ao 15º dia
+        parte4: calcularTempoRestante(28) // VERSÃO 6.9: Parte 4 do 28º ao 30º dia
     };
 }
 
-// --- CONTADORES OTIMIZADOS - VERSÃO 6.8 ---
+// --- CONTADORES OTIMIZADOS - VERSÃO 6.9 ---
 function iniciarAtualizacaoContadoresOtimizada() {
     contadoresAtivos.forEach(interval => clearInterval(interval));
     contadoresAtivos = [];
@@ -799,7 +838,7 @@ function apiRequestJSONP(url, callback) {
     document.body.appendChild(script);
 }
 
-// --- API COM CACHE - VERSÃO 6.8 ---
+// --- API COM CACHE - VERSÃO 6.9 ---
 async function apiGet(func, params = {}) {
     const cacheKey = `api_${func}_${JSON.stringify(params)}`;
     
@@ -984,7 +1023,7 @@ function logout() {
     renderLogin(); 
 }
 
-// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 6.8 ---
+// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 6.9 ---
 async function mostrarRelatorioProfessor() {
     const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
     
@@ -1019,7 +1058,7 @@ async function mostrarRelatorioProfessor() {
     contentArea.innerHTML = relatorioHTML;
 }
 
-// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 6.8 ---
+// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 6.9 ---
 const carregarRelatorioTurmaOtimizado = debounce(async function(turmaSelecionada) {
     const cacheKey = `relatorio_${turmaSelecionada}`;
     const cached = frontendCache.get(cacheKey);
@@ -1074,7 +1113,7 @@ const carregarRelatorioTurmaOtimizado = debounce(async function(turmaSelecionada
             return;
         }
         
-        // VERSÃO 6.8: Reestruturação do layout do relatório
+        // VERSÃO 6.9: Reestruturação do layout do relatório
         let relatorioTurmaHTML = `
             <div class="relatorio-header">
                 <h4 class="text-lg font-semibold text-red-700">Relatório da Turma ${turmaSelecionada}</h4>
@@ -1320,7 +1359,7 @@ async function mostrarRelatorioAluno() {
     }
 }
 
-// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 6.8 ---
+// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 6.9 ---
 async function mostrarPainelProfessor() {
     const cacheKey = 'painel_professor';
     const cached = frontendCache.get(cacheKey);
@@ -1357,19 +1396,19 @@ async function mostrarPainelProfessor() {
                 
                 <div class="mt-4 space-y-4">
                     <div>
-                        <label for="parte1" class="block text-sm font-medium text-gray-700 mb-2">Parte 1 (até 19h do dia)</label>
+                        <label for="parte1" class="block text-sm font-medium text-gray-700 mb-2">Parte 1 (até 19h do dia) <span class="retencao-aviso retencao-50">50% retenção</span></label>
                         <textarea id="parte1" placeholder="Descreva a parte 1 da tarefa" rows="3" required></textarea>
                     </div>
                     <div>
-                        <label for="parte2" class="block text-sm font-medium text-gray-700 mb-2">Parte 2 (7º-8º dia)</label>
+                        <label for="parte2" class="block text-sm font-medium text-gray-700 mb-2">Parte 2 (7º-8º dia) <span class="retencao-aviso retencao-25">25% retenção</span></label>
                         <textarea id="parte2" placeholder="Descreva a parte 2 da tarefa" rows="3" required></textarea>
                     </div>
                     <div>
-                        <label for="parte3" class="block text-sm font-medium text-gray-700 mb-2">Parte 3 (14º-15º dia)</label>
+                        <label for="parte3" class="block text-sm font-medium text-gray-700 mb-2">Parte 3 (14º-15º dia) <span class="retencao-aviso retencao-15">15% retenção</span></label>
                         <textarea id="parte3" placeholder="Descreva a parte 3 da tarefa" rows="3" required></textarea>
                     </div>
                     <div>
-                        <label for="parte4" class="block text-sm font-medium text-gray-700 mb-2">Parte 4 (28º-30º dia)</label>
+                        <label for="parte4" class="block text-sm font-medium text-gray-700 mb-2">Parte 4 (28º-30º dia) <span class="retencao-aviso retencao-10">9.99% retenção</span></label>
                         <textarea id="parte4" placeholder="Descreva a parte 4 da tarefa" rows="3" required></textarea>
                     </div>
                 </div>
@@ -1485,10 +1524,10 @@ function renderizarTabelaTarefas() {
             <td class="turma-column">${tarefa.Turma}</td>
             <td class="px-4 py-2">
                 <div class="font-semibold text-gray-800 mb-2">${tarefa.Tema}</div>
-                ${parte1 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 1:</span> ${parte1}</div>` : ''}
-                ${parte2 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 2:</span> ${parte2}</div>` : ''}
-                ${parte3 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 3:</span> ${parte3}</div>` : ''}
-                ${parte4 ? `<div class="text-sm text-gray-600"><span class="font-medium">Parte 4:</span> ${parte4}</div>` : ''}
+                ${parte1 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 1:</span> ${parte1} <span class="retencao-aviso retencao-50">50% retenção</span></div>` : ''}
+                ${parte2 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 2:</span> ${parte2} <span class="retencao-aviso retencao-25">25% retenção</span></div>` : ''}
+                ${parte3 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 3:</span> ${parte3} <span class="retencao-aviso retencao-15">15% retenção</span></div>` : ''}
+                ${parte4 ? `<div class="text-sm text-gray-600"><span class="font-medium">Parte 4:</span> ${parte4} <span class="retencao-aviso retencao-10">9.99% retenção</span></div>` : ''}
             </td>
             <td class="data-column">${formatarData(tarefa.DataAula)}</td>
             <td class="acoes-column">
@@ -1527,7 +1566,7 @@ async function editarTarefa(idTarefa) {
     await mostrarPainelProfessor();
 }
 
-// --- SALVAR TAREFA COM DEBOUNCE - VERSÃO 6.8 ---
+// --- SALVAR TAREFA COM DEBOUNCE - VERSÃO 6.9 ---
 const salvarTarefa = debounce(async function() {
     const btnSalvar = document.getElementById('btnSalvarTarefa');
     
@@ -1688,7 +1727,7 @@ function limparFormulario() {
     }
 }
 
-// --- PAINEL DO ALUNO COM CACHE - VERSÃO 6.8 ---
+// --- PAINEL DO ALUNO COM CACHE - VERSÃO 6.9 ---
 async function mostrarPainelAluno() {
     const cacheKey = `painel_aluno_${usuarioLogado.RA}`;
     const cached = frontendCache.get(cacheKey);
@@ -1717,7 +1756,7 @@ async function mostrarPainelAluno() {
     frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000);
 }
 
-// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 6.8 ---
+// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 6.9 ---
 async function carregarTarefasAluno() {
     const cacheKey = `tarefas_aluno_${usuarioLogado.RA}_dados`;
     const cached = frontendCache.get(cacheKey);
@@ -1862,6 +1901,7 @@ function renderTarefaItem(tarefa, entrega) {
     `;
 }
 
+// --- VERSÃO 6.9: FUNÇÃO ATUALIZADA PARA MOSTRAR CONTEÚDO APENAS QUANDO LIBERADO ---
 function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     const linkSalvo = entrega ? entrega[`Link${numeroParte}`] : '';
     const inputId = `link-${idTarefa}-${numeroParte}`;
@@ -1869,11 +1909,32 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     
     const disponivel = contador.liberada && !contador.expirado && !temLinkSalvo;
     const expirado = contador.expirado;
+    
+    // VERSÃO 6.9: Adicionar avisos de retenção
+    let retencaoAviso = '';
+    if (numeroParte === 1) retencaoAviso = '<span class="retencao-aviso retencao-50">50% retenção</span>';
+    else if (numeroParte === 2) retencaoAviso = '<span class="retencao-aviso retencao-25">25% retenção</span>';
+    else if (numeroParte === 3) retencaoAviso = '<span class="retencao-aviso retencao-15">15% retenção</span>';
+    else if (numeroParte === 4) retencaoAviso = '<span class="retencao-aviso retencao-10">9.99% retenção</span>';
+
+    // VERSÃO 6.9: Mostrar conteúdo apenas quando liberado
+    if (!contador.liberada) {
+        return `
+        <div class="mt-3 p-3 bg-gray-50 rounded border parte-${numeroParte}">
+            <div class="flex justify-between items-center">
+                <strong>Parte ${numeroParte}: ${retencaoAviso}</strong>
+                <span class="contador ${contador.classe}">${contador.texto}</span>
+            </div>
+            <div class="conteudo-bloqueado">
+                Conteúdo será liberado em breve
+            </div>
+        </div>`;
+    }
 
     return `
     <div class="mt-3 p-3 bg-gray-50 rounded border parte-${numeroParte}">
         <div class="flex justify-between items-center">
-            <strong>Parte ${numeroParte}:</strong>
+            <strong>Parte ${numeroParte}: ${retencaoAviso}</strong>
             <span class="contador ${contador.classe}">${contador.texto}</span>
         </div>
         <p class="mt-1">${conteudo}</p>
@@ -1899,7 +1960,7 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     </div>`;
 }
 
-// --- SALVAR LINK COM DEBOUNCE - VERSÃO 6.8 ---
+// --- SALVAR LINK COM DEBOUNCE - VERSÃO 6.9 ---
 const salvarLink = debounce(async function(idTarefa, parte) {
     const input = document.getElementById(`link-${idTarefa}-${parte}`);
     const link = input.value.trim();
