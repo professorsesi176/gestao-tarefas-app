@@ -371,6 +371,30 @@
             50% { opacity: 1; }
             100% { opacity: 0.6; }
         }
+        
+        /* VERSÃO 6.8 - NOVOS ESTILOS PARA O RELATÓRIO */
+        .relatorio-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .relatorio-info {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        
+        .relatorio-status {
+            background-color: #f3f4f6;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3b82f6;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -390,7 +414,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 6.7
+        Desenvolvido por Geovane Modena | Versão 6.8
     </footer>
 </div>
 
@@ -429,7 +453,7 @@ let tarefaParaExcluir = null;
 let contadoresAtivos = [];
 let tarefaEditando = null;
 
-// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 6.7 ---
+// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 6.8 ---
 const frontendCache = {
     get: (key) => {
         try {
@@ -485,7 +509,7 @@ const frontendCache = {
     }
 };
 
-// --- DEBOUNCE FUNCTION - VERSÃO 6.7 ---
+// --- DEBOUNCE FUNCTION - VERSÃO 6.8 ---
 function debounce(func, wait, immediate = false) {
     let timeout;
     return function executedFunction(...args) {
@@ -613,21 +637,29 @@ function mostrarConclusaoRelatorio() {
     }, 3000);
 }
 
-// --- FUNÇÕES DE TEMPO OTIMIZADAS - VERSÃO 6.7 ---
+// --- FUNÇÕES DE TEMPO OTIMIZADAS - VERSÃO 6.8 ---
 function calcularContadoresOtimizado(dataAula) {
     const agora = new Date();
     const dataAulaObj = new Date(dataAula);
     
-    const calcularTempoRestante = (diasAdicionais, horasLimite = 18) => {
+    // VERSÃO 6.8: Alteração dos prazos conforme solicitado
+    const calcularTempoRestante = (diasAdicionais, horasLimite = 19) => { // Parte 1 até 19h
         const liberacao = new Date(dataAulaObj);
         liberacao.setDate(liberacao.getDate() + diasAdicionais);
         if (diasAdicionais === 0) liberacao.setHours(0, 0, 0, 0);
         
         const limite = new Date(dataAulaObj);
-        limite.setDate(limite.getDate() + (diasAdicionais === 0 ? 0 : 
-                         diasAdicionais === 3 ? 7 : 
-                         diasAdicionais === 7 ? 14 : 28));
-        if (diasAdicionais === 0) limite.setHours(horasLimite, 0, 0, 0);
+        
+        // VERSÃO 6.8: Ajuste dos prazos conforme solicitado
+        if (diasAdicionais === 0) {
+            limite.setHours(horasLimite, 0, 0, 0); // Parte 1: até 19h do mesmo dia
+        } else if (diasAdicionais === 7) { // Parte 2: 7º ao 8º dia
+            limite.setDate(limite.getDate() + 8);
+        } else if (diasAdicionais === 14) { // Parte 3: 14º ao 15º dia
+            limite.setDate(limite.getDate() + 15);
+        } else if (diasAdicionais === 28) { // Parte 4: 28º ao 30º dia
+            limite.setDate(limite.getDate() + 30);
+        }
         
         const diffLiberacao = liberacao - agora;
         const diffLimite = limite - agora;
@@ -688,14 +720,14 @@ function calcularContadoresOtimizado(dataAula) {
     };
     
     return {
-        parte1: calcularTempoRestante(0, 18),
-        parte2: calcularTempoRestante(3),
-        parte3: calcularTempoRestante(7),
-        parte4: calcularTempoRestante(14)
+        parte1: calcularTempoRestante(0, 19), // VERSÃO 6.8: Parte 1 até 19h
+        parte2: calcularTempoRestante(7), // VERSÃO 6.8: Parte 2 do 7º ao 8º dia
+        parte3: calcularTempoRestante(14), // VERSÃO 6.8: Parte 3 do 14º ao 15º dia
+        parte4: calcularTempoRestante(28) // VERSÃO 6.8: Parte 4 do 28º ao 30º dia
     };
 }
 
-// --- CONTADORES OTIMIZADOS - VERSÃO 6.7 ---
+// --- CONTADORES OTIMIZADOS - VERSÃO 6.8 ---
 function iniciarAtualizacaoContadoresOtimizada() {
     contadoresAtivos.forEach(interval => clearInterval(interval));
     contadoresAtivos = [];
@@ -767,7 +799,7 @@ function apiRequestJSONP(url, callback) {
     document.body.appendChild(script);
 }
 
-// --- API COM CACHE - VERSÃO 6.7 ---
+// --- API COM CACHE - VERSÃO 6.8 ---
 async function apiGet(func, params = {}) {
     const cacheKey = `api_${func}_${JSON.stringify(params)}`;
     
@@ -952,7 +984,7 @@ function logout() {
     renderLogin(); 
 }
 
-// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 6.7 ---
+// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 6.8 ---
 async function mostrarRelatorioProfessor() {
     const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
     
@@ -987,7 +1019,7 @@ async function mostrarRelatorioProfessor() {
     contentArea.innerHTML = relatorioHTML;
 }
 
-// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 6.7 ---
+// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 6.8 ---
 const carregarRelatorioTurmaOtimizado = debounce(async function(turmaSelecionada) {
     const cacheKey = `relatorio_${turmaSelecionada}`;
     const cached = frontendCache.get(cacheKey);
@@ -1042,9 +1074,19 @@ const carregarRelatorioTurmaOtimizado = debounce(async function(turmaSelecionada
             return;
         }
         
+        // VERSÃO 6.8: Reestruturação do layout do relatório
         let relatorioTurmaHTML = `
-            <h4 class="text-lg font-semibold mb-3 text-red-700">Relatório da Turma ${turmaSelecionada}</h4>
-            <div class="overflow-x-auto border rounded-lg">
+            <div class="relatorio-header">
+                <h4 class="text-lg font-semibold text-red-700">Relatório da Turma ${turmaSelecionada}</h4>
+            </div>
+            <div class="relatorio-status" id="carregamento-status">
+                <div class="spinner"></div>
+                Carregando notas dos alunos...
+            </div>
+            <div class="relatorio-info">
+                Total de alunos: ${alunosTurma.length} | Total de tarefas: ${tarefasTurma.length}
+            </div>
+            <div class="overflow-x-auto border rounded-lg mt-4">
                 <table class="min-w-full compact-table table-header-white">
                     <thead>
                         <tr>
@@ -1079,10 +1121,6 @@ const carregarRelatorioTurmaOtimizado = debounce(async function(turmaSelecionada
         relatorioTurmaHTML += `
                     </tbody>
                 </table>
-            </div>
-            <div class="mt-4 text-sm text-gray-600">
-                <p>Total de alunos: ${alunosTurma.length} | Total de tarefas: ${tarefasTurma.length}</p>
-                <p class="mt-2 text-blue-600" id="carregamento-status">Carregando notas dos alunos...</p>
             </div>
         `;
         
@@ -1159,7 +1197,7 @@ const carregarRelatorioTurmaOtimizado = debounce(async function(turmaSelecionada
                     alunosProcessados++;
                     const progresso = 30 + (alunosProcessados / alunosTurma.length) * 60;
                     progressBar.style.width = `${progresso}%`;
-                    carregamentoStatus.textContent = `Carregando aluno ${alunosProcessados} de ${alunosTurma.length}...`;
+                    carregamentoStatus.innerHTML = `<div class="spinner"></div> Carregando aluno ${alunosProcessados} de ${alunosTurma.length}...`;
                 }
             }
         };
@@ -1171,8 +1209,8 @@ const carregarRelatorioTurmaOtimizado = debounce(async function(turmaSelecionada
         }
         
         progressBar.style.width = '100%';
-        carregamentoStatus.textContent = 'Relatório completo!';
-        carregamentoStatus.className = 'mt-2 text-green-600';
+        carregamentoStatus.innerHTML = 'Relatório completo!';
+        carregamentoStatus.className = 'relatorio-status bg-green-50 text-green-700 border-l-green-500';
         
         const relatorioCompletoHTML = document.getElementById('relatorio-turma-container').innerHTML;
         frontendCache.set(cacheKey, relatorioCompletoHTML, 10 * 60 * 1000);
@@ -1282,7 +1320,7 @@ async function mostrarRelatorioAluno() {
     }
 }
 
-// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 6.7 ---
+// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 6.8 ---
 async function mostrarPainelProfessor() {
     const cacheKey = 'painel_professor';
     const cached = frontendCache.get(cacheKey);
@@ -1319,19 +1357,19 @@ async function mostrarPainelProfessor() {
                 
                 <div class="mt-4 space-y-4">
                     <div>
-                        <label for="parte1" class="block text-sm font-medium text-gray-700 mb-2">Parte 1 (até 18h do dia)</label>
+                        <label for="parte1" class="block text-sm font-medium text-gray-700 mb-2">Parte 1 (até 19h do dia)</label>
                         <textarea id="parte1" placeholder="Descreva a parte 1 da tarefa" rows="3" required></textarea>
                     </div>
                     <div>
-                        <label for="parte2" class="block text-sm font-medium text-gray-700 mb-2">Parte 2 (3º-7º dia)</label>
+                        <label for="parte2" class="block text-sm font-medium text-gray-700 mb-2">Parte 2 (7º-8º dia)</label>
                         <textarea id="parte2" placeholder="Descreva a parte 2 da tarefa" rows="3" required></textarea>
                     </div>
                     <div>
-                        <label for="parte3" class="block text-sm font-medium text-gray-700 mb-2">Parte 3 (8º-14º dia)</label>
+                        <label for="parte3" class="block text-sm font-medium text-gray-700 mb-2">Parte 3 (14º-15º dia)</label>
                         <textarea id="parte3" placeholder="Descreva a parte 3 da tarefa" rows="3" required></textarea>
                     </div>
                     <div>
-                        <label for="parte4" class="block text-sm font-medium text-gray-700 mb-2">Parte 4 (15º-28º dia)</label>
+                        <label for="parte4" class="block text-sm font-medium text-gray-700 mb-2">Parte 4 (28º-30º dia)</label>
                         <textarea id="parte4" placeholder="Descreva a parte 4 da tarefa" rows="3" required></textarea>
                     </div>
                 </div>
@@ -1489,7 +1527,7 @@ async function editarTarefa(idTarefa) {
     await mostrarPainelProfessor();
 }
 
-// --- SALVAR TAREFA COM DEBOUNCE - VERSÃO 6.7 ---
+// --- SALVAR TAREFA COM DEBOUNCE - VERSÃO 6.8 ---
 const salvarTarefa = debounce(async function() {
     const btnSalvar = document.getElementById('btnSalvarTarefa');
     
@@ -1650,7 +1688,7 @@ function limparFormulario() {
     }
 }
 
-// --- PAINEL DO ALUNO COM CACHE - VERSÃO 6.7 ---
+// --- PAINEL DO ALUNO COM CACHE - VERSÃO 6.8 ---
 async function mostrarPainelAluno() {
     const cacheKey = `painel_aluno_${usuarioLogado.RA}`;
     const cached = frontendCache.get(cacheKey);
@@ -1679,7 +1717,7 @@ async function mostrarPainelAluno() {
     frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000);
 }
 
-// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 6.7 ---
+// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 6.8 ---
 async function carregarTarefasAluno() {
     const cacheKey = `tarefas_aluno_${usuarioLogado.RA}_dados`;
     const cached = frontendCache.get(cacheKey);
@@ -1861,7 +1899,7 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     </div>`;
 }
 
-// --- SALVAR LINK COM DEBOUNCE - VERSÃO 6.7 ---
+// --- SALVAR LINK COM DEBOUNCE - VERSÃO 6.8 ---
 const salvarLink = debounce(async function(idTarefa, parte) {
     const input = document.getElementById(`link-${idTarefa}-${parte}`);
     const link = input.value.trim();
