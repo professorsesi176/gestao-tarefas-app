@@ -453,7 +453,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 6.9
+        Desenvolvido por Geovane Modena | Versão 7.0
     </footer>
 </div>
 
@@ -492,7 +492,7 @@ let tarefaParaExcluir = null;
 let contadoresAtivos = [];
 let tarefaEditando = null;
 
-// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 6.9 ---
+// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 7.0 ---
 const frontendCache = {
     get: (key) => {
         try {
@@ -548,7 +548,7 @@ const frontendCache = {
     }
 };
 
-// --- DEBOUNCE FUNCTION - VERSÃO 6.9 ---
+// --- DEBOUNCE FUNCTION - VERSÃO 7.0 ---
 function debounce(func, wait, immediate = false) {
     let timeout;
     return function executedFunction(...args) {
@@ -676,22 +676,22 @@ function mostrarConclusaoRelatorio() {
     }, 3000);
 }
 
-// --- FUNÇÕES DE TEMPO OTIMIZADAS - VERSÃO 6.9 ---
+// --- FUNÇÕES DE TEMPO OTIMIZADAS - VERSÃO 7.0 ---
 function calcularContadoresOtimizado(dataAula) {
     const agora = new Date();
     const dataAulaObj = new Date(dataAula);
     
-    // VERSÃO 6.9: Alteração dos prazos conforme solicitado
-    const calcularTempoRestante = (diasAdicionais, horasLimite = 19) => { // Parte 1 até 19h
+    // VERSÃO 7.0: Alteração dos prazos conforme solicitado
+    const calcularTempoRestante = (diasAdicionais, horasLimite = 23, minutosLimite = 59) => { // Parte 1 até 23h59
         const liberacao = new Date(dataAulaObj);
         liberacao.setDate(liberacao.getDate() + diasAdicionais);
         if (diasAdicionais === 0) liberacao.setHours(0, 0, 0, 0);
         
         const limite = new Date(dataAulaObj);
         
-        // VERSÃO 6.9: Ajuste dos prazos conforme solicitado
+        // VERSÃO 7.0: Ajuste dos prazos conforme solicitado
         if (diasAdicionais === 0) {
-            limite.setHours(horasLimite, 0, 0, 0); // Parte 1: até 19h do mesmo dia
+            limite.setHours(horasLimite, minutosLimite, 0, 0); // Parte 1: até 23h59 do mesmo dia
         } else if (diasAdicionais === 7) { // Parte 2: 7º ao 8º dia
             limite.setDate(limite.getDate() + 8);
         } else if (diasAdicionais === 14) { // Parte 3: 14º ao 15º dia
@@ -759,14 +759,14 @@ function calcularContadoresOtimizado(dataAula) {
     };
     
     return {
-        parte1: calcularTempoRestante(0, 19), // VERSÃO 6.9: Parte 1 até 19h
-        parte2: calcularTempoRestante(7), // VERSÃO 6.9: Parte 2 do 7º ao 8º dia
-        parte3: calcularTempoRestante(14), // VERSÃO 6.9: Parte 3 do 14º ao 15º dia
-        parte4: calcularTempoRestante(28) // VERSÃO 6.9: Parte 4 do 28º ao 30º dia
+        parte1: calcularTempoRestante(0, 23, 59), // VERSÃO 7.0: Parte 1 até 23h59
+        parte2: calcularTempoRestante(7), // VERSÃO 7.0: Parte 2 do 7º ao 8º dia
+        parte3: calcularTempoRestante(14), // VERSÃO 7.0: Parte 3 do 14º ao 15º dia
+        parte4: calcularTempoRestante(28) // VERSÃO 7.0: Parte 4 do 28º ao 30º dia
     };
 }
 
-// --- CONTADORES OTIMIZADOS - VERSÃO 6.9 ---
+// --- CONTADORES OTIMIZADOS - VERSÃO 7.0 ---
 function iniciarAtualizacaoContadoresOtimizada() {
     contadoresAtivos.forEach(interval => clearInterval(interval));
     contadoresAtivos = [];
@@ -838,7 +838,7 @@ function apiRequestJSONP(url, callback) {
     document.body.appendChild(script);
 }
 
-// --- API COM CACHE - VERSÃO 6.9 ---
+// --- API COM CACHE - VERSÃO 7.0 ---
 async function apiGet(func, params = {}) {
     const cacheKey = `api_${func}_${JSON.stringify(params)}`;
     
@@ -918,7 +918,7 @@ const renderLogin = () => {
     contentArea.innerHTML = `
         <div id="login" class="max-w-md mx-auto p-6">
             <h2 class="text-2xl font-bold text-center text-red-700 mb-6">Login</h2>
-            <div id="loginErro" class="text-red-500 mb-4 hidden text-center font-semibold">Usuário ou RA incorretos!</div>
+            <div id="loginErro" class="text-red-500 mb-4 hidden text-center font-semibold">Usuário ou RM incorretos!</div>
 
             <form id="login-form" class="space-y-4">
                 <div>
@@ -926,8 +926,8 @@ const renderLogin = () => {
                     <input type="email" id="email" name="email" required placeholder="seu.email@escola.com" class="w-full">
                 </div>
                 <div>
-                    <label for="ra" class="block text-sm font-medium text-gray-700 mb-2">RA</label>
-                    <input type="text" id="ra" name="ra" required placeholder="Digite seu RA" class="w-full">
+                    <label for="rm" class="block text-sm font-medium text-gray-700 mb-2">RM</label>
+                    <input type="text" id="rm" name="rm" required placeholder="Digite seu RM" class="w-full">
                 </div>
                 <button type="submit" class="btn-primary" id="login-button">
                     <span id="login-text">Entrar</span>
@@ -945,7 +945,7 @@ const renderLogin = () => {
 async function login(event) {
     event.preventDefault(); 
     const email = document.getElementById('email').value.trim();
-    const ra = document.getElementById('ra').value.trim();
+    const rm = document.getElementById('rm').value.trim();
     
     const loginErro = document.getElementById('loginErro'); 
     const loginButton = document.getElementById('login-button');
@@ -958,11 +958,11 @@ async function login(event) {
     
     const user = usuarios.find(u => {
         const userEmail = u.Email.toLowerCase().trim();
-        const userRA = String(u.RA).trim();
+        const userRM = String(u.RA).trim(); // VERSÃO 7.0: Mantemos RA no backend mas exibimos RM no frontend
         const inputEmail = email.toLowerCase().trim();
-        const inputRA = ra.trim();
+        const inputRM = rm.trim();
         
-        return userEmail === inputEmail && userRA === inputRA;
+        return userEmail === inputEmail && userRM === inputRM;
     });
     
     if (!user) {
@@ -1023,7 +1023,7 @@ function logout() {
     renderLogin(); 
 }
 
-// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 6.9 ---
+// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 7.0 ---
 async function mostrarRelatorioProfessor() {
     const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
     
@@ -1058,7 +1058,7 @@ async function mostrarRelatorioProfessor() {
     contentArea.innerHTML = relatorioHTML;
 }
 
-// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 6.9 ---
+// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 7.0 ---
 const carregarRelatorioTurmaOtimizado = debounce(async function(turmaSelecionada) {
     const cacheKey = `relatorio_${turmaSelecionada}`;
     const cached = frontendCache.get(cacheKey);
@@ -1113,7 +1113,7 @@ const carregarRelatorioTurmaOtimizado = debounce(async function(turmaSelecionada
             return;
         }
         
-        // VERSÃO 6.9: Reestruturação do layout do relatório
+        // VERSÃO 7.0: Reestruturação do layout do relatório
         let relatorioTurmaHTML = `
             <div class="relatorio-header">
                 <h4 class="text-lg font-semibold text-red-700">Relatório da Turma ${turmaSelecionada}</h4>
@@ -1359,7 +1359,7 @@ async function mostrarRelatorioAluno() {
     }
 }
 
-// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 6.9 ---
+// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 7.0 ---
 async function mostrarPainelProfessor() {
     const cacheKey = 'painel_professor';
     const cached = frontendCache.get(cacheKey);
@@ -1396,7 +1396,7 @@ async function mostrarPainelProfessor() {
                 
                 <div class="mt-4 space-y-4">
                     <div>
-                        <label for="parte1" class="block text-sm font-medium text-gray-700 mb-2">Parte 1 (até 19h do dia) <span class="retencao-aviso retencao-50">50% retenção</span></label>
+                        <label for="parte1" class="block text-sm font-medium text-gray-700 mb-2">Parte 1 (até 23h59 do dia) <span class="retencao-aviso retencao-50">50% retenção</span></label>
                         <textarea id="parte1" placeholder="Descreva a parte 1 da tarefa" rows="3" required></textarea>
                     </div>
                     <div>
@@ -1566,7 +1566,7 @@ async function editarTarefa(idTarefa) {
     await mostrarPainelProfessor();
 }
 
-// --- SALVAR TAREFA COM DEBOUNCE - VERSÃO 6.9 ---
+// --- SALVAR TAREFA COM DEBOUNCE - VERSÃO 7.0 ---
 const salvarTarefa = debounce(async function() {
     const btnSalvar = document.getElementById('btnSalvarTarefa');
     
@@ -1727,7 +1727,7 @@ function limparFormulario() {
     }
 }
 
-// --- PAINEL DO ALUNO COM CACHE - VERSÃO 6.9 ---
+// --- PAINEL DO ALUNO COM CACHE - VERSÃO 7.0 ---
 async function mostrarPainelAluno() {
     const cacheKey = `painel_aluno_${usuarioLogado.RA}`;
     const cached = frontendCache.get(cacheKey);
@@ -1756,7 +1756,7 @@ async function mostrarPainelAluno() {
     frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000);
 }
 
-// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 6.9 ---
+// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 7.0 ---
 async function carregarTarefasAluno() {
     const cacheKey = `tarefas_aluno_${usuarioLogado.RA}_dados`;
     const cached = frontendCache.get(cacheKey);
@@ -1901,7 +1901,7 @@ function renderTarefaItem(tarefa, entrega) {
     `;
 }
 
-// --- VERSÃO 6.9: FUNÇÃO ATUALIZADA PARA MOSTRAR CONTEÚDO APENAS QUANDO LIBERADO ---
+// --- VERSÃO 7.0: FUNÇÃO ATUALIZADA PARA MOSTRAR CONTEÚDO APENAS QUANDO LIBERADO ---
 function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     const linkSalvo = entrega ? entrega[`Link${numeroParte}`] : '';
     const inputId = `link-${idTarefa}-${numeroParte}`;
@@ -1910,14 +1910,14 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     const disponivel = contador.liberada && !contador.expirado && !temLinkSalvo;
     const expirado = contador.expirado;
     
-    // VERSÃO 6.9: Adicionar avisos de retenção
+    // VERSÃO 7.0: Adicionar avisos de retenção
     let retencaoAviso = '';
     if (numeroParte === 1) retencaoAviso = '<span class="retencao-aviso retencao-50">50% retenção</span>';
     else if (numeroParte === 2) retencaoAviso = '<span class="retencao-aviso retencao-25">25% retenção</span>';
     else if (numeroParte === 3) retencaoAviso = '<span class="retencao-aviso retencao-15">15% retenção</span>';
     else if (numeroParte === 4) retencaoAviso = '<span class="retencao-aviso retencao-10">9.99% retenção</span>';
 
-    // VERSÃO 6.9: Mostrar conteúdo apenas quando liberado
+    // VERSÃO 7.0: Mostrar conteúdo apenas quando liberado
     if (!contador.liberada) {
         return `
         <div class="mt-3 p-3 bg-gray-50 rounded border parte-${numeroParte}">
@@ -1960,7 +1960,7 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     </div>`;
 }
 
-// --- SALVAR LINK COM DEBOUNCE - VERSÃO 6.9 ---
+// --- SALVAR LINK COM DEBOUNCE - VERSÃO 7.0 ---
 const salvarLink = debounce(async function(idTarefa, parte) {
     const input = document.getElementById(`link-${idTarefa}-${parte}`);
     const link = input.value.trim();
