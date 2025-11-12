@@ -317,7 +317,7 @@
             animation: spin 1s ease-in-out infinite;
         }
 
-        /* NOVOS ESTILOS VERSÃO 7.0 - CARREGAMENTO GRADUAL */
+        /* NOVOS ESTILOS VERSÃO 7.1 - CARREGAMENTO GRADUAL */
         .cache-indicator {
             position: absolute;
             top: 10px;
@@ -372,7 +372,7 @@
             100% { opacity: 0.6; }
         }
         
-        /* VERSÃO 7.0 - NOVOS ESTILOS PARA O RELATÓRIO */
+        /* VERSÃO 7.1 - NOVOS ESTILOS PARA O RELATÓRIO */
         .relatorio-header {
             display: flex;
             justify-content: space-between;
@@ -396,7 +396,7 @@
             border-left: 4px solid #3b82f6;
         }
         
-        /* VERSÃO 7.0 - NOVOS ESTILOS PARA RETENÇÃO E CONTEÚDO CONDICIONAL */
+        /* VERSÃO 7.1 - NOVOS ESTILOS PARA RETENÇÃO E CONTEÚDO CONDICIONAL */
         .retencao-aviso {
             display: inline-block;
             padding: 4px 8px;
@@ -435,7 +435,7 @@
             margin-top: 8px;
         }
 
-        /* NOVOS ESTILOS PARA AS INFORMAÇÕES ADICIONAIS */
+        /* NOVOS ESTILOS PARA AS INFORMAÇÕES ADICIONAIS - VERSÃO 7.1 */
         .instrucoes-box {
             background-color: #f0f9ff;
             border: 1px solid #bae6fd;
@@ -466,12 +466,25 @@
             border-radius: 8px;
             padding: 16px;
             margin-top: 20px;
+            display: none; /* Inicialmente oculto */
+        }
+
+        .fundamento-cientifico.expandido {
+            display: block;
         }
 
         .fundamento-title {
             color: #854d0e;
             font-weight: 600;
             margin-bottom: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .fundamento-title:hover {
+            color: #713f12;
         }
 
         .fundamento-list {
@@ -511,6 +524,21 @@
             margin: 12px 0;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+
+        .expand-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .expand-icon.expandido {
+            transform: rotate(180deg);
+        }
+
+        .info-nota {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 4px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -530,7 +558,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 7.0
+        Desenvolvido por Geovane Modena | Versão 7.1
     </footer>
 </div>
 
@@ -569,7 +597,7 @@ let tarefaParaExcluir = null;
 let contadoresAtivos = [];
 let tarefaEditando = null;
 
-// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 7.0 ---
+// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 7.1 ---
 const frontendCache = {
     get: (key) => {
         try {
@@ -625,7 +653,7 @@ const frontendCache = {
     }
 };
 
-// --- DEBOUNCE FUNCTION - VERSÃO 7.0 ---
+// --- DEBOUNCE FUNCTION - VERSÃO 7.1 ---
 function debounce(func, wait, immediate = false) {
     let timeout;
     return function executedFunction(...args) {
@@ -753,20 +781,20 @@ function mostrarConclusaoRelatorio() {
     }, 3000);
 }
 
-// --- FUNÇÕES DE TEMPO OTIMIZADAS - VERSÃO 7.0 ---
+// --- FUNÇÕES DE TEMPO ATUALIZADAS - VERSÃO 7.1 ---
 function calcularContadoresOtimizado(dataAula) {
     const agora = new Date();
     const dataAulaObj = new Date(dataAula);
     
-    // VERSÃO 7.0: Alteração dos prazos conforme solicitado
-    const calcularTempoRestante = (diasAdicionais, horasLimite = 23, minutosLimite = 59) => { // Parte 1 até 23h59
+    // VERSÃO 7.1: Função atualizada para mostrar minutos
+    const calcularTempoRestante = (diasAdicionais, horasLimite = 23, minutosLimite = 59) => {
         const liberacao = new Date(dataAulaObj);
         liberacao.setDate(liberacao.getDate() + diasAdicionais);
         if (diasAdicionais === 0) liberacao.setHours(0, 0, 0, 0);
         
         const limite = new Date(dataAulaObj);
         
-        // VERSÃO 7.0: Ajuste dos prazos conforme solicitado
+        // VERSÃO 7.1: Ajuste dos prazos
         if (diasAdicionais === 0) {
             limite.setHours(horasLimite, minutosLimite, 0, 0); // Parte 1: até 23h59 do mesmo dia
         } else if (diasAdicionais === 7) { // Parte 2: 7º ao 8º dia
@@ -783,14 +811,17 @@ function calcularContadoresOtimizado(dataAula) {
         if (diffLiberacao > 0) {
             const dias = Math.floor(diffLiberacao / (1000 * 60 * 60 * 24));
             const horas = Math.floor((diffLiberacao % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutos = Math.floor((diffLiberacao % (1000 * 60 * 60)) / (1000 * 60));
             
             let texto = '';
             if (dias > 0) {
                 texto = `Libera em ${dias}d ${horas}h`;
             } else if (horas > 0) {
-                texto = `Libera em ${horas}h`;
+                texto = `Libera em ${horas}h ${minutos}m`;
+            } else if (minutos > 0) {
+                texto = `Libera em ${minutos}m`;
             } else {
-                texto = `Libera em <1h`;
+                texto = `Libera em <1m`;
             }
             
             return { 
@@ -814,17 +845,20 @@ function calcularContadoresOtimizado(dataAula) {
         
         const dias = Math.floor(diffLimite / (1000 * 60 * 60 * 24));
         const horas = Math.floor((diffLimite % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutos = Math.floor((diffLimite % (1000 * 60 * 60)) / (1000 * 60));
         
         let texto = '';
         if (dias > 0) {
             texto = `${dias}d ${horas}h`;
         } else if (horas > 0) {
-            texto = `${horas}h`;
+            texto = `${horas}h ${minutos}m`;
+        } else if (minutos > 0) {
+            texto = `${minutos}m`;
         } else {
-            texto = `<1h`;
+            texto = `<1m`;
         }
         
-        const classe = dias === 0 ? 'urgente' : 'disponivel';
+        const classe = dias === 0 && horas < 2 ? 'urgente' : 'disponivel';
         
         return { 
             texto, 
@@ -836,14 +870,14 @@ function calcularContadoresOtimizado(dataAula) {
     };
     
     return {
-        parte1: calcularTempoRestante(0, 23, 59), // VERSÃO 7.0: Parte 1 até 23h59
-        parte2: calcularTempoRestante(7), // VERSÃO 7.0: Parte 2 do 7º ao 8º dia
-        parte3: calcularTempoRestante(14), // VERSÃO 7.0: Parte 3 do 14º ao 15º dia
-        parte4: calcularTempoRestante(28) // VERSÃO 7.0: Parte 4 do 28º ao 30º dia
+        parte1: calcularTempoRestante(0, 23, 59), // VERSÃO 7.1: Parte 1 até 23h59
+        parte2: calcularTempoRestante(7), // VERSÃO 7.1: Parte 2 do 7º ao 8º dia
+        parte3: calcularTempoRestante(14), // VERSÃO 7.1: Parte 3 do 14º ao 15º dia
+        parte4: calcularTempoRestante(28) // VERSÃO 7.1: Parte 4 do 28º ao 30º dia
     };
 }
 
-// --- CONTADORES OTIMIZADOS - VERSÃO 7.0 ---
+// --- CONTADORES OTIMIZADOS - VERSÃO 7.1 ---
 function iniciarAtualizacaoContadoresOtimizada() {
     contadoresAtivos.forEach(interval => clearInterval(interval));
     contadoresAtivos = [];
@@ -852,7 +886,7 @@ function iniciarAtualizacaoContadoresOtimizada() {
         if (usuarioLogado && usuarioLogado.Perfil === 'Aluno') {
             atualizarContadoresAlunoOtimizado();
         }
-    }, 2000);
+    }, 1000); // Atualiza a cada segundo para mostrar minutos
     
     contadoresAtivos.push(interval);
 }
@@ -915,7 +949,7 @@ function apiRequestJSONP(url, callback) {
     document.body.appendChild(script);
 }
 
-// --- API COM CACHE - VERSÃO 7.0 ---
+// --- API COM CACHE - VERSÃO 7.1 ---
 async function apiGet(func, params = {}) {
     const cacheKey = `api_${func}_${JSON.stringify(params)}`;
     
@@ -1035,7 +1069,7 @@ async function login(event) {
     
     const user = usuarios.find(u => {
         const userEmail = u.Email.toLowerCase().trim();
-        const userRM = String(u.RM).trim(); // VERSÃO 7.0: Alterado para RM
+        const userRM = String(u.RM).trim();
         const inputEmail = email.toLowerCase().trim();
         const inputRM = rm.trim();
         
@@ -1100,7 +1134,7 @@ function logout() {
     renderLogin(); 
 }
 
-// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 7.0 ---
+// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 7.1 ---
 async function mostrarRelatorioProfessor() {
     const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
     
@@ -1135,7 +1169,7 @@ async function mostrarRelatorioProfessor() {
     contentArea.innerHTML = relatorioHTML;
 }
 
-// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 7.0 ---
+// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 7.1 ---
 const carregarRelatorioTurmaOtimizado = debounce(async function(turmaSelecionada) {
     const cacheKey = `relatorio_${turmaSelecionada}`;
     const cached = frontendCache.get(cacheKey);
@@ -1190,7 +1224,6 @@ const carregarRelatorioTurmaOtimizado = debounce(async function(turmaSelecionada
             return;
         }
         
-        // VERSÃO 7.0: Reestruturação do layout do relatório
         let relatorioTurmaHTML = `
             <div class="relatorio-header">
                 <h4 class="text-lg font-semibold text-red-700">Relatório da Turma ${turmaSelecionada}</h4>
@@ -1436,7 +1469,7 @@ async function mostrarRelatorioAluno() {
     }
 }
 
-// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 7.0 ---
+// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 7.1 ---
 async function mostrarPainelProfessor() {
     const cacheKey = 'painel_professor';
     const cached = frontendCache.get(cacheKey);
@@ -1643,7 +1676,7 @@ async function editarTarefa(idTarefa) {
     await mostrarPainelProfessor();
 }
 
-// --- SALVAR TAREFA COM DEBOUNCE - VERSÃO 7.0 ---
+// --- SALVAR TAREFA COM DEBOUNCE - VERSÃO 7.1 ---
 const salvarTarefa = debounce(async function() {
     const btnSalvar = document.getElementById('btnSalvarTarefa');
     
@@ -1804,7 +1837,7 @@ function limparFormulario() {
     }
 }
 
-// --- PAINEL DO ALUNO COM CACHE - VERSÃO 7.0 ---
+// --- PAINEL DO ALUNO COM CACHE - VERSÃO 7.1 ---
 async function mostrarPainelAluno() {
     const cacheKey = `painel_aluno_${usuarioLogado.RM}`;
     const cached = frontendCache.get(cacheKey);
@@ -1835,34 +1868,41 @@ async function mostrarPainelAluno() {
                     <div class="text-center text-gray-500 py-8">Carregando tarefas...</div>
                 </div>
                 
-                <!-- FUNDAMENTO CIENTÍFICO ADICIONADO AQUI -->
-                <div class="fundamento-cientifico">
-                    <div class="fundamento-title">Fundamento científico</div>
-                    <p class="mb-4">A curva de esquecimento de Ebbinghaus e os estudos modernos de neuroaprendizagem mostram que:</p>
-                    <ol class="fundamento-list">
-                        <li>O cérebro consolida melhor a memória entre 6h e 9h após o aprendizado inicial.</li>
-                        <li>O sono tem papel essencial — é durante o sono que ocorre a consolidação sináptica (transformar memórias de curto em longo prazo).</li>
-                        <li>A atenção sustentada é máxima no período entre 8h e 11h da manhã e tem uma segunda faixa ótima entre 17h e 19h.</li>
-                        <li>À noite, atividades reflexivas e criativas têm melhor rendimento, porque o córtex pré-frontal está menos sobrecarregado de estímulos novos.</li>
-                        <li>Sono de 7h a 9h por noite.</li>
-                        <li>Evitar telas nos 30 min antes de dormir.</li>
-                        <li>Fazer revisão leve antes do sono.</li>
-                    </ol>
-                    
-                    <div class="flex justify-center my-4">
-                        <img src="https://blog-static.infra.grancursosonline.com.br/wp-content/uploads/2017/01/curva-do-esquecimento-1.png" 
-                             alt="Curva do Esquecimento de Ebbinghaus" 
-                             class="imagem-curva">
+                <!-- FUNDAMENTO CIENTÍFICO ADICIONADO AQUI - VERSÃO 7.1: OCULTO INICIALMENTE -->
+                <div class="fundamento-cientifico" id="fundamento-cientifico">
+                    <div class="fundamento-title" onclick="toggleFundamentoCientifico()">
+                        <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m6 9 6 6 6-6"/>
+                        </svg>
+                        Fundamentos Científicos da Aprendizagem
                     </div>
-                    
-                    <div class="referencias">
-                        <div class="referencias-title">Referências:</div>
-                        <ul class="referencias-list">
-                            <li>EBBINGHAUS, Hermann. Memory: A Contribution to Experimental Psychology. New York: Teachers College, Columbia University, 1913. (Obra original publicada em 1885.)</li>
-                            <li>DUNLOSKY, John et al. Improving Students' Learning with Effective Learning Techniques: Promising Directions from Cognitive and Educational Psychology. Psychological Science in the Public Interest, v. 14, n. 1, p. 4–58, 2013. DOI: 10.1177/1529100612453266</li>
-                            <li>WALKER, Matthew. Why We Sleep: Unlocking the Power of Sleep and Dreams. New York: Scribner, 2018.</li>
-                            <li>BLOOM, Benjamin S. (Org.). Taxonomy of Educational Objectives: The Classification of Educational Goals. Handbook I: Cognitive Domain. New York: Longmans, Green and Co., 1956.</li>
-                        </ul>
+                    <div id="conteudo-fundamento" style="display: none;">
+                        <p class="mb-4">A curva de esquecimento de Ebbinghaus e os estudos modernos de neuroaprendizagem mostram que:</p>
+                        <ol class="fundamento-list">
+                            <li>O cérebro consolida melhor a memória entre 6h e 9h após o aprendizado inicial.</li>
+                            <li>O sono tem papel essencial — é durante o sono que ocorre a consolidação sináptica (transformar memórias de curto em longo prazo).</li>
+                            <li>A atenção sustentada é máxima no período entre 8h e 11h da manhã e tem uma segunda faixa ótima entre 17h e 19h.</li>
+                            <li>À noite, atividades reflexivas e criativas têm melhor rendimento, porque o córtex pré-frontal está menos sobrecarregado de estímulos novos.</li>
+                            <li>Sono de 7h a 9h por noite.</li>
+                            <li>Evitar telas nos 30 min antes de dormir.</li>
+                            <li>Fazer revisão leve antes do sono.</li>
+                        </ol>
+                        
+                        <div class="flex justify-center my-4">
+                            <img src="https://blog-static.infra.grancursosonline.com.br/wp-content/uploads/2017/01/curva-do-esquecimento-1.png" 
+                                 alt="Curva do Esquecimento de Ebbinghaus" 
+                                 class="imagem-curva">
+                        </div>
+                        
+                        <div class="referencias">
+                            <div class="referencias-title">Referências:</div>
+                            <ul class="referencias-list">
+                                <li>EBBINGHAUS, Hermann. Memory: A Contribution to Experimental Psychology. New York: Teachers College, Columbia University, 1913. (Obra original publicada em 1885.)</li>
+                                <li>DUNLOSKY, John et al. Improving Students' Learning with Effective Learning Techniques: Promising Directions from Cognitive and Educational Psychology. Psychological Science in the Public Interest, v. 14, n. 1, p. 4–58, 2013. DOI: 10.1177/1529100612453266</li>
+                                <li>WALKER, Matthew. Why We Sleep: Unlocking the Power of Sleep and Dreams. New York: Scribner, 2018.</li>
+                                <li>BLOOM, Benjamin S. (Org.). Taxonomy of Educational Objectives: The Classification of Educational Goals. Handbook I: Cognitive Domain. New York: Longmans, Green and Co., 1956.</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1875,7 +1915,24 @@ async function mostrarPainelAluno() {
     frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000);
 }
 
-// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 7.0 ---
+// --- FUNÇÃO PARA EXPANDIR/RECOLHER FUNDAMENTO CIENTÍFICO - VERSÃO 7.1 ---
+function toggleFundamentoCientifico() {
+    const fundamento = document.getElementById('fundamento-cientifico');
+    const conteudo = document.getElementById('conteudo-fundamento');
+    const icon = document.querySelector('.expand-icon');
+    
+    if (conteudo.style.display === 'none') {
+        conteudo.style.display = 'block';
+        fundamento.classList.add('expandido');
+        icon.classList.add('expandido');
+    } else {
+        conteudo.style.display = 'none';
+        fundamento.classList.remove('expandido');
+        icon.classList.remove('expandido');
+    }
+}
+
+// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 7.1 ---
 async function carregarTarefasAluno() {
     const cacheKey = `tarefas_aluno_${usuarioLogado.RM}_dados`;
     const cached = frontendCache.get(cacheKey);
@@ -2020,7 +2077,7 @@ function renderTarefaItem(tarefa, entrega) {
     `;
 }
 
-// --- VERSÃO 7.0: FUNÇÃO ATUALIZADA PARA MOSTRAR CONTEÚDO APENAS QUANDO LIBERADO ---
+// --- VERSÃO 7.1: FUNÇÃO ATUALIZADA COM MINUTOS E INFORMAÇÃO DE NOTA ---
 function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     const linkSalvo = entrega ? entrega[`Link${numeroParte}`] : '';
     const inputId = `link-${idTarefa}-${numeroParte}`;
@@ -2029,14 +2086,20 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     const disponivel = contador.liberada && !contador.expirado && !temLinkSalvo;
     const expirado = contador.expirado;
     
-    // VERSÃO 7.0: Adicionar avisos de retenção
+    // VERSÃO 7.1: Adicionar avisos de retenção
     let retencaoAviso = '';
     if (numeroParte === 1) retencaoAviso = '<span class="retencao-aviso retencao-50">50% retenção</span>';
     else if (numeroParte === 2) retencaoAviso = '<span class="retencao-aviso retencao-25">25% retenção</span>';
     else if (numeroParte === 3) retencaoAviso = '<span class="retencao-aviso retencao-15">15% retenção</span>';
     else if (numeroParte === 4) retencaoAviso = '<span class="retencao-aviso retencao-10">9.99% retenção</span>';
 
-    // VERSÃO 7.0: Mostrar conteúdo apenas quando liberado
+    // VERSÃO 7.1: Informação sobre nota da parte 1
+    let infoNota = '';
+    if (numeroParte === 1) {
+        infoNota = '<div class="info-nota">Nota: 2.5 até 18h | 2.0 até 23h59</div>';
+    }
+
+    // VERSÃO 7.1: Mostrar conteúdo apenas quando liberado
     if (!contador.liberada) {
         return `
         <div class="mt-3 p-3 bg-gray-50 rounded border parte-${numeroParte}">
@@ -2057,6 +2120,7 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
             <span class="contador ${contador.classe}">${contador.texto}</span>
         </div>
         <p class="mt-1">${conteudo}</p>
+        ${infoNota}
         <div class="link-container">
             <input type="text" 
                    class="link-input ${temLinkSalvo ? 'link-salvo' : ''}" 
@@ -2079,7 +2143,7 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     </div>`;
 }
 
-// --- SALVAR LINK COM DEBOUNCE - VERSÃO 7.0 ---
+// --- SALVAR LINK COM DEBOUNCE - VERSÃO 7.1 ---
 const salvarLink = debounce(async function(idTarefa, parte) {
     const input = document.getElementById(`link-${idTarefa}-${parte}`);
     const link = input.value.trim();
@@ -2153,6 +2217,7 @@ window.limparFormulario = limparFormulario;
 window.closeModal = closeModal;
 window.salvarLink = salvarLink;
 window.excluirLink = excluirLink;
+window.toggleFundamentoCientifico = toggleFundamentoCientifico;
 </script>
 </body>
 </html>
