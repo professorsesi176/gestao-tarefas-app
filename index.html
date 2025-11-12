@@ -317,7 +317,7 @@
             animation: spin 1s ease-in-out infinite;
         }
 
-        /* NOVOS ESTILOS VERSÃO 7.1 - CARREGAMENTO GRADUAL */
+        /* NOVOS ESTILOS VERSÃO 7.2 - CARREGAMENTO GRADUAL */
         .cache-indicator {
             position: absolute;
             top: 10px;
@@ -372,7 +372,7 @@
             100% { opacity: 0.6; }
         }
         
-        /* VERSÃO 7.1 - NOVOS ESTILOS PARA O RELATÓRIO */
+        /* VERSÃO 7.2 - NOVOS ESTILOS PARA O RELATÓRIO */
         .relatorio-header {
             display: flex;
             justify-content: space-between;
@@ -396,7 +396,7 @@
             border-left: 4px solid #3b82f6;
         }
         
-        /* VERSÃO 7.1 - NOVOS ESTILOS PARA RETENÇÃO E CONTEÚDO CONDICIONAL */
+        /* VERSÃO 7.2 - NOVOS ESTILOS PARA RETENÇÃO E CONTEÚDO CONDICIONAL */
         .retencao-aviso {
             display: inline-block;
             padding: 4px 8px;
@@ -435,7 +435,7 @@
             margin-top: 8px;
         }
 
-        /* NOVOS ESTILOS PARA AS INFORMAÇÕES ADICIONAIS - VERSÃO 7.1 */
+        /* NOVOS ESTILOS PARA AS INFORMAÇÕES ADICIONAIS - VERSÃO 7.2 */
         .instrucoes-box {
             background-color: #f0f9ff;
             border: 1px solid #bae6fd;
@@ -466,11 +466,6 @@
             border-radius: 8px;
             padding: 16px;
             margin-top: 20px;
-            display: none; /* Inicialmente oculto */
-        }
-
-        .fundamento-cientifico.expandido {
-            display: block;
         }
 
         .fundamento-title {
@@ -481,10 +476,19 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            user-select: none;
         }
 
         .fundamento-title:hover {
             color: #713f12;
+        }
+
+        .fundamento-content {
+            display: none;
+        }
+
+        .fundamento-content.expandido {
+            display: block;
         }
 
         .fundamento-list {
@@ -558,7 +562,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 7.1
+        Desenvolvido por Geovane Modena | Versão 7.2
     </footer>
 </div>
 
@@ -597,7 +601,7 @@ let tarefaParaExcluir = null;
 let contadoresAtivos = [];
 let tarefaEditando = null;
 
-// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 7.1 ---
+// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 7.2 ---
 const frontendCache = {
     get: (key) => {
         try {
@@ -653,7 +657,7 @@ const frontendCache = {
     }
 };
 
-// --- DEBOUNCE FUNCTION - VERSÃO 7.1 ---
+// --- DEBOUNCE FUNCTION - VERSÃO 7.2 ---
 function debounce(func, wait, immediate = false) {
     let timeout;
     return function executedFunction(...args) {
@@ -781,12 +785,12 @@ function mostrarConclusaoRelatorio() {
     }, 3000);
 }
 
-// --- FUNÇÕES DE TEMPO ATUALIZADAS - VERSÃO 7.1 ---
+// --- FUNÇÕES DE TEMPO ATUALIZADAS - VERSÃO 7.2 ---
 function calcularContadoresOtimizado(dataAula) {
     const agora = new Date();
     const dataAulaObj = new Date(dataAula);
     
-    // VERSÃO 7.1: Função atualizada para mostrar minutos
+    // VERSÃO 7.2: Função atualizada para mostrar minutos inclusive no tempo de liberação
     const calcularTempoRestante = (diasAdicionais, horasLimite = 23, minutosLimite = 59) => {
         const liberacao = new Date(dataAulaObj);
         liberacao.setDate(liberacao.getDate() + diasAdicionais);
@@ -794,7 +798,7 @@ function calcularContadoresOtimizado(dataAula) {
         
         const limite = new Date(dataAulaObj);
         
-        // VERSÃO 7.1: Ajuste dos prazos
+        // VERSÃO 7.2: Ajuste dos prazos
         if (diasAdicionais === 0) {
             limite.setHours(horasLimite, minutosLimite, 0, 0); // Parte 1: até 23h59 do mesmo dia
         } else if (diasAdicionais === 7) { // Parte 2: 7º ao 8º dia
@@ -815,7 +819,7 @@ function calcularContadoresOtimizado(dataAula) {
             
             let texto = '';
             if (dias > 0) {
-                texto = `Libera em ${dias}d ${horas}h`;
+                texto = `Libera em ${dias}d ${horas}h ${minutos}m`;
             } else if (horas > 0) {
                 texto = `Libera em ${horas}h ${minutos}m`;
             } else if (minutos > 0) {
@@ -849,7 +853,7 @@ function calcularContadoresOtimizado(dataAula) {
         
         let texto = '';
         if (dias > 0) {
-            texto = `${dias}d ${horas}h`;
+            texto = `${dias}d ${horas}h ${minutos}m`;
         } else if (horas > 0) {
             texto = `${horas}h ${minutos}m`;
         } else if (minutos > 0) {
@@ -870,14 +874,14 @@ function calcularContadoresOtimizado(dataAula) {
     };
     
     return {
-        parte1: calcularTempoRestante(0, 23, 59), // VERSÃO 7.1: Parte 1 até 23h59
-        parte2: calcularTempoRestante(7), // VERSÃO 7.1: Parte 2 do 7º ao 8º dia
-        parte3: calcularTempoRestante(14), // VERSÃO 7.1: Parte 3 do 14º ao 15º dia
-        parte4: calcularTempoRestante(28) // VERSÃO 7.1: Parte 4 do 28º ao 30º dia
+        parte1: calcularTempoRestante(0, 23, 59), // VERSÃO 7.2: Parte 1 até 23h59
+        parte2: calcularTempoRestante(7), // VERSÃO 7.2: Parte 2 do 7º ao 8º dia
+        parte3: calcularTempoRestante(14), // VERSÃO 7.2: Parte 3 do 14º ao 15º dia
+        parte4: calcularTempoRestante(28) // VERSÃO 7.2: Parte 4 do 28º ao 30º dia
     };
 }
 
-// --- CONTADORES OTIMIZADOS - VERSÃO 7.1 ---
+// --- CONTADORES OTIMIZADOS - VERSÃO 7.2 ---
 function iniciarAtualizacaoContadoresOtimizada() {
     contadoresAtivos.forEach(interval => clearInterval(interval));
     contadoresAtivos = [];
@@ -949,7 +953,7 @@ function apiRequestJSONP(url, callback) {
     document.body.appendChild(script);
 }
 
-// --- API COM CACHE - VERSÃO 7.1 ---
+// --- API COM CACHE - VERSÃO 7.2 ---
 async function apiGet(func, params = {}) {
     const cacheKey = `api_${func}_${JSON.stringify(params)}`;
     
@@ -1024,7 +1028,7 @@ async function init() {
     renderLogin();
 }
 
-// --- FUNÇÕES DE AUTENTICAÇÃO ---
+// --- FUNÇões DE AUTENTICAÇÃO ---
 const renderLogin = () => {
     contentArea.innerHTML = `
         <div id="login" class="max-w-md mx-auto p-6">
@@ -1134,7 +1138,7 @@ function logout() {
     renderLogin(); 
 }
 
-// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 7.1 ---
+// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 7.2 ---
 async function mostrarRelatorioProfessor() {
     const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
     
@@ -1169,7 +1173,7 @@ async function mostrarRelatorioProfessor() {
     contentArea.innerHTML = relatorioHTML;
 }
 
-// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 7.1 ---
+// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 7.2 ---
 const carregarRelatorioTurmaOtimizado = debounce(async function(turmaSelecionada) {
     const cacheKey = `relatorio_${turmaSelecionada}`;
     const cached = frontendCache.get(cacheKey);
@@ -1469,7 +1473,7 @@ async function mostrarRelatorioAluno() {
     }
 }
 
-// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 7.1 ---
+// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 7.2 ---
 async function mostrarPainelProfessor() {
     const cacheKey = 'painel_professor';
     const cached = frontendCache.get(cacheKey);
@@ -1676,7 +1680,7 @@ async function editarTarefa(idTarefa) {
     await mostrarPainelProfessor();
 }
 
-// --- SALVAR TAREFA COM DEBOUNCE - VERSÃO 7.1 ---
+// --- SALVAR TAREFA COM DEBOUNCE - VERSÃO 7.2 ---
 const salvarTarefa = debounce(async function() {
     const btnSalvar = document.getElementById('btnSalvarTarefa');
     
@@ -1837,7 +1841,7 @@ function limparFormulario() {
     }
 }
 
-// --- PAINEL DO ALUNO COM CACHE - VERSÃO 7.1 ---
+// --- PAINEL DO ALUNO COM CACHE - VERSÃO 7.2 ---
 async function mostrarPainelAluno() {
     const cacheKey = `painel_aluno_${usuarioLogado.RM}`;
     const cached = frontendCache.get(cacheKey);
@@ -1868,15 +1872,15 @@ async function mostrarPainelAluno() {
                     <div class="text-center text-gray-500 py-8">Carregando tarefas...</div>
                 </div>
                 
-                <!-- FUNDAMENTO CIENTÍFICO ADICIONADO AQUI - VERSÃO 7.1: OCULTO INICIALMENTE -->
-                <div class="fundamento-cientifico" id="fundamento-cientifico">
+                <!-- FUNDAMENTO CIENTÍFICO ADICIONADO AQUI - VERSÃO 7.2: TÍTULO VISÍVEL -->
+                <div class="fundamento-cientifico">
                     <div class="fundamento-title" onclick="toggleFundamentoCientifico()">
                         <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="m6 9 6 6 6-6"/>
                         </svg>
                         Fundamentos Científicos da Aprendizagem
                     </div>
-                    <div id="conteudo-fundamento" style="display: none;">
+                    <div class="fundamento-content" id="conteudo-fundamento">
                         <p class="mb-4">A curva de esquecimento de Ebbinghaus e os estudos modernos de neuroaprendizagem mostram que:</p>
                         <ol class="fundamento-list">
                             <li>O cérebro consolida melhor a memória entre 6h e 9h após o aprendizado inicial.</li>
@@ -1915,24 +1919,21 @@ async function mostrarPainelAluno() {
     frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000);
 }
 
-// --- FUNÇÃO PARA EXPANDIR/RECOLHER FUNDAMENTO CIENTÍFICO - VERSÃO 7.1 ---
+// --- FUNÇÃO PARA EXPANDIR/RECOLHER FUNDAMENTO CIENTÍFICO - VERSÃO 7.2 ---
 function toggleFundamentoCientifico() {
-    const fundamento = document.getElementById('fundamento-cientifico');
     const conteudo = document.getElementById('conteudo-fundamento');
     const icon = document.querySelector('.expand-icon');
     
-    if (conteudo.style.display === 'none') {
-        conteudo.style.display = 'block';
-        fundamento.classList.add('expandido');
-        icon.classList.add('expandido');
-    } else {
-        conteudo.style.display = 'none';
-        fundamento.classList.remove('expandido');
+    if (conteudo.classList.contains('expandido')) {
+        conteudo.classList.remove('expandido');
         icon.classList.remove('expandido');
+    } else {
+        conteudo.classList.add('expandido');
+        icon.classList.add('expandido');
     }
 }
 
-// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 7.1 ---
+// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 7.2 ---
 async function carregarTarefasAluno() {
     const cacheKey = `tarefas_aluno_${usuarioLogado.RM}_dados`;
     const cached = frontendCache.get(cacheKey);
@@ -2077,7 +2078,7 @@ function renderTarefaItem(tarefa, entrega) {
     `;
 }
 
-// --- VERSÃO 7.1: FUNÇÃO ATUALIZADA COM MINUTOS E INFORMAÇÃO DE NOTA ---
+// --- VERSÃO 7.2: FUNÇÃO ATUALIZADA COM MINUTOS E INFORMAÇÃO DE NOTA ---
 function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     const linkSalvo = entrega ? entrega[`Link${numeroParte}`] : '';
     const inputId = `link-${idTarefa}-${numeroParte}`;
@@ -2086,20 +2087,20 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     const disponivel = contador.liberada && !contador.expirado && !temLinkSalvo;
     const expirado = contador.expirado;
     
-    // VERSÃO 7.1: Adicionar avisos de retenção
+    // VERSÃO 7.2: Adicionar avisos de retenção
     let retencaoAviso = '';
     if (numeroParte === 1) retencaoAviso = '<span class="retencao-aviso retencao-50">50% retenção</span>';
     else if (numeroParte === 2) retencaoAviso = '<span class="retencao-aviso retencao-25">25% retenção</span>';
     else if (numeroParte === 3) retencaoAviso = '<span class="retencao-aviso retencao-15">15% retenção</span>';
     else if (numeroParte === 4) retencaoAviso = '<span class="retencao-aviso retencao-10">9.99% retenção</span>';
 
-    // VERSÃO 7.1: Informação sobre nota da parte 1
+    // VERSÃO 7.2: Informação sobre nota da parte 1
     let infoNota = '';
     if (numeroParte === 1) {
         infoNota = '<div class="info-nota">Nota: 2.5 até 18h | 2.0 até 23h59</div>';
     }
 
-    // VERSÃO 7.1: Mostrar conteúdo apenas quando liberado
+    // VERSÃO 7.2: Mostrar conteúdo apenas quando liberado
     if (!contador.liberada) {
         return `
         <div class="mt-3 p-3 bg-gray-50 rounded border parte-${numeroParte}">
@@ -2143,7 +2144,7 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     </div>`;
 }
 
-// --- SALVAR LINK COM DEBOUNCE - VERSÃO 7.1 ---
+// --- SALVAR LINK COM DEBOUNCE - VERSÃO 7.2 ---
 const salvarLink = debounce(async function(idTarefa, parte) {
     const input = document.getElementById(`link-${idTarefa}-${parte}`);
     const link = input.value.trim();
