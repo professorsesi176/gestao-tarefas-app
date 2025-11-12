@@ -317,7 +317,7 @@
             animation: spin 1s ease-in-out infinite;
         }
 
-        /* NOVOS ESTILOS VERSÃO 6.7 - CARREGAMENTO GRADUAL */
+        /* NOVOS ESTILOS VERSÃO 7.0 - CARREGAMENTO GRADUAL */
         .cache-indicator {
             position: absolute;
             top: 10px;
@@ -372,7 +372,7 @@
             100% { opacity: 0.6; }
         }
         
-        /* VERSÃO 6.8 - NOVOS ESTILOS PARA O RELATÓRIO */
+        /* VERSÃO 7.0 - NOVOS ESTILOS PARA O RELATÓRIO */
         .relatorio-header {
             display: flex;
             justify-content: space-between;
@@ -396,7 +396,7 @@
             border-left: 4px solid #3b82f6;
         }
         
-        /* VERSÃO 6.9 - NOVOS ESTILOS PARA RETENÇÃO E CONTEÚDO CONDICIONAL */
+        /* VERSÃO 7.0 - NOVOS ESTILOS PARA RETENÇÃO E CONTEÚDO CONDICIONAL */
         .retencao-aviso {
             display: inline-block;
             padding: 4px 8px;
@@ -433,6 +433,83 @@
             background-color: #f9fafb;
             border-radius: 4px;
             margin-top: 8px;
+        }
+
+        /* NOVOS ESTILOS PARA AS INFORMAÇÕES ADICIONAIS */
+        .instrucoes-box {
+            background-color: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .instrucoes-title {
+            color: #0369a1;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .instrucoes-list {
+            list-style-type: decimal;
+            padding-left: 20px;
+            margin-bottom: 0;
+        }
+
+        .instrucoes-list li {
+            margin-bottom: 8px;
+        }
+
+        .fundamento-cientifico {
+            background-color: #fefce8;
+            border: 1px solid #fef08a;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .fundamento-title {
+            color: #854d0e;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .fundamento-list {
+            list-style-type: decimal;
+            padding-left: 20px;
+            margin-bottom: 16px;
+        }
+
+        .fundamento-list li {
+            margin-bottom: 8px;
+        }
+
+        .referencias {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 16px;
+        }
+
+        .referencias-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .referencias-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .referencias-list li {
+            margin-bottom: 4px;
+        }
+
+        .imagem-curva {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin: 12px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
     </style>
 </head>
@@ -958,7 +1035,7 @@ async function login(event) {
     
     const user = usuarios.find(u => {
         const userEmail = u.Email.toLowerCase().trim();
-        const userRM = String(u.RA).trim(); // VERSÃO 7.0: Mantemos RA no backend mas exibimos RM no frontend
+        const userRM = String(u.RM).trim(); // VERSÃO 7.0: Alterado para RM
         const inputEmail = email.toLowerCase().trim();
         const inputRM = rm.trim();
         
@@ -1176,7 +1253,7 @@ const carregarRelatorioTurmaOtimizado = debounce(async function(turmaSelecionada
             for (let i = inicio; i < fim && i < alunosTurma.length; i++) {
                 const aluno = alunosTurma[i];
                 lotes.push(
-                    apiGet('getEntregasAluno', { ra: aluno.RA })
+                    apiGet('getEntregasAluno', { rm: aluno.RM })
                         .then(entregasResponse => {
                             const entregasAluno = entregasResponse.data || [];
                             return { aluno, entregas: entregasAluno, index: i };
@@ -1261,7 +1338,7 @@ const carregarRelatorioTurmaOtimizado = debounce(async function(turmaSelecionada
 }, 300);
 
 async function mostrarRelatorioAluno() {
-    const cacheKey = `relatorio_aluno_${usuarioLogado.RA}`;
+    const cacheKey = `relatorio_aluno_${usuarioLogado.RM}`;
     const cached = frontendCache.get(cacheKey);
     
     if (cached) {
@@ -1271,7 +1348,7 @@ async function mostrarRelatorioAluno() {
     }
     
     try {
-        const entregasResponse = await apiGet('getEntregasAluno', { ra: usuarioLogado.RA });
+        const entregasResponse = await apiGet('getEntregasAluno', { rm: usuarioLogado.RM });
         const entregas = entregasResponse.data || [];
         
         let relatorioHTML = `
@@ -1729,7 +1806,7 @@ function limparFormulario() {
 
 // --- PAINEL DO ALUNO COM CACHE - VERSÃO 7.0 ---
 async function mostrarPainelAluno() {
-    const cacheKey = `painel_aluno_${usuarioLogado.RA}`;
+    const cacheKey = `painel_aluno_${usuarioLogado.RM}`;
     const cached = frontendCache.get(cacheKey);
     
     if (cached) {
@@ -1743,8 +1820,50 @@ async function mostrarPainelAluno() {
         <div id="painelAluno" class="space-y-6">
             <div class="card p-6">
                 <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${usuarioLogado.Turma}</h3>
+                
+                <!-- INSTRUÇÕES ADICIONADAS AQUI -->
+                <div class="instrucoes-box">
+                    <div class="instrucoes-title">Instruções para entrega:</div>
+                    <ol class="instrucoes-list">
+                        <li>Realize as atividades em folhas e as guarde com cuidado para serem entregues futuramente.</li>
+                        <li>Tire uma foto, converta o arquivo em PDF, suba no seu OneDrive com o e-mail do SESI, compartilhe o link publicamente e o copie.</li>
+                        <li>Cole no espaço indicado dentro do prazo estabelecido e salve para validar sua nota.</li>
+                    </ol>
+                </div>
+                
                 <div id="tarefas-aluno-container">
                     <div class="text-center text-gray-500 py-8">Carregando tarefas...</div>
+                </div>
+                
+                <!-- FUNDAMENTO CIENTÍFICO ADICIONADO AQUI -->
+                <div class="fundamento-cientifico">
+                    <div class="fundamento-title">Fundamento científico</div>
+                    <p class="mb-4">A curva de esquecimento de Ebbinghaus e os estudos modernos de neuroaprendizagem mostram que:</p>
+                    <ol class="fundamento-list">
+                        <li>O cérebro consolida melhor a memória entre 6h e 9h após o aprendizado inicial.</li>
+                        <li>O sono tem papel essencial — é durante o sono que ocorre a consolidação sináptica (transformar memórias de curto em longo prazo).</li>
+                        <li>A atenção sustentada é máxima no período entre 8h e 11h da manhã e tem uma segunda faixa ótima entre 17h e 19h.</li>
+                        <li>À noite, atividades reflexivas e criativas têm melhor rendimento, porque o córtex pré-frontal está menos sobrecarregado de estímulos novos.</li>
+                        <li>Sono de 7h a 9h por noite.</li>
+                        <li>Evitar telas nos 30 min antes de dormir.</li>
+                        <li>Fazer revisão leve antes do sono.</li>
+                    </ol>
+                    
+                    <div class="flex justify-center my-4">
+                        <img src="https://blog-static.infra.grancursosonline.com.br/wp-content/uploads/2017/01/curva-do-esquecimento-1.png" 
+                             alt="Curva do Esquecimento de Ebbinghaus" 
+                             class="imagem-curva">
+                    </div>
+                    
+                    <div class="referencias">
+                        <div class="referencias-title">Referências:</div>
+                        <ul class="referencias-list">
+                            <li>EBBINGHAUS, Hermann. Memory: A Contribution to Experimental Psychology. New York: Teachers College, Columbia University, 1913. (Obra original publicada em 1885.)</li>
+                            <li>DUNLOSKY, John et al. Improving Students' Learning with Effective Learning Techniques: Promising Directions from Cognitive and Educational Psychology. Psychological Science in the Public Interest, v. 14, n. 1, p. 4–58, 2013. DOI: 10.1177/1529100612453266</li>
+                            <li>WALKER, Matthew. Why We Sleep: Unlocking the Power of Sleep and Dreams. New York: Scribner, 2018.</li>
+                            <li>BLOOM, Benjamin S. (Org.). Taxonomy of Educational Objectives: The Classification of Educational Goals. Handbook I: Cognitive Domain. New York: Longmans, Green and Co., 1956.</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1758,7 +1877,7 @@ async function mostrarPainelAluno() {
 
 // --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 7.0 ---
 async function carregarTarefasAluno() {
-    const cacheKey = `tarefas_aluno_${usuarioLogado.RA}_dados`;
+    const cacheKey = `tarefas_aluno_${usuarioLogado.RM}_dados`;
     const cached = frontendCache.get(cacheKey);
     
     if (cached) {
@@ -1781,7 +1900,7 @@ async function carregarTarefasAluno() {
 
         let entregas = [];
         try {
-            const entregasResponse = await apiGet('getEntregasAluno', { ra: usuarioLogado.RA });
+            const entregasResponse = await apiGet('getEntregasAluno', { rm: usuarioLogado.RM });
             entregas = entregasResponse.data || [];
         } catch (error) {
             console.error('Erro ao carregar entregas:', error);
@@ -1973,7 +2092,7 @@ const salvarLink = debounce(async function(idTarefa, parte) {
     try {
         await apiPost('entregarTarefa', {
             ID_Tarefa: idTarefa,
-            RA_Aluno: usuarioLogado.RA,
+            RM_Aluno: usuarioLogado.RM,
             NomeAluno: usuarioLogado.NomeCompleto,
             Turma: usuarioLogado.Turma,
             Parte: parte,
@@ -1982,10 +2101,10 @@ const salvarLink = debounce(async function(idTarefa, parte) {
         
         showModal('Sucesso', `Link da parte ${parte} salvo com sucesso!`);
         
-        frontendCache.remove(`painel_aluno_${usuarioLogado.RA}`);
-        frontendCache.remove(`tarefas_aluno_${usuarioLogado.RA}_dados`);
-        frontendCache.remove(`relatorio_aluno_${usuarioLogado.RA}`);
-        frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({ra: usuarioLogado.RA})}`);
+        frontendCache.remove(`painel_aluno_${usuarioLogado.RM}`);
+        frontendCache.remove(`tarefas_aluno_${usuarioLogado.RM}_dados`);
+        frontendCache.remove(`relatorio_aluno_${usuarioLogado.RM}`);
+        frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: usuarioLogado.RM})}`);
         
         await carregarTarefasAluno();
     } catch (error) {
@@ -1997,16 +2116,16 @@ const excluirLink = debounce(async function(idTarefa, parte) {
     try {
         await apiPost('excluirEntrega', {
             ID_Tarefa: idTarefa,
-            RA_Aluno: usuarioLogado.RA,
+            RM_Aluno: usuarioLogado.RM,
             Parte: parte
         });
         
         showModal('Sucesso', `Link da parte ${parte} excluído com sucesso!`);
         
-        frontendCache.remove(`painel_aluno_${usuarioLogado.RA}`);
-        frontendCache.remove(`tarefas_aluno_${usuarioLogado.RA}_dados`);
-        frontendCache.remove(`relatorio_aluno_${usuarioLogado.RA}`);
-        frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({ra: usuarioLogado.RA})}`);
+        frontendCache.remove(`painel_aluno_${usuarioLogado.RM}`);
+        frontendCache.remove(`tarefas_aluno_${usuarioLogado.RM}_dados`);
+        frontendCache.remove(`relatorio_aluno_${usuarioLogado.RM}`);
+        frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: usuarioLogado.RM})}`);
         
         await carregarTarefasAluno();
     } catch (error) {
