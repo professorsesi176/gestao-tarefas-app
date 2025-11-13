@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Tarefas Escolar - Versão 7.4</title>
+    <title>Gestão de Tarefas Escolar - Versão 7.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
     
@@ -604,7 +604,7 @@
 <div id="app-container" class="w-full max-w-6xl bg-white shadow-xl rounded-2xl p-6 sm:p-8 transition-all duration-300">
     <header class="mb-8 border-b pb-4">
         <div class="header-content">
-            <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar - V7.4</h1>
+            <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar - V7.5</h1>
             <div id="user-info" class="user-info-container"></div>
             <div class="absolute top-0 right-0 flex space-x-2">
                 <button id="relatorioBtn" class="btn-relatorio hidden">Relatório</button>
@@ -616,7 +616,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 7.4 - Sistema de notas e relatórios atualizados
+        Desenvolvido por Geovane Modena | Versão 7.5
     </footer>
 </div>
 
@@ -655,7 +655,7 @@ let tarefaParaExcluir = null;
 let contadoresAtivos = [];
 let tarefaEditando = null;
 
-// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 7.4 ATUALIZADO ---
+// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 7.5 ATUALIZADO ---
 const frontendCache = {
     get: (key) => {
         try {
@@ -711,7 +711,7 @@ const frontendCache = {
     }
 };
 
-// --- DEBOUNCE FUNCTION - VERSÃO 7.4 ---
+// --- DEBOUNCE FUNCTION - VERSÃO 7.5 ---
 function debounce(func, wait, immediate = false) {
     let timeout;
     return function executedFunction(...args) {
@@ -782,7 +782,7 @@ const formatarData = (dataISO) => {
     return data.toLocaleDateString('pt-BR');
 };
 
-// --- FUNÇÕES DE FORMATAÇÃO - VERSÃO 7.4 ---
+// --- FUNÇÕES DE FORMATAÇÃO - VERSÃO 7.5 ---
 function formatarConteudoParaExibicao(texto) {
     if (!texto) return '';
     
@@ -890,7 +890,7 @@ function mostrarLoadingRelatorio() {
     `;
 }
 
-// --- FUNÇÕES DE TEMPO ATUALIZADAS - VERSÃO 7.4 ---
+// --- FUNÇÕES DE TEMPO ATUALIZADAS - VERSÃO 7.5 ---
 function calcularContadoresOtimizado(dataAula) {
     const agora = new Date();
     const dataAulaObj = new Date(dataAula);
@@ -984,7 +984,7 @@ function calcularContadoresOtimizado(dataAula) {
     };
 }
 
-// --- CONTADORES OTIMIZADOS - VERSÃO 7.4 ---
+// --- CONTADORES OTIMIZADOS - VERSÃO 7.5 ---
 function iniciarAtualizacaoContadoresOtimizada() {
     contadoresAtivos.forEach(interval => clearInterval(interval));
     contadoresAtivos = [];
@@ -1035,28 +1035,42 @@ function isElementInViewport(el) {
     );
 }
 
-// --- API REQUEST COM JSONP E CACHE - VERSÃO 7.4 ATUALIZADO ---
+// --- API REQUEST COM JSONP E CACHE - VERSÃO 7.5 ATUALIZADO ---
 function apiRequestJSONP(url, callback) {
     const callbackName = 'jsonp_callback_' + jsonpCallbackId++;
     
+    // Timeout para evitar requisições pendentes
+    const timeout = setTimeout(() => {
+        if (window[callbackName]) {
+            delete window[callbackName];
+            callback(new Error('Timeout: A requisição demorou muito para responder'));
+        }
+    }, 15000); // 15 segundos de timeout
+    
     window[callbackName] = function(data) {
+        clearTimeout(timeout);
         delete window[callbackName];
-        document.body.removeChild(script);
+        if (script.parentNode) {
+            document.body.removeChild(script);
+        }
         callback(null, data);
     };
     
     const script = document.createElement('script');
     script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
     script.onerror = function() {
+        clearTimeout(timeout);
         delete window[callbackName];
-        document.body.removeChild(script);
-        callback(new Error('Falha ao carregar o script'));
+        if (script.parentNode) {
+            document.body.removeChild(script);
+        }
+        callback(new Error('Falha ao carregar o script. Verifique sua conexão.'));
     };
     
     document.body.appendChild(script);
 }
 
-// --- API COM CACHE - VERSÃO 7.4 ATUALIZADO ---
+// --- API COM CACHE - VERSÃO 7.5 ATUALIZADO ---
 async function apiGet(func, params = {}, forceRefresh = false) {
     const cacheKey = `api_${func}_${JSON.stringify(params)}`;
     
@@ -1085,12 +1099,17 @@ async function apiGet(func, params = {}, forceRefresh = false) {
             url += `&_=${Date.now()}`;
         }
         
+        console.log(`🌐 Fazendo requisição: ${func}`);
+        
         apiRequestJSONP(url, (error, data) => {
             if (error) {
+                console.error(`❌ Erro na requisição ${func}:`, error);
                 reject(error);
             } else if (data && data.success === false) {
+                console.error(`❌ Erro no backend ${func}:`, data.error);
                 reject(new Error(data.error));
             } else {
+                console.log(`✅ Sucesso na requisição ${func}`);
                 frontendCache.set(cacheKey, data, 2 * 60 * 1000);
                 resolve(data);
             }
@@ -1112,12 +1131,17 @@ async function apiPost(action, dados) {
             }
         }
         
+        console.log(`🌐 Fazendo POST: ${action}`);
+        
         apiRequestJSONP(url, (error, data) => {
             if (error) {
+                console.error(`❌ Erro no POST ${action}:`, error);
                 reject(error);
             } else if (data && data.success === false) {
+                console.error(`❌ Erro no backend ${action}:`, data.error);
                 reject(new Error(data.error));
             } else {
+                console.log(`✅ Sucesso no POST ${action}`);
                 resolve(data);
             }
         });
@@ -1127,11 +1151,24 @@ async function apiPost(action, dados) {
 // --- INICIALIZAÇÃO ---
 async function init() {
     try {
+        console.log('🔄 Inicializando aplicação...');
         const response = await apiGet('getUsers');
         usuarios = response.data || [];
+        console.log(`✅ ${usuarios.length} usuários carregados`);
     } catch (error) {
-        console.error('Erro ao carregar usuários:', error);
+        console.error('❌ Erro ao carregar usuários:', error);
         usuarios = [];
+        
+        // Adicionar usuário padrão caso não consiga carregar
+        usuarios = [
+            { 
+                NomeCompleto: "Geovane Módena", 
+                Email: "geovane.modena@portalsesisp.org.br", 
+                RM: "9999",
+                Turma: "Professor", 
+                Perfil: "Professor" 
+            }
+        ];
     }
     
     renderLogin();
@@ -1220,10 +1257,14 @@ async function login(event) {
     }
 
     try {
+        console.log('🔄 Carregando tarefas...');
         const response = await apiGet('getTarefas');
         tarefas = response.data || [];
+        console.log(`✅ ${tarefas.length} tarefas carregadas`);
     } catch (error) {
+        console.error('❌ Erro ao carregar tarefas:', error);
         tarefas = [];
+        showModal('Aviso', 'Algumas funcionalidades podem estar limitadas devido a problemas de conexão.');
     }
 
     if (user.Perfil === "Professor") {
@@ -1247,13 +1288,13 @@ function logout() {
     renderLogin(); 
 }
 
-// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 7.4 CORRIGIDO ---
+// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 7.5 CORRIGIDO ---
 async function mostrarRelatorioProfessor() {
     const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
     
     let relatorioHTML = `
         <div class="card p-6">
-            <h3 class="text-2xl font-bold text-red-700 mb-4">Relatório por Turma - V7.4</h3>
+            <h3 class="text-2xl font-bold text-red-700 mb-4">Relatório por Turma - V7.5</h3>
             <div class="mb-4">
                 <p class="block text-sm font-medium text-gray-700 mb-2">Selecione a Turma:</p>
                 <div class="flex flex-wrap gap-2 mb-6" id="botoes-turma">
@@ -1282,9 +1323,9 @@ async function mostrarRelatorioProfessor() {
     contentArea.innerHTML = relatorioHTML;
 }
 
-// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 7.4 CORRIGIDO ---
+// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 7.5 CORRIGIDO ---
 async function carregarRelatorioTurma(turmaSelecionada) {
-    // VERSÃO 7.4: Invalidar cache para forçar atualização
+    // VERSÃO 7.5: Invalidar cache para forçar atualização
     frontendCache.remove(`relatorio_${turmaSelecionada}`);
     
     document.getElementById('relatorio-turma-container').innerHTML = `
@@ -1305,7 +1346,7 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         progressBar.style.width = '10%';
         progressText.textContent = 'Carregando informações da turma...';
         
-        // VERSÃO 7.4: Forçar atualização dos dados
+        // VERSÃO 7.5: Forçar atualização dos dados
         const [usersResponse, tarefasResponse] = await Promise.all([
             apiGet('getUsers', {}, true),
             apiGet('getTarefasPorTurma', { turma: turmaSelecionada }, true)
@@ -1498,7 +1539,7 @@ async function mostrarRelatorioAluno() {
         
         let relatorioHTML = `
             <div class="card p-6">
-                <h3 class="text-2xl font-bold text-red-700 mb-4">Meu Relatório - V7.4</h3>
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Meu Relatório - V7.5</h3>
         `;
         
         if (entregas.length === 0) {
@@ -1581,7 +1622,7 @@ async function mostrarRelatorioAluno() {
     }
 }
 
-// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 7.4 ---
+// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 7.5 ---
 async function mostrarPainelProfessor() {
     const cacheKey = 'painel_professor';
     const cached = frontendCache.get(cacheKey);
@@ -1798,7 +1839,7 @@ async function editarTarefa(idTarefa) {
     await mostrarPainelProfessor();
 }
 
-// --- SALVAR TAREFA COM DEBOUNCE - VERSÃO 7.4 ---
+// --- SALVAR TAREFA COM DEBOUNCE - VERSÃO 7.5 ---
 const salvarTarefa = debounce(async function() {
     const btnSalvar = document.getElementById('btnSalvarTarefa');
     
@@ -1845,7 +1886,7 @@ const salvarTarefa = debounce(async function() {
         const response = await apiPost('criarTarefa', dados);
         showModal('Sucesso', 'Tarefa criada com sucesso!');
         
-        // VERSÃO 7.4: Invalidar cache de forma mais abrangente
+        // VERSÃO 7.5: Invalidar cache de forma mais abrangente
         frontendCache.remove('painel_professor');
         frontendCache.remove('tarefas_professor_lista');
         turmasSelecionadas.forEach(turma => {
@@ -1906,7 +1947,7 @@ const atualizarTarefa = debounce(async function() {
         const response = await apiPost('editarTarefa', dados);
         showModal('Sucesso', 'Tarefa atualizada com sucesso!');
         
-        // VERSÃO 7.4: Invalidar cache de forma mais abrangente
+        // VERSÃO 7.5: Invalidar cache de forma mais abrangente
         frontendCache.remove('painel_professor');
         frontendCache.remove('tarefas_professor_lista');
         frontendCache.remove(`api_getTarefasPorTurma_${JSON.stringify({turma: turmaSelecionada})}`);
@@ -1927,7 +1968,7 @@ async function excluirTarefa(idTarefa) {
         await apiPost('excluirTarefa', { ID: idTarefa });
         showModal('Sucesso', 'Tarefa excluída com sucesso.');
         
-        // VERSÃO 7.4: Invalidar cache de forma mais abrangente
+        // VERSÃO 7.5: Invalidar cache de forma mais abrangente
         frontendCache.remove('painel_professor');
         frontendCache.remove('tarefas_professor_lista');
         ['1A', '1B', '2A', '2B', '3A', '3B'].forEach(turma => {
@@ -1962,7 +2003,7 @@ function limparFormulario() {
     }
 }
 
-// --- PAINEL DO ALUNO COM CACHE - VERSÃO 7.4 ---
+// --- PAINEL DO ALUNO COM CACHE - VERSÃO 7.5 ---
 async function mostrarPainelAluno() {
     const cacheKey = `painel_aluno_${usuarioLogado.RM}`;
     const cached = frontendCache.get(cacheKey);
@@ -1977,7 +2018,7 @@ async function mostrarPainelAluno() {
     contentArea.innerHTML = `
         <div id="painelAluno" class="space-y-6">
             <div class="card p-6">
-                <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${usuarioLogado.Turma} - V7.4</h3>
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${usuarioLogado.Turma} - V7.5</h3>
                 
                 <div class="instrucoes-box">
                     <div class="instrucoes-title">Instruções para entrega:</div>
@@ -2038,7 +2079,7 @@ async function mostrarPainelAluno() {
     frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000);
 }
 
-// --- FUNÇÃO PARA EXPANDIR/RECOLHER FUNDAMENTO CIENTÍFICO - VERSÃO 7.4 ---
+// --- FUNÇÃO PARA EXPANDIR/RECOLHER FUNDAMENTO CIENTÍFICO - VERSÃO 7.5 ---
 function toggleFundamentoCientifico() {
     const conteudo = document.getElementById('conteudo-fundamento');
     const icon = document.querySelector('.expand-icon');
@@ -2052,7 +2093,7 @@ function toggleFundamentoCientifico() {
     }
 }
 
-// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 7.4 ---
+// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 7.5 ---
 async function carregarTarefasAluno() {
     const cacheKey = `tarefas_aluno_${usuarioLogado.RM}_dados`;
     const cached = frontendCache.get(cacheKey);
@@ -2066,6 +2107,7 @@ async function carregarTarefasAluno() {
     mostrarLoadingTarefasAluno();
     
     try {
+        console.log('🔄 Carregando tarefas do aluno...');
         const response = await apiGet('getTarefasPorTurma', { turma: usuarioLogado.Turma });
         const container = document.getElementById('tarefas-aluno-container');
         
@@ -2077,10 +2119,12 @@ async function carregarTarefasAluno() {
 
         let entregas = [];
         try {
+            console.log('🔄 Carregando entregas do aluno...');
             const entregasResponse = await apiGet('getEntregasAluno', { rm: usuarioLogado.RM });
             entregas = entregasResponse.data || [];
+            console.log(`✅ ${entregas.length} entregas carregadas`);
         } catch (error) {
-            console.error('Erro ao carregar entregas:', error);
+            console.error('❌ Erro ao carregar entregas:', error);
         }
 
         frontendCache.set(cacheKey, {tarefas: response.data, entregas: entregas}, 2 * 60 * 1000);
@@ -2088,6 +2132,7 @@ async function carregarTarefasAluno() {
         renderTarefasAlunoGradualmente(response.data, entregas, container);
         
     } catch (error) {
+        console.error('❌ Erro ao carregar tarefas do aluno:', error);
         document.getElementById('tarefas-aluno-container').innerHTML = 
             `<div class="text-center text-red-500 py-8">Erro ao carregar tarefas: ${error.message}</div>`;
     }
@@ -2186,7 +2231,7 @@ function renderTarefaItem(tarefa, entrega) {
     `;
 }
 
-// --- VERSÃO 7.4: FUNÇÃO ATUALIZADA COM FORMATAÇÃO ---
+// --- VERSÃO 7.5: FUNÇÃO ATUALIZADA COM FORMATAÇÃO ---
 function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     const linkSalvo = entrega ? entrega[`Link${numeroParte}`] : '';
     const inputId = `link-${idTarefa}-${numeroParte}`;
@@ -2251,7 +2296,7 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     </div>`;
 }
 
-// --- SALVAR LINK COM DEBOUNCE - VERSÃO 7.4 ---
+// --- SALVAR LINK COM DEBOUNCE - VERSÃO 7.5 ---
 const salvarLink = debounce(async function(idTarefa, parte) {
     const input = document.getElementById(`link-${idTarefa}-${parte}`);
     const link = input.value.trim();
@@ -2273,13 +2318,13 @@ const salvarLink = debounce(async function(idTarefa, parte) {
         
         showModal('Sucesso', `Link da parte ${parte} salvo com sucesso!`);
         
-        // VERSÃO 7.4: Invalidar cache de forma mais abrangente
+        // VERSÃO 7.5: Invalidar cache de forma mais abrangente
         frontendCache.remove(`painel_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`tarefas_aluno_${usuarioLogado.RM}_dados`);
         frontendCache.remove(`relatorio_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: usuarioLogado.RM})}`);
         
-        // VERSÃO 7.4: Invalidar também o cache do relatório do professor
+        // VERSÃO 7.5: Invalidar também o cache do relatório do professor
         frontendCache.remove(`relatorio_${usuarioLogado.Turma}`);
         
         await carregarTarefasAluno();
@@ -2298,13 +2343,13 @@ const excluirLink = debounce(async function(idTarefa, parte) {
         
         showModal('Sucesso', `Link da parte ${parte} excluído com sucesso!`);
         
-        // VERSÃO 7.4: Invalidar cache de forma mais abrangente
+        // VERSÃO 7.5: Invalidar cache de forma mais abrangente
         frontendCache.remove(`painel_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`tarefas_aluno_${usuarioLogado.RM}_dados`);
         frontendCache.remove(`relatorio_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: usuarioLogado.RM})}`);
         
-        // VERSÃO 7.4: Invalidar também o cache do relatório do professor
+        // VERSÃO 7.5: Invalidar também o cache do relatório do professor
         frontendCache.remove(`relatorio_${usuarioLogado.Turma}`);
         
         await carregarTarefasAluno();
