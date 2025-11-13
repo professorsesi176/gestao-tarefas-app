@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Tarefas Escolar - Versão 7.3</title>
+    <title>Gestão de Tarefas Escolar - Versão 7.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
     
@@ -575,6 +575,28 @@
         .btn-formatacao:hover {
             background-color: #e5e7eb;
         }
+        
+        /* VERSÃO 7.4 - CORREÇÕES ESPECÍFICAS */
+        .btn-atualizar-dados {
+            background-color: #3b82f6;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            border: none;
+            margin-top: 10px;
+        }
+        
+        .btn-atualizar-dados:hover {
+            background-color: #2563eb;
+        }
+        
+        .btn-atualizar-dados:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -582,7 +604,7 @@
 <div id="app-container" class="w-full max-w-6xl bg-white shadow-xl rounded-2xl p-6 sm:p-8 transition-all duration-300">
     <header class="mb-8 border-b pb-4">
         <div class="header-content">
-            <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar</h1>
+            <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar - V7.4</h1>
             <div id="user-info" class="user-info-container"></div>
             <div class="absolute top-0 right-0 flex space-x-2">
                 <button id="relatorioBtn" class="btn-relatorio hidden">Relatório</button>
@@ -594,7 +616,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 7.3
+        Desenvolvido por Geovane Modena | Versão 7.4 - Sistema de notas e relatórios atualizados
     </footer>
 </div>
 
@@ -633,7 +655,7 @@ let tarefaParaExcluir = null;
 let contadoresAtivos = [];
 let tarefaEditando = null;
 
-// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 7.3 ATUALIZADO ---
+// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 7.4 ATUALIZADO ---
 const frontendCache = {
     get: (key) => {
         try {
@@ -689,7 +711,7 @@ const frontendCache = {
     }
 };
 
-// --- DEBOUNCE FUNCTION - VERSÃO 7.2 ---
+// --- DEBOUNCE FUNCTION - VERSÃO 7.4 ---
 function debounce(func, wait, immediate = false) {
     let timeout;
     return function executedFunction(...args) {
@@ -760,12 +782,10 @@ const formatarData = (dataISO) => {
     return data.toLocaleDateString('pt-BR');
 };
 
-// --- FUNÇÕES DE FORMATAÇÃO - VERSÃO 7.3 ---
+// --- FUNÇÕES DE FORMATAÇÃO - VERSÃO 7.4 ---
 function formatarConteudoParaExibicao(texto) {
     if (!texto) return '';
     
-    // Usar white-space: pre-line para preservar quebras de linha
-    // E criar elementos HTML seguros
     return texto
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -786,45 +806,36 @@ function adicionarFormatacao(parteId, tipo) {
     
     switch(tipo) {
         case 'urls':
-            // Transforma URLs em links clicáveis
             if (textoSelecionado) {
-                // Se há texto selecionado, verificar se é uma URL
                 const urlRegex = /(https?:\/\/[^\s]+)/g;
                 textoFormatado = textoSelecionado.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
             } else {
-                // Se não há texto selecionado, inserir exemplo de URL
                 textoFormatado = 'https://exemplo.com';
                 novoFim = inicio + 19;
             }
             break;
         case 'lista':
             if (textoSelecionado) {
-                // Se há texto selecionado, transformar em lista
                 const linhas = textoSelecionado.split('\n');
                 textoFormatado = linhas.map(linha => linha.trim() ? `• ${linha}` : '').join('\n');
             } else {
-                // Se não há texto selecionado, inserir marcador
                 textoFormatado = '• ';
                 novoFim = inicio + 2;
             }
             break;
         case 'numerada':
             if (textoSelecionado) {
-                // Se há texto selecionado, transformar em lista numerada
                 const linhas = textoSelecionado.split('\n');
                 textoFormatado = linhas.map((linha, index) => linha.trim() ? `${index + 1}. ${linha}` : '').join('\n');
             } else {
-                // Se não há texto selecionado, inserir número
                 textoFormatado = '1. ';
                 novoFim = inicio + 3;
             }
             break;
     }
     
-    // Substituir o texto selecionado ou inserir no cursor
     textarea.value = textarea.value.substring(0, inicio) + textoFormatado + textarea.value.substring(fim);
     
-    // Reposicionar o cursor
     textarea.focus();
     textarea.setSelectionRange(novoInicio, novoFim);
 }
@@ -879,29 +890,11 @@ function mostrarLoadingRelatorio() {
     `;
 }
 
-function mostrarConclusaoRelatorio() {
-    const container = document.getElementById('relatorio-turma-container');
-    if (!container) return;
-    
-    const mensagem = document.createElement('div');
-    mensagem.className = 'text-green-600 text-center mt-4 p-3 bg-green-50 rounded border border-green-200';
-    mensagem.innerHTML = '<strong>✓ Relatório carregado com sucesso!</strong>';
-    
-    container.appendChild(mensagem);
-    
-    setTimeout(() => {
-        if (mensagem.parentNode) {
-            mensagem.remove();
-        }
-    }, 3000);
-}
-
-// --- FUNÇÕES DE TEMPO ATUALIZADAS - VERSÃO 7.2 ---
+// --- FUNÇÕES DE TEMPO ATUALIZADAS - VERSÃO 7.4 ---
 function calcularContadoresOtimizado(dataAula) {
     const agora = new Date();
     const dataAulaObj = new Date(dataAula);
     
-    // VERSÃO 7.2: Função atualizada para mostrar minutos inclusive no tempo de liberação
     const calcularTempoRestante = (diasAdicionais, horasLimite = 23, minutosLimite = 59) => {
         const liberacao = new Date(dataAulaObj);
         liberacao.setDate(liberacao.getDate() + diasAdicionais);
@@ -909,14 +902,13 @@ function calcularContadoresOtimizado(dataAula) {
         
         const limite = new Date(dataAulaObj);
         
-        // VERSÃO 7.2: Ajuste dos prazos
         if (diasAdicionais === 0) {
-            limite.setHours(horasLimite, minutosLimite, 0, 0); // Parte 1: até 23h59 do mesmo dia
-        } else if (diasAdicionais === 7) { // Parte 2: 7º ao 8º dia
+            limite.setHours(horasLimite, minutosLimite, 0, 0);
+        } else if (diasAdicionais === 7) {
             limite.setDate(limite.getDate() + 8);
-        } else if (diasAdicionais === 14) { // Parte 3: 14º ao 15º dia
+        } else if (diasAdicionais === 14) {
             limite.setDate(limite.getDate() + 15);
-        } else if (diasAdicionais === 28) { // Parte 4: 28º ao 30º dia
+        } else if (diasAdicionais === 28) {
             limite.setDate(limite.getDate() + 30);
         }
         
@@ -985,14 +977,14 @@ function calcularContadoresOtimizado(dataAula) {
     };
     
     return {
-        parte1: calcularTempoRestante(0, 23, 59), // VERSÃO 7.2: Parte 1 até 23h59
-        parte2: calcularTempoRestante(7), // VERSÃO 7.2: Parte 2 do 7º ao 8º dia
-        parte3: calcularTempoRestante(14), // VERSÃO 7.2: Parte 3 do 14º ao 15º dia
-        parte4: calcularTempoRestante(28) // VERSÃO 7.2: Parte 4 do 28º ao 30º dia
+        parte1: calcularTempoRestante(0, 23, 59),
+        parte2: calcularTempoRestante(7),
+        parte3: calcularTempoRestante(14),
+        parte4: calcularTempoRestante(28)
     };
 }
 
-// --- CONTADORES OTIMIZADOS - VERSÃO 7.2 ---
+// --- CONTADORES OTIMIZADOS - VERSÃO 7.4 ---
 function iniciarAtualizacaoContadoresOtimizada() {
     contadoresAtivos.forEach(interval => clearInterval(interval));
     contadoresAtivos = [];
@@ -1001,7 +993,7 @@ function iniciarAtualizacaoContadoresOtimizada() {
         if (usuarioLogado && usuarioLogado.Perfil === 'Aluno') {
             atualizarContadoresAlunoOtimizado();
         }
-    }, 1000); // Atualiza a cada segundo para mostrar minutos
+    }, 1000);
     
     contadoresAtivos.push(interval);
 }
@@ -1043,7 +1035,7 @@ function isElementInViewport(el) {
     );
 }
 
-// --- API REQUEST COM JSONP E CACHE - VERSÃO 7.3 ATUALIZADO ---
+// --- API REQUEST COM JSONP E CACHE - VERSÃO 7.4 ATUALIZADO ---
 function apiRequestJSONP(url, callback) {
     const callbackName = 'jsonp_callback_' + jsonpCallbackId++;
     
@@ -1064,11 +1056,10 @@ function apiRequestJSONP(url, callback) {
     document.body.appendChild(script);
 }
 
-// --- API COM CACHE - VERSÃO 7.3 ATUALIZADO ---
+// --- API COM CACHE - VERSÃO 7.4 ATUALIZADO ---
 async function apiGet(func, params = {}, forceRefresh = false) {
     const cacheKey = `api_${func}_${JSON.stringify(params)}`;
     
-    // Se não for forçado a atualizar, verifica o cache
     if (!forceRefresh) {
         const cached = frontendCache.get(cacheKey);
         if (cached) {
@@ -1090,7 +1081,6 @@ async function apiGet(func, params = {}, forceRefresh = false) {
             }
         }
         
-        // Adiciona timestamp para evitar cache do navegador quando forçado
         if (forceRefresh) {
             url += `&_=${Date.now()}`;
         }
@@ -1257,13 +1247,13 @@ function logout() {
     renderLogin(); 
 }
 
-// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 7.3 CORRIGIDO ---
+// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 7.4 CORRIGIDO ---
 async function mostrarRelatorioProfessor() {
     const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
     
     let relatorioHTML = `
         <div class="card p-6">
-            <h3 class="text-2xl font-bold text-red-700 mb-4">Relatório por Turma</h3>
+            <h3 class="text-2xl font-bold text-red-700 mb-4">Relatório por Turma - V7.4</h3>
             <div class="mb-4">
                 <p class="block text-sm font-medium text-gray-700 mb-2">Selecione a Turma:</p>
                 <div class="flex flex-wrap gap-2 mb-6" id="botoes-turma">
@@ -1271,7 +1261,7 @@ async function mostrarRelatorioProfessor() {
     
     turmas.forEach(turma => {
         relatorioHTML += `
-            <button onclick="carregarRelatorioTurmaOtimizado('${turma}')" class="btn-turma">
+            <button onclick="carregarRelatorioTurma('${turma}')" class="btn-turma">
                 Turma ${turma}
             </button>
         `;
@@ -1292,19 +1282,10 @@ async function mostrarRelatorioProfessor() {
     contentArea.innerHTML = relatorioHTML;
 }
 
-// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 7.3 CORRIGIDO ---
-async function carregarRelatorioTurmaOtimizado(turmaSelecionada) {
-    // VERSÃO 7.3 CORREÇÃO: SEMPRE invalidar o cache para forçar atualização
+// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 7.4 CORRIGIDO ---
+async function carregarRelatorioTurma(turmaSelecionada) {
+    // VERSÃO 7.4: Invalidar cache para forçar atualização
     frontendCache.remove(`relatorio_${turmaSelecionada}`);
-    
-    // VERSÃO 7.3 CORREÇÃO: Invalidar também o cache das entregas dos alunos
-    const usersResponse = await apiGet('getUsers', {}, true); // forceRefresh = true
-    const alunosTurma = usersResponse.data.filter(user => user.Turma === turmaSelecionada && user.Perfil === 'Aluno');
-    
-    // Invalidar cache de entregas de cada aluno
-    alunosTurma.forEach(aluno => {
-        frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: aluno.RM})}`);
-    });
     
     document.getElementById('relatorio-turma-container').innerHTML = `
         <div class="text-center py-8">
@@ -1324,18 +1305,19 @@ async function carregarRelatorioTurmaOtimizado(turmaSelecionada) {
         progressBar.style.width = '10%';
         progressText.textContent = 'Carregando informações da turma...';
         
-        const [usersResponseFinal, tarefasResponse] = await Promise.all([
-            apiGet('getUsers', {}, true), // forceRefresh = true
-            apiGet('getTarefasPorTurma', { turma: turmaSelecionada }, true) // forceRefresh = true
+        // VERSÃO 7.4: Forçar atualização dos dados
+        const [usersResponse, tarefasResponse] = await Promise.all([
+            apiGet('getUsers', {}, true),
+            apiGet('getTarefasPorTurma', { turma: turmaSelecionada }, true)
         ]);
         
-        const alunosTurmaFinal = usersResponseFinal.data.filter(user => user.Turma === turmaSelecionada && user.Perfil === 'Aluno');
+        const alunosTurma = usersResponse.data.filter(user => user.Turma === turmaSelecionada && user.Perfil === 'Aluno');
         const tarefasTurma = tarefasResponse.data || [];
         
         progressBar.style.width = '30%';
-        progressText.textContent = `Turma carregada: ${alunosTurmaFinal.length} alunos, ${tarefasTurma.length} tarefas`;
+        progressText.textContent = `Turma carregada: ${alunosTurma.length} alunos, ${tarefasTurma.length} tarefas`;
         
-        if (alunosTurmaFinal.length === 0) {
+        if (alunosTurma.length === 0) {
             const html = `<p class="text-gray-500 text-center py-8">Nenhum aluno encontrado na turma ${turmaSelecionada}.</p>`;
             document.getElementById('relatorio-turma-container').innerHTML = html;
             frontendCache.set(`relatorio_${turmaSelecionada}`, html, 10 * 60 * 1000);
@@ -1352,16 +1334,18 @@ async function carregarRelatorioTurmaOtimizado(turmaSelecionada) {
         let relatorioTurmaHTML = `
             <div class="relatorio-header">
                 <h4 class="text-lg font-semibold text-red-700">Relatório da Turma ${turmaSelecionada}</h4>
-                <button onclick="carregarRelatorioTurmaOtimizado('${turmaSelecionada}')" class="btn-primary btn-small">
-                    Atualizar Dados
-                </button>
+                <div>
+                    <button onclick="carregarRelatorioTurma('${turmaSelecionada}')" class="btn-atualizar-dados">
+                        Atualizar Dados
+                    </button>
+                </div>
             </div>
             <div class="relatorio-status" id="carregamento-status">
                 <div class="spinner"></div>
                 Carregando notas dos alunos...
             </div>
             <div class="relatorio-info">
-                Total de alunos: ${alunosTurmaFinal.length} | Total de tarefas: ${tarefasTurma.length} | Última atualização: ${new Date().toLocaleTimeString()}
+                Total de alunos: ${alunosTurma.length} | Total de tarefas: ${tarefasTurma.length} | Última atualização: ${new Date().toLocaleTimeString()}
             </div>
             <div class="overflow-x-auto border rounded-lg mt-4">
                 <table class="min-w-full compact-table table-header-white">
@@ -1381,7 +1365,7 @@ async function carregarRelatorioTurmaOtimizado(turmaSelecionada) {
                     <tbody id="relatorio-tbody">
         `;
         
-        alunosTurmaFinal.forEach((aluno, index) => {
+        alunosTurma.forEach((aluno, index) => {
             relatorioTurmaHTML += `
                 <tr class="aluno-loading">
                     <td class="px-4 py-3 font-medium text-gray-900 border-b">${aluno.NomeCompleto}</td>
@@ -1411,10 +1395,10 @@ async function carregarRelatorioTurmaOtimizado(turmaSelecionada) {
         const processarLoteAlunos = async (inicio, fim) => {
             const lotes = [];
             
-            for (let i = inicio; i < fim && i < alunosTurmaFinal.length; i++) {
-                const aluno = alunosTurmaFinal[i];
+            for (let i = inicio; i < fim && i < alunosTurma.length; i++) {
+                const aluno = alunosTurma[i];
                 lotes.push(
-                    apiGet('getEntregasAluno', { rm: aluno.RM }, true) // VERSÃO 7.3 CORREÇÃO: forceRefresh = true
+                    apiGet('getEntregasAluno', { rm: aluno.RM }, true)
                         .then(entregasResponse => {
                             const entregasAluno = entregasResponse.data || [];
                             return { aluno, entregas: entregasAluno, index: i };
@@ -1472,15 +1456,15 @@ async function carregarRelatorioTurmaOtimizado(turmaSelecionada) {
                     }
                     
                     alunosProcessados++;
-                    const progresso = 30 + (alunosProcessados / alunosTurmaFinal.length) * 60;
+                    const progresso = 30 + (alunosProcessados / alunosTurma.length) * 60;
                     progressBar.style.width = `${progresso}%`;
-                    carregamentoStatus.innerHTML = `<div class="spinner"></div> Carregando aluno ${alunosProcessados} de ${alunosTurmaFinal.length}...`;
+                    carregamentoStatus.innerHTML = `<div class="spinner"></div> Carregando aluno ${alunosProcessados} de ${alunosTurma.length}...`;
                 }
             }
         };
         
         const tamanhoLote = 3;
-        for (let i = 0; i < alunosTurmaFinal.length; i += tamanhoLote) {
+        for (let i = 0; i < alunosTurma.length; i += tamanhoLote) {
             await processarLoteAlunos(i, i + tamanhoLote);
             await new Promise(resolve => setTimeout(resolve, 100));
         }
@@ -1514,7 +1498,7 @@ async function mostrarRelatorioAluno() {
         
         let relatorioHTML = `
             <div class="card p-6">
-                <h3 class="text-2xl font-bold text-red-700 mb-4">Meu Relatório</h3>
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Meu Relatório - V7.4</h3>
         `;
         
         if (entregas.length === 0) {
@@ -1597,7 +1581,7 @@ async function mostrarRelatorioAluno() {
     }
 }
 
-// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 7.3 ---
+// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 7.4 ---
 async function mostrarPainelProfessor() {
     const cacheKey = 'painel_professor';
     const cached = frontendCache.get(cacheKey);
@@ -1761,10 +1745,8 @@ function renderizarTabelaTarefas() {
         const parte3 = tarefa.Parte3 || '';
         const parte4 = tarefa.Parte4 || '';
 
-        // VERSÃO 7.3: Formatar o conteúdo para exibição na tabela
         const formatarParaTabela = (texto) => {
             if (!texto) return '';
-            // Limitar a 100 caracteres e adicionar reticências se necessário
             const textoLimitado = texto.length > 100 ? texto.substring(0, 100) + '...' : texto;
             return formatarConteudoParaExibicao(textoLimitado);
         };
@@ -1816,7 +1798,7 @@ async function editarTarefa(idTarefa) {
     await mostrarPainelProfessor();
 }
 
-// --- SALVAR TAREFA COM DEBOUNCE - VERSÃO 7.2 ---
+// --- SALVAR TAREFA COM DEBOUNCE - VERSÃO 7.4 ---
 const salvarTarefa = debounce(async function() {
     const btnSalvar = document.getElementById('btnSalvarTarefa');
     
@@ -1863,6 +1845,7 @@ const salvarTarefa = debounce(async function() {
         const response = await apiPost('criarTarefa', dados);
         showModal('Sucesso', 'Tarefa criada com sucesso!');
         
+        // VERSÃO 7.4: Invalidar cache de forma mais abrangente
         frontendCache.remove('painel_professor');
         frontendCache.remove('tarefas_professor_lista');
         turmasSelecionadas.forEach(turma => {
@@ -1923,6 +1906,7 @@ const atualizarTarefa = debounce(async function() {
         const response = await apiPost('editarTarefa', dados);
         showModal('Sucesso', 'Tarefa atualizada com sucesso!');
         
+        // VERSÃO 7.4: Invalidar cache de forma mais abrangente
         frontendCache.remove('painel_professor');
         frontendCache.remove('tarefas_professor_lista');
         frontendCache.remove(`api_getTarefasPorTurma_${JSON.stringify({turma: turmaSelecionada})}`);
@@ -1943,6 +1927,7 @@ async function excluirTarefa(idTarefa) {
         await apiPost('excluirTarefa', { ID: idTarefa });
         showModal('Sucesso', 'Tarefa excluída com sucesso.');
         
+        // VERSÃO 7.4: Invalidar cache de forma mais abrangente
         frontendCache.remove('painel_professor');
         frontendCache.remove('tarefas_professor_lista');
         ['1A', '1B', '2A', '2B', '3A', '3B'].forEach(turma => {
@@ -1977,7 +1962,7 @@ function limparFormulario() {
     }
 }
 
-// --- PAINEL DO ALUNO COM CACHE - VERSÃO 7.3 ---
+// --- PAINEL DO ALUNO COM CACHE - VERSÃO 7.4 ---
 async function mostrarPainelAluno() {
     const cacheKey = `painel_aluno_${usuarioLogado.RM}`;
     const cached = frontendCache.get(cacheKey);
@@ -1992,9 +1977,8 @@ async function mostrarPainelAluno() {
     contentArea.innerHTML = `
         <div id="painelAluno" class="space-y-6">
             <div class="card p-6">
-                <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${usuarioLogado.Turma}</h3>
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${usuarioLogado.Turma} - V7.4</h3>
                 
-                <!-- INSTRUÇÕES ADICIONADAS AQUI -->
                 <div class="instrucoes-box">
                     <div class="instrucoes-title">Instruções para entrega:</div>
                     <ol class="instrucoes-list">
@@ -2008,7 +1992,6 @@ async function mostrarPainelAluno() {
                     <div class="text-center text-gray-500 py-8">Carregando tarefas...</div>
                 </div>
                 
-                <!-- FUNDAMENTO CIENTÍFICO ADICIONADO AQUI - VERSÃO 7.3: TÍTULO VISÍVEL -->
                 <div class="fundamento-cientifico">
                     <div class="fundamento-title" onclick="toggleFundamentoCientifico()">
                         <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2055,7 +2038,7 @@ async function mostrarPainelAluno() {
     frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000);
 }
 
-// --- FUNÇÃO PARA EXPANDIR/RECOLHER FUNDAMENTO CIENTÍFICO - VERSÃO 7.3 ---
+// --- FUNÇÃO PARA EXPANDIR/RECOLHER FUNDAMENTO CIENTÍFICO - VERSÃO 7.4 ---
 function toggleFundamentoCientifico() {
     const conteudo = document.getElementById('conteudo-fundamento');
     const icon = document.querySelector('.expand-icon');
@@ -2069,7 +2052,7 @@ function toggleFundamentoCientifico() {
     }
 }
 
-// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 7.3 ---
+// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 7.4 ---
 async function carregarTarefasAluno() {
     const cacheKey = `tarefas_aluno_${usuarioLogado.RM}_dados`;
     const cached = frontendCache.get(cacheKey);
@@ -2146,17 +2129,6 @@ function renderTarefasAlunoFromCache(tarefas, entregas) {
         </div>
         `;
     }).join('');
-    
-    const conclusao = document.createElement('div');
-    conclusao.className = 'text-green-600 text-center mt-4 p-3 bg-green-50 rounded border border-green-200';
-    conclusao.innerHTML = '<strong>✓ Todas as tarefas carregadas do cache!</strong>';
-    container.appendChild(conclusao);
-    
-    setTimeout(() => {
-        if (conclusao.parentNode) {
-            conclusao.remove();
-        }
-    }, 3000);
 }
 
 async function renderTarefasAlunoGradualmente(tarefas, entregas, container) {
@@ -2214,7 +2186,7 @@ function renderTarefaItem(tarefa, entrega) {
     `;
 }
 
-// --- VERSÃO 7.3: FUNÇÃO ATUALIZADA COM FORMATAÇÃO ---
+// --- VERSÃO 7.4: FUNÇÃO ATUALIZADA COM FORMATAÇÃO ---
 function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     const linkSalvo = entrega ? entrega[`Link${numeroParte}`] : '';
     const inputId = `link-${idTarefa}-${numeroParte}`;
@@ -2223,20 +2195,17 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     const disponivel = contador.liberada && !contador.expirado && !temLinkSalvo;
     const expirado = contador.expirado;
     
-    // VERSÃO 7.3: Adicionar avisos de retenção
     let retencaoAviso = '';
     if (numeroParte === 1) retencaoAviso = '<span class="retencao-aviso retencao-50">50% retenção</span>';
     else if (numeroParte === 2) retencaoAviso = '<span class="retencao-aviso retencao-25">25% retenção</span>';
     else if (numeroParte === 3) retencaoAviso = '<span class="retencao-aviso retencao-15">15% retenção</span>';
     else if (numeroParte === 4) retencaoAviso = '<span class="retencao-aviso retencao-10">9.99% retenção</span>';
 
-    // VERSÃO 7.3: Informação sobre nota da parte 1
     let infoNota = '';
     if (numeroParte === 1) {
         infoNota = '<div class="info-nota">Nota: 2.5 até 18h | 2.0 até 23h59</div>';
     }
 
-    // VERSÃO 7.3: Mostrar conteúdo apenas quando liberado
     if (!contador.liberada) {
         return `
         <div class="mt-3 p-3 bg-gray-50 rounded border parte-${numeroParte}">
@@ -2250,7 +2219,6 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
         </div>`;
     }
 
-    // VERSÃO 7.3: Exibir conteúdo formatado com quebras de linha
     const conteudoFormatado = formatarConteudoParaExibicao(conteudo);
 
     return `
@@ -2283,7 +2251,7 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     </div>`;
 }
 
-// --- SALVAR LINK COM DEBOUNCE - VERSÃO 7.3 ---
+// --- SALVAR LINK COM DEBOUNCE - VERSÃO 7.4 ---
 const salvarLink = debounce(async function(idTarefa, parte) {
     const input = document.getElementById(`link-${idTarefa}-${parte}`);
     const link = input.value.trim();
@@ -2305,13 +2273,13 @@ const salvarLink = debounce(async function(idTarefa, parte) {
         
         showModal('Sucesso', `Link da parte ${parte} salvo com sucesso!`);
         
-        // VERSÃO 7.3 CORREÇÃO: Invalidar cache mais abrangente
+        // VERSÃO 7.4: Invalidar cache de forma mais abrangente
         frontendCache.remove(`painel_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`tarefas_aluno_${usuarioLogado.RM}_dados`);
         frontendCache.remove(`relatorio_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: usuarioLogado.RM})}`);
         
-        // VERSÃO 7.3 CORREÇÃO: Invalidar também o cache do relatório do professor
+        // VERSÃO 7.4: Invalidar também o cache do relatório do professor
         frontendCache.remove(`relatorio_${usuarioLogado.Turma}`);
         
         await carregarTarefasAluno();
@@ -2330,13 +2298,13 @@ const excluirLink = debounce(async function(idTarefa, parte) {
         
         showModal('Sucesso', `Link da parte ${parte} excluído com sucesso!`);
         
-        // VERSÃO 7.3 CORREÇÃO: Invalidar cache mais abrangente
+        // VERSÃO 7.4: Invalidar cache de forma mais abrangente
         frontendCache.remove(`painel_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`tarefas_aluno_${usuarioLogado.RM}_dados`);
         frontendCache.remove(`relatorio_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: usuarioLogado.RM})}`);
         
-        // VERSÃO 7.3 CORREÇÃO: Invalidar também o cache do relatório do professor
+        // VERSÃO 7.4: Invalidar também o cache do relatório do professor
         frontendCache.remove(`relatorio_${usuarioLogado.Turma}`);
         
         await carregarTarefasAluno();
@@ -2355,7 +2323,7 @@ window.mostrarPainelProfessor = mostrarPainelProfessor;
 window.mostrarPainelAluno = mostrarPainelAluno;
 window.mostrarRelatorioProfessor = mostrarRelatorioProfessor;
 window.mostrarRelatorioAluno = mostrarRelatorioAluno;
-window.carregarRelatorioTurmaOtimizado = carregarRelatorioTurmaOtimizado;
+window.carregarRelatorioTurma = carregarRelatorioTurma;
 window.salvarTarefa = salvarTarefa;
 window.atualizarTarefa = atualizarTarefa;
 window.excluirTarefa = excluirTarefa;
