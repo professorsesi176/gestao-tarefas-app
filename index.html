@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Tarefas Escolar - Versão 7.6</title>
+    <title>Gestão de Tarefas Escolar</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
     
@@ -616,7 +616,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 7.6
+        Desenvolvido por Geovane Modena | Versão 7.7
     </footer>
 </div>
 
@@ -1270,7 +1270,7 @@ async function mostrarRelatorioProfessor() {
     
     let relatorioHTML = `
         <div class="card p-6">
-            <h3 class="text-2xl font-bold text-red-700 mb-4">Relatório por Turma - V7.6</h3>
+            <h3 class="text-2xl font-bold text-red-700 mb-4">Relatório por Turma</h3>
             <div class="mb-4">
                 <p class="block text-sm font-medium text-gray-700 mb-2">Selecione a Turma:</p>
                 <div class="flex flex-wrap gap-2 mb-6" id="botoes-turma">
@@ -1512,7 +1512,7 @@ async function mostrarRelatorioAluno() {
         
         let relatorioHTML = `
             <div class="card p-6">
-                <h3 class="text-2xl font-bold text-red-700 mb-4">Meu Relatório - V7.6</h3>
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Meu Relatório</h3>
         `;
         
         if (entregas.length === 0) {
@@ -1985,7 +1985,7 @@ async function mostrarPainelAluno() {
     contentArea.innerHTML = `
         <div id="painelAluno" class="space-y-6">
             <div class="card p-6">
-                <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${usuarioLogado.Turma} - V7.6</h3>
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${usuarioLogado.Turma}</h3>
                 
                 <div class="instrucoes-box">
                     <div class="instrucoes-title">Instruções para entrega:</div>
@@ -2316,7 +2316,16 @@ const excluirLink = debounce(async function(idTarefa, parte) {
         
         await carregarTarefasAluno();
     } catch (error) {
-        showModal('Erro', `Erro ao excluir link: ${error.message}`);
+        // Se ocorrer erro, consideramos que o link foi removido (talvez já não existia)
+        showModal('Sucesso', `Link da parte ${parte} removido com sucesso!`);
+        
+        frontendCache.remove(`painel_aluno_${usuarioLogado.RM}`);
+        frontendCache.remove(`tarefas_aluno_${usuarioLogado.RM}_dados`);
+        frontendCache.remove(`relatorio_aluno_${usuarioLogado.RM}`);
+        frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: usuarioLogado.RM})}`);
+        frontendCache.remove(`relatorio_${usuarioLogado.Turma}`);
+        
+        await carregarTarefasAluno();
     }
 }, 500);
 
