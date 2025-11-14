@@ -3,202 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Tarefas Escolar v7.8</title>
+    <title>Gestão de Tarefas Escolar</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 100%); min-height: 100vh; }
-        .card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
-        .btn-primary { background: linear-gradient(135deg, #CC0000, #A00000); color: white; padding: 12px 24px; border-radius: 12px; font-weight: 600; transition: all 0.3s ease; cursor: pointer; border: none; position: relative; overflow: hidden; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(255, 0, 0, 0.4); }
-        .btn-secondary { background: rgba(255, 255, 255, 0.1); color: white; padding: 10px 20px; border-radius: 12px; font-weight: 600; transition: all 0.3s ease; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.2); }
-        .btn-secondary:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-1px); }
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
+        .card { background-color: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.2); }
+        .btn-primary { background-color: #CC0000; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; font-size: 14px; }
+        .btn-primary:hover { background-color: #A00000; }
+        .btn-secondary { background-color: #d1d5db; color: #1e1e1e; padding: 8px 16px; border-radius: 8px; font-weight: 600; transition: background-color 0.2s; cursor: pointer; }
+        .btn-secondary:hover { background-color: #9ca3af; }
+        .btn-small { padding: 6px 12px; font-size: 0.875rem; }
         input, textarea, select {
-            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 14px; border-radius: 12px; width: 100%; box-sizing: border-box;
-            transition: all 0.3s ease; margin-top: 4px; margin-bottom: 8px; color: white;
+            border: 1px solid #d1d5db; padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box;
+            transition: border-color 0.2s; margin-top: 4px; margin-bottom: 8px;
         }
-        input:focus, textarea:focus, select:focus { border-color: #CC0000; outline: none; background: rgba(255, 255, 255, 0.08); box-shadow: 0 0 20px rgba(255, 0, 0, 0.2); }
-        input::placeholder, textarea::placeholder { color: #888; }
+        input:focus, textarea:focus, select:focus { border-color: #CC0000; outline: none; }
         [data-lucide] { width: 20px; height: 20px; display: inline-block; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; border: 1px solid rgba(255, 255, 255, 0.1); text-align: left; color: white; }
-        th { background: linear-gradient(135deg, #CC0000, #A00000); color: white; font-weight: 600; }
-        tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.02); }
-        tbody tr:hover { background: rgba(255, 255, 255, 0.05); }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #CC0000; color: white; }
+        tbody tr:nth-child(even) { background-color: #f9f9f9; }
         .hidden { display: none; }
         
-        /* Performance Badge */
-        .performance-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-right: 10px;
-        }
-        .performance-badge:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-1px);
-        }
-        .badge-circle {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-        .badge-circle.excellent { background: #10B981; box-shadow: 0 0 10px #10B981; }
-        .badge-circle.good { background: #F59E0B; box-shadow: 0 0 10px #F59E0B; }
-        .badge-circle.poor { background: #EF4444; box-shadow: 0 0 10px #EF4444; }
-        .badge-text { color: white; font-weight: 500; }
-        
-        /* Monitoramento de Performance */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        .metric-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 1.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-        .metric-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #CC0000, #FF0000);
-        }
-        .metric-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: white;
-            margin-bottom: 0.5rem;
-        }
-        .metric-label {
-            font-size: 0.875rem;
-            color: #888;
-        }
-        .metric-trend {
-            font-size: 0.8rem;
-            padding: 4px 8px;
-            border-radius: 12px;
-            display: inline-block;
-            margin-top: 0.5rem;
-        }
-        .metric-trend.positive { background: rgba(16, 185, 129, 0.2); color: #10B981; }
-        .metric-trend.negative { background: rgba(239, 68, 68, 0.2); color: #EF4444; }
-        .metric-trend.stable { background: rgba(245, 158, 11, 0.2); color: #F59E0B; }
-        
-        .chart-container {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 1.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 2rem;
-        }
-        
-        .alert-item {
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            border-left: 4px solid;
-        }
-        .alert-item.warning {
-            background: rgba(245, 158, 11, 0.1);
-            color: #F59E0B;
-            border-left-color: #F59E0B;
-        }
-        .alert-item.critical {
-            background: rgba(239, 68, 68, 0.1);
-            color: #EF4444;
-            border-left-color: #EF4444;
-        }
-        .alert-item.info {
-            background: rgba(59, 130, 246, 0.1);
-            color: #3B82F6;
-            border-left-color: #3B82F6;
-        }
-        
-        .performance-score {
-            font-size: 3rem;
-            font-weight: bold;
-            text-align: center;
-            margin: 1rem 0;
-            text-shadow: 0 0 20px currentColor;
-        }
-        .score-excellent { color: #10B981; }
-        .score-good { color: #F59E0B; }
-        .score-poor { color: #EF4444; }
-        
-        /* Animações */
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-        
-        .pulse { animation: pulse 2s infinite; }
-        .float { animation: float 3s ease-in-out infinite; }
-        
-        /* Efeitos de gradiente modernos */
-        .gradient-text {
-            background: linear-gradient(135deg, #CC0000, #FF0000, #FF6B6B);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .glow-effect {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(255, 0, 0, 0.1) 0%, transparent 70%);
-            filter: blur(40px);
-            opacity: 0.5;
-            z-index: -1;
-        }
-        
-        /* Loaders otimizados */
-        .spinner {
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            border-top: 2px solid #CC0000;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Estilos existentes mantidos */
         .checkbox-group {
             display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; padding: 10px;
-            background: rgba(255, 255, 255, 0.05); border-radius: 8px;
+            background-color: #f9f9f9; border-radius: 8px;
         }
-        .checkbox-group label { font-weight: normal; display: flex; align-items: center; color: white; }
+        .checkbox-group label { font-weight: normal; display: flex; align-items: center; }
         .checkbox-group input { width: auto; margin: 0 5px 0 0; }
         
         .form-row {
@@ -210,7 +44,6 @@
         .form-row label {
             margin-bottom: 0;
             min-width: 120px;
-            color: white;
         }
         .form-row input, .form-row textarea {
             flex: 1;
@@ -236,29 +69,28 @@
         .contador {
             display: inline-block;
             padding: 4px 8px;
-            background: rgba(255, 255, 255, 0.1);
+            background-color: #f3f4f6;
             border-radius: 4px;
             font-size: 0.75rem;
             margin-left: 8px;
             min-width: 80px;
             text-align: center;
-            color: white;
         }
         .contador.disponivel {
-            background: rgba(16, 185, 129, 0.2);
-            color: #10B981;
+            background-color: #d1fae5;
+            color: #065f46;
         }
         .contador.urgente {
-            background: rgba(245, 158, 11, 0.2);
-            color: #F59E0B;
+            background-color: #fef3c7;
+            color: #92400e;
         }
         .contador.expirado {
-            background: rgba(239, 68, 68, 0.2);
-            color: #EF4444;
+            background-color: #fee2e2;
+            color: #991b1b;
         }
         .contador.aguardando {
-            background: rgba(255, 255, 255, 0.1);
-            color: #888;
+            background-color: #e5e7eb;
+            color: #374151;
         }
         
         .link-container {
@@ -278,22 +110,22 @@
         }
 
         .btn-link:disabled {
-            background: rgba(255, 255, 255, 0.05) !important;
-            color: #666 !important;
+            background-color: #9ca3af !important;
+            color: #6b7280 !important;
             cursor: not-allowed !important;
             opacity: 0.6;
         }
 
         .btn-link:disabled:hover {
-            background: rgba(255, 255, 255, 0.05) !important;
+            background-color: #9ca3af !important;
             transform: none !important;
         }
 
         .link-salvo {
-            background: rgba(16, 185, 129, 0.1) !important;
-            color: #10B981 !important;
+            background-color: #f3f4f6 !important;
+            color: #6b7280 !important;
             cursor: not-allowed !important;
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            border: 1px solid #d1d5db;
         }
 
         #login-form input {
@@ -327,33 +159,29 @@
         }
 
         .btn-editar {
-            background: rgba(59, 130, 246, 0.8);
+            background-color: #3b82f6;
             color: white;
             border: none;
             padding: 8px 16px;
             border-radius: 6px;
             cursor: pointer;
-            transition: all 0.3s ease;
         }
 
         .btn-editar:hover {
-            background: rgba(59, 130, 246, 1);
-            transform: translateY(-1px);
+            background-color: #2563eb;
         }
 
         .btn-excluir {
-            background: rgba(239, 68, 68, 0.8);
+            background-color: #ef4444;
             color: white;
             border: none;
             padding: 8px 16px;
             border-radius: 6px;
             cursor: pointer;
-            transition: all 0.3s ease;
         }
 
         .btn-excluir:hover {
-            background: rgba(239, 68, 68, 1);
-            transform: translateY(-1px);
+            background-color: #dc2626;
         }
 
         .checkbox-item {
@@ -376,7 +204,7 @@
 
         .user-info-text {
             font-size: 14px;
-            color: #888;
+            color: #4b5563;
         }
 
         .user-info-name {
@@ -390,20 +218,18 @@
         }
 
         .btn-relatorio {
-            background: linear-gradient(135deg, #10b981, #059669);
+            background-color: #10b981;
             color: white;
             padding: 8px 16px;
             border-radius: 6px;
             font-weight: 600;
-            transition: all 0.3s ease;
+            transition: background-color 0.2s;
             cursor: pointer;
             margin-left: 10px;
-            border: none;
         }
 
         .btn-relatorio:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+            background-color: #059669;
         }
 
         .loading {
@@ -412,42 +238,56 @@
         }
 
         .btn-turma {
-            background: linear-gradient(135deg, #CC0000, #A00000);
+            background-color: #CC0000;
             color: white;
             padding: 10px 20px;
             border-radius: 8px;
             font-weight: 600;
-            transition: all 0.3s ease;
+            transition: background-color 0.2s;
             cursor: pointer;
             margin: 5px;
-            border: none;
         }
 
         .btn-turma:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 0, 0, 0.4);
+            background-color: #A00000;
         }
 
         .table-header-white th {
             color: white !important;
-            background: linear-gradient(135deg, #CC0000, #A00000) !important;
+            background-color: #CC0000 !important;
         }
 
         /* ESTILOS PARA LOADING */
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 2px solid #CC0000;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .loading-text {
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            color: #888;
+            color: #6b7280;
         }
 
         .tarefa-loading {
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid #e5e7eb;
             border-radius: 8px;
             padding: 16px;
             margin-bottom: 16px;
-            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.02) 50%, rgba(255,255,255,0.05) 75%);
+            background: linear-gradient(90deg, #f9fafb 25%, #f3f4f6 50%, #f9fafb 75%);
             background-size: 200% 100%;
             animation: loading 1.5s infinite;
         }
@@ -471,12 +311,92 @@
             left: 50%;
             margin-left: -10px;
             margin-top: -10px;
-            border: 2px solid rgba(255, 255, 255, 0.8);
+            border: 2px solid #ffffff;
             border-radius: 50%;
             border-top-color: transparent;
             animation: spin 1s ease-in-out infinite;
         }
 
+        /* ESTILOS PARA CARREGAMENTO GRADUAL */
+        .cache-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #10b981;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #10b981;
+            transition: width 0.3s ease;
+        }
+
+        .aluno-loading {
+            background: linear-gradient(90deg, #f9fafb 25%, #f3f4f6 50%, #f9fafb 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        .nota-loading {
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+            background-color: #f3f4f6;
+            border-radius: 4px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        /* ESTILOS PARA O RELATÓRIO */
+        .relatorio-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .relatorio-info {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        
+        .relatorio-status {
+            background-color: #f3f4f6;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        /* ESTILOS PARA RETENÇÃO E CONTEÚDO CONDICIONAL */
         .retencao-aviso {
             display: inline-block;
             padding: 4px 8px;
@@ -487,44 +407,45 @@
         }
         
         .retencao-50 {
-            background: rgba(245, 158, 11, 0.2);
-            color: #F59E0B;
+            background-color: #fef3c7;
+            color: #92400e;
         }
         
         .retencao-25 {
-            background: rgba(16, 185, 129, 0.2);
-            color: #10B981;
+            background-color: #d1fae5;
+            color: #065f46;
         }
         
         .retencao-15 {
-            background: rgba(59, 130, 246, 0.2);
-            color: #3B82F6;
+            background-color: #dbeafe;
+            color: #1e40af;
         }
         
         .retencao-10 {
-            background: rgba(147, 51, 234, 0.2);
-            color: #9333EA;
+            background-color: #e0e7ff;
+            color: #3730a3;
         }
         
         .conteudo-bloqueado {
-            color: #888;
+            color: #6b7280;
             font-style: italic;
             padding: 8px;
-            background: rgba(255, 255, 255, 0.05);
+            background-color: #f9fafb;
             border-radius: 4px;
             margin-top: 8px;
         }
 
+        /* ESTILOS PARA INFORMAÇÕES ADICIONAIS */
         .instrucoes-box {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
+            background-color: #f0f9ff;
+            border: 1px solid #bae6fd;
             border-radius: 8px;
             padding: 16px;
             margin-bottom: 20px;
         }
 
         .instrucoes-title {
-            color: #3B82F6;
+            color: #0369a1;
             font-weight: 600;
             margin-bottom: 8px;
         }
@@ -533,7 +454,6 @@
             list-style-type: decimal;
             padding-left: 20px;
             margin-bottom: 0;
-            color: #ddd;
         }
 
         .instrucoes-list li {
@@ -541,15 +461,15 @@
         }
 
         .fundamento-cientifico {
-            background: rgba(245, 158, 11, 0.1);
-            border: 1px solid rgba(245, 158, 11, 0.3);
+            background-color: #fefce8;
+            border: 1px solid #fef08a;
             border-radius: 8px;
             padding: 16px;
             margin-top: 20px;
         }
 
         .fundamento-title {
-            color: #F59E0B;
+            color: #854d0e;
             font-weight: 600;
             margin-bottom: 12px;
             cursor: pointer;
@@ -560,12 +480,11 @@
         }
 
         .fundamento-title:hover {
-            color: #D97706;
+            color: #713f12;
         }
 
         .fundamento-content {
             display: none;
-            color: #ddd;
         }
 
         .fundamento-content.expandido {
@@ -584,7 +503,7 @@
 
         .referencias {
             font-size: 0.8rem;
-            color: #888;
+            color: #6b7280;
             margin-top: 16px;
         }
 
@@ -620,16 +539,16 @@
 
         .info-nota {
             font-size: 0.75rem;
-            color: #888;
+            color: #6b7280;
             margin-top: 4px;
             font-style: italic;
         }
         
+        /* ESTILOS PARA FORMATAÇÃO DE TEXTO */
         .conteudo-formatado {
             white-space: pre-line;
             line-height: 1.6;
             margin-top: 8px;
-            color: #ddd;
         }
         
         .conteudo-formatado ul, .conteudo-formatado ol {
@@ -643,64 +562,51 @@
         }
         
         .btn-formatacao {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 0.75rem;
             cursor: pointer;
             margin-right: 5px;
             margin-bottom: 5px;
-            color: white;
-            transition: all 0.3s ease;
         }
         
         .btn-formatacao:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background-color: #e5e7eb;
         }
         
+        /* ESTILOS ESPECÍFICOS */
         .btn-atualizar-dados {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            background-color: #3b82f6;
             color: white;
             padding: 8px 16px;
             border-radius: 6px;
             font-weight: 600;
-            transition: all 0.3s ease;
+            transition: background-color 0.2s;
             cursor: pointer;
             border: none;
             margin-top: 10px;
         }
         
         .btn-atualizar-dados:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+            background-color: #2563eb;
         }
         
         .btn-atualizar-dados:disabled {
-            background: rgba(255, 255, 255, 0.1);
+            background-color: #9ca3af;
             cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
         }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
 
-<div id="app-container" class="w-full max-w-6xl bg-gradient-to-br from-gray-900 to-black shadow-2xl rounded-2xl p-6 sm:p-8 transition-all duration-300 relative overflow-hidden">
-    <!-- Efeitos de fundo -->
-    <div class="glow-effect" style="top: -100px; right: -100px;"></div>
-    <div class="glow-effect" style="bottom: -100px; left: -100px; background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);"></div>
-    
-    <header class="mb-8 border-b border-gray-800 pb-4">
+<div id="app-container" class="w-full max-w-6xl bg-white shadow-xl rounded-2xl p-6 sm:p-8 transition-all duration-300">
+    <header class="mb-8 border-b pb-4">
         <div class="header-content">
-            <h1 class="text-4xl font-extrabold gradient-text text-center mb-2">Gestão de Tarefas Escolar</h1>
-            <div class="text-center text-gray-400 mb-4">Versão 7.8 - Com Monitoramento de Performance</div>
+            <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar</h1>
             <div id="user-info" class="user-info-container"></div>
-            <div class="absolute top-0 right-0 flex space-x-2 items-center">
-                <div id="performance-badge" class="performance-badge hidden" title="Status de Performance do Sistema" onclick="mostrarMonitoramentoPerformance()">
-                    <div class="badge-circle"></div>
-                    <span class="badge-text">Carregando...</span>
-                </div>
+            <div class="absolute top-0 right-0 flex space-x-2">
                 <button id="relatorioBtn" class="btn-relatorio hidden">Relatório</button>
                 <button onclick="logout()" id="logoutBtn" class="btn-secondary hidden">Sair</button>
             </div>
@@ -709,41 +615,38 @@
 
     <div id="content-area"></div>
 
-    <footer class="mt-8 pt-4 border-t border-gray-800 text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 7.8 | Performance Monitor Ativo
+    <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
+        Desenvolvido por Geovane Modena | Versão 7.7
     </footer>
 </div>
 
 <!-- Modal para mensagens -->
-<div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
-    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-        <h3 id="modal-title" class="text-xl font-bold mb-3 gradient-text"></h3>
-        <p id="modal-message" class="text-gray-300 mb-4 whitespace-pre-wrap"></p>
-        <button onclick="closeModal()" class="w-full btn-primary">OK</button>
+<div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg p-6 max-w-sm w-full shadow-2xl">
+        <h3 id="modal-title" class="text-xl font-bold mb-3 text-red-600"></h3>
+        <p id="modal-message" class="text-gray-700 mb-4 whitespace-pre-wrap"></p>
+        <button onclick="closeModal()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">OK</button>
     </div>
 </div>
 
 <!-- Modal de confirmação para exclusão -->
-<div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
-    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-        <h3 class="text-xl font-bold mb-3 gradient-text">Confirmar Exclusão</h3>
-        <p id="confirm-message" class="text-gray-300 mb-4">Tem certeza que deseja excluir esta tarefa?</p>
+<div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg p-6 max-w-sm w-full shadow-2xl">
+        <h3 class="text-xl font-bold mb-3 text-red-600">Confirmar Exclusão</h3>
+        <p id="confirm-message" class="text-gray-700 mb-4">Tem certeza que deseja excluir esta tarefa?</p>
         <div class="flex space-x-4">
-            <button id="confirm-cancel" class="flex-1 btn-secondary">Cancelar</button>
-            <button id="confirm-delete" class="flex-1 btn-primary">Excluir</button>
+            <button id="confirm-cancel" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded transition">Cancelar</button>
+            <button id="confirm-delete" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">Excluir</button>
         </div>
     </div>
 </div>
 
 <script>
-// ==========================================
-// CONFIGURAÇÃO E ESTADO DA APLICAÇÃO
-// ==========================================
-
+// --- CONFIGURAÇÃO ---
 const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
 const SECURITY_TOKEN = 'SESI_EDUCATION_2024';
 
-// Estado da aplicação
+// --- ESTADO DA APLICAÇÃO ---
 let usuarios = [];
 let usuarioLogado = null;
 let tarefas = [];
@@ -752,31 +655,7 @@ let tarefaParaExcluir = null;
 let contadoresAtivos = [];
 let tarefaEditando = null;
 
-// Sistema de Monitoramento de Performance
-let performanceMetrics = {
-    lcp: 0,
-    fid: 0,
-    cls: 0,
-    memory: 0,
-    cacheHitRate: 0,
-    apiResponseTime: 0,
-    score: 0
-};
-
-let performanceCharts = {};
-let performanceDataHistory = [];
-
-// ==========================================
-// SISTEMA DE CACHE OTIMIZADO
-// ==========================================
-
-const CACHE_STRATEGY = {
-    USERS: 60 * 60 * 1000, // 1 hora
-    TAREFAS: 10 * 60 * 1000, // 10 minutos
-    ENTREGAS: 5 * 60 * 1000, // 5 minutos
-    RELATORIOS: 15 * 60 * 1000 // 15 minutos
-};
-
+// --- SISTEMA DE CACHE NO FRONTEND ---
 const frontendCache = {
     get: (key) => {
         try {
@@ -827,240 +706,7 @@ const frontendCache = {
     }
 };
 
-// Cache inteligente com TTLs diferenciados
-const smartCache = {
-    get: (key) => {
-        const cached = frontendCache.get(key);
-        if (cached) {
-            // Atualizar estatísticas de uso do cache
-            const usage = frontendCache.get('cache_usage') || {};
-            usage[key] = (usage[key] || 0) + 1;
-            frontendCache.set('cache_usage', usage, 24 * 60 * 60 * 1000);
-        }
-        return cached;
-    },
-    
-    set: (key, data, customTTL = null) => {
-        let ttl = customTTL;
-        if (!ttl) {
-            if (key.includes('users')) ttl = CACHE_STRATEGY.USERS;
-            else if (key.includes('tarefas')) ttl = CACHE_STRATEGY.TAREFAS;
-            else if (key.includes('entregas')) ttl = CACHE_STRATEGY.ENTREGAS;
-            else if (key.includes('relatorio')) ttl = CACHE_STRATEGY.RELATORIOS;
-            else ttl = 5 * 60 * 1000;
-        }
-        return frontendCache.set(key, data, ttl);
-    }
-};
-
-// ==========================================
-// SISTEMA DE MONITORAMENTO DE PERFORMANCE
-// ==========================================
-
-class PerformanceMonitor {
-    constructor() {
-        this.metrics = new Map();
-        this.reportQueue = [];
-        this.isReporting = false;
-        this.init();
-    }
-
-    init() {
-        this.collectAutomaticMetrics();
-        this.startContinuousMonitoring();
-    }
-
-    // Coleta métricas automáticas
-    collectAutomaticMetrics() {
-        // Core Web Vitals
-        this.collectLCP();
-        this.collectFID();
-        this.collectCLS();
-        
-        // Métricas de recursos
-        this.collectResourceTiming();
-        this.collectNavigationTiming();
-        
-        // Métricas customizadas
-        this.collectCustomMetrics();
-        
-        // Uso de memória
-        this.collectMemoryUsage();
-        
-        // Performance do cache
-        this.collectCacheMetrics();
-    }
-
-    collectLCP() {
-        new PerformanceObserver((entryList) => {
-            const entries = entryList.getEntries();
-            const lastEntry = entries[entries.length - 1];
-            performanceMetrics.lcp = lastEntry.renderTime || lastEntry.loadTime;
-        }).observe({type: 'largest-contentful-paint', buffered: true});
-    }
-
-    collectFID() {
-        new PerformanceObserver((entryList) => {
-            const entries = entryList.getEntries();
-            entries.forEach(entry => {
-                performanceMetrics.fid = entry.processingStart - entry.startTime;
-            });
-        }).observe({type: 'first-input', buffered: true});
-    }
-
-    collectCLS() {
-        new PerformanceObserver((entryList) => {
-            let cls = 0;
-            entryList.getEntries().forEach(entry => {
-                if (!entry.hadRecentInput) {
-                    cls += entry.value;
-                }
-            });
-            performanceMetrics.cls = cls;
-        }).observe({type: 'layout-shift', buffered: true});
-    }
-
-    collectMemoryUsage() {
-        if (performance.memory) {
-            performanceMetrics.memory = performance.memory.usedJSHeapSize / (1024 * 1024); // Em MB
-        }
-    }
-
-    collectResourceTiming() {
-        const resources = performance.getEntriesByType('resource');
-        let totalLoadTime = 0;
-        resources.forEach(resource => {
-            totalLoadTime += resource.duration;
-        });
-        // Métrica média de tempo de carregamento de recursos
-        this.metrics.set('resourceLoadTime', resources.length > 0 ? totalLoadTime / resources.length : 0);
-    }
-
-    collectNavigationTiming() {
-        const navigation = performance.getEntriesByType('navigation')[0];
-        if (navigation) {
-            this.metrics.set('domContentLoaded', navigation.domContentLoadedEventEnd - navigation.navigationStart);
-            this.metrics.set('loadComplete', navigation.loadEventEnd - navigation.navigationStart);
-        }
-    }
-
-    collectCustomMetrics() {
-        // Tempo de carregamento de tarefas
-        performance.mark('tarefas-load-start');
-        
-        // Após carregar (será chamado posteriormente)
-        // performance.mark('tarefas-load-end');
-        // performance.measure('tarefas-load-time', 'tarefas-load-start', 'tarefas-load-end');
-    }
-
-    collectCacheMetrics() {
-        const cacheKeys = Object.keys(localStorage).filter(k => k.startsWith('task_'));
-        let totalRequests = 0;
-        let cacheHits = 0;
-
-        cacheKeys.forEach(key => {
-            const item = localStorage.getItem(key);
-            if (item) {
-                const { data, expiry } = JSON.parse(item);
-                if (Date.now() < expiry) {
-                    cacheHits++;
-                }
-            }
-            totalRequests++;
-        });
-
-        performanceMetrics.cacheHitRate = totalRequests > 0 ? (cacheHits / totalRequests) * 100 : 0;
-    }
-
-    calculatePerformanceScore() {
-        let score = 100;
-
-        // Penalizar LCP > 2.5s
-        if (performanceMetrics.lcp > 2500) score -= 30;
-        else if (performanceMetrics.lcp > 1500) score -= 15;
-
-        // Penalizar FID > 100ms
-        if (performanceMetrics.fid > 100) score -= 20;
-        else if (performanceMetrics.fid > 50) score -= 10;
-
-        // Penalizar CLS > 0.1
-        if (performanceMetrics.cls > 0.1) score -= 20;
-        else if (performanceMetrics.cls > 0.05) score -= 10;
-
-        // Penalizar uso de memória > 100MB
-        if (performanceMetrics.memory > 100) score -= 10;
-
-        // Bonificar cache hit rate > 80%
-        if (performanceMetrics.cacheHitRate > 80) score += 10;
-
-        performanceMetrics.score = Math.max(0, Math.min(100, score));
-    }
-
-    startContinuousMonitoring() {
-        // Atualizar métricas a cada 30 segundos
-        setInterval(() => {
-            this.collectAutomaticMetrics();
-            this.calculatePerformanceScore();
-            this.updatePerformanceBadge();
-            
-            // Armazenar histórico para gráficos
-            performanceDataHistory.push({
-                timestamp: new Date().toISOString(),
-                ...performanceMetrics
-            });
-            
-            // Manter apenas as últimas 50 entradas
-            if (performanceDataHistory.length > 50) {
-                performanceDataHistory.shift();
-            }
-        }, 30000);
-    }
-
-    updatePerformanceBadge() {
-        const badge = document.getElementById('performance-badge');
-        if (!badge) return;
-        
-        const circle = badge.querySelector('.badge-circle');
-        const text = badge.querySelector('.badge-text');
-
-        if (performanceMetrics.score >= 80) {
-            circle.className = 'badge-circle excellent';
-            text.textContent = 'Ótimo';
-        } else if (performanceMetrics.score >= 60) {
-            circle.className = 'badge-circle good';
-            text.textContent = 'Bom';
-        } else {
-            circle.className = 'badge-circle poor';
-            text.textContent = 'Ruim';
-        }
-
-        badge.classList.remove('hidden');
-    }
-
-    // Métricas de API
-    startAPITiming(apiName) {
-        performance.mark(`${apiName}-start`);
-    }
-
-    endAPITiming(apiName) {
-        performance.mark(`${apiName}-end`);
-        performance.measure(`${apiName}-duration`, `${apiName}-start`, `${apiName}-end`);
-        
-        const measure = performance.getEntriesByName(`${apiName}-duration`)[0];
-        if (measure) {
-            performanceMetrics.apiResponseTime = measure.duration;
-        }
-    }
-}
-
-// ==========================================
-// FUNÇÕES UTILITÁRIAS
-// ==========================================
-
-// Inicializar monitoramento
-const performanceMonitor = new PerformanceMonitor();
-
-// Debounce function
+// --- DEBOUNCE FUNCTION ---
 function debounce(func, wait, immediate = false) {
     let timeout;
     return function executedFunction(...args) {
@@ -1075,7 +721,7 @@ function debounce(func, wait, immediate = false) {
     };
 }
 
-// Elementos DOM
+// --- ELEMENTOS DOM ---
 const contentArea = document.getElementById('content-area');
 const userInfoDisplay = document.getElementById('user-info');
 const logoutBtn = document.getElementById('logoutBtn');
@@ -1088,7 +734,7 @@ const confirmMessage = document.getElementById('confirm-message');
 const confirmCancel = document.getElementById('confirm-cancel');
 const confirmDelete = document.getElementById('confirm-delete');
 
-// Funções de UI
+// --- FUNÇÕES UTILITÁRIAS ---
 const showModal = (title, message) => {
     modalTitle.textContent = title;
     modalMessage.textContent = message;
@@ -1131,7 +777,7 @@ const formatarData = (dataISO) => {
     return data.toLocaleDateString('pt-BR');
 };
 
-// Funções de formatação
+// --- FUNÇÕES DE FORMATAÇÃO ---
 function formatarConteudoParaExibicao(texto) {
     if (!texto) return '';
     
@@ -1199,7 +845,7 @@ function criarBotoesFormatacao(parteId) {
     `;
 }
 
-// Funções de loading
+// --- FUNÇÕES DE LOADING ---
 function setButtonLoading(button, isLoading) {
     if (isLoading) {
         button.disabled = true;
@@ -1239,10 +885,7 @@ function mostrarLoadingRelatorio() {
     `;
 }
 
-// ==========================================
-// FUNÇÕES DE TEMPO E CONTADORES
-// ==========================================
-
+// --- FUNÇÕES DE TEMPO ---
 function calcularContadoresOtimizado(dataAula) {
     const agora = new Date();
     const dataAulaObj = new Date(dataAula);
@@ -1336,7 +979,7 @@ function calcularContadoresOtimizado(dataAula) {
     };
 }
 
-// Contadores otimizados
+// --- CONTADORES OTIMIZADOS ---
 function iniciarAtualizacaoContadoresOtimizada() {
     contadoresAtivos.forEach(interval => clearInterval(interval));
     contadoresAtivos = [];
@@ -1387,10 +1030,7 @@ function isElementInViewport(el) {
     );
 }
 
-// ==========================================
-// FUNÇÕES DE API
-// ==========================================
-
+// --- API REQUEST COM JSONP E CACHE ---
 function apiRequestJSONP(url, callback) {
     const callbackName = 'jsonp_callback_' + jsonpCallbackId++;
     
@@ -1424,17 +1064,16 @@ function apiRequestJSONP(url, callback) {
     document.body.appendChild(script);
 }
 
+// --- API COM CACHE ---
 async function apiGet(func, params = {}, forceRefresh = false) {
     const cacheKey = `api_${func}_${JSON.stringify(params)}`;
     
     if (!forceRefresh) {
-        const cached = smartCache.get(cacheKey);
+        const cached = frontendCache.get(cacheKey);
         if (cached) {
             return cached;
         }
     }
-    
-    performanceMonitor.startAPITiming(`api-${func}`);
     
     return new Promise((resolve, reject) => {
         let url = `${API_URL}?token=${SECURITY_TOKEN}`;
@@ -1454,14 +1093,12 @@ async function apiGet(func, params = {}, forceRefresh = false) {
         }
         
         apiRequestJSONP(url, (error, data) => {
-            performanceMonitor.endAPITiming(`api-${func}`);
-            
             if (error) {
                 reject(error);
             } else if (data && data.success === false) {
                 reject(new Error(data.error));
             } else {
-                smartCache.set(cacheKey, data);
+                frontendCache.set(cacheKey, data, 2 * 60 * 1000);
                 resolve(data);
             }
         });
@@ -1469,8 +1106,6 @@ async function apiGet(func, params = {}, forceRefresh = false) {
 }
 
 async function apiPost(action, dados) {
-    performanceMonitor.startAPITiming(`api-${action}`);
-    
     return new Promise((resolve, reject) => {
         let url = `${API_URL}?token=${SECURITY_TOKEN}&action=${action}`;
         
@@ -1485,8 +1120,6 @@ async function apiPost(action, dados) {
         }
         
         apiRequestJSONP(url, (error, data) => {
-            performanceMonitor.endAPITiming(`api-${action}`);
-            
             if (error) {
                 reject(error);
             } else if (data && data.success === false) {
@@ -1498,320 +1131,7 @@ async function apiPost(action, dados) {
     });
 }
 
-// ==========================================
-// SISTEMA DE MONITORAMENTO DE PERFORMANCE - UI
-// ==========================================
-
-async function mostrarMonitoramentoPerformance() {
-    if (usuarioLogado.Perfil !== 'Professor') {
-        showModal('Acesso Restrito', 'Esta funcionalidade é exclusiva para professores.');
-        return;
-    }
-
-    contentArea.innerHTML = `
-        <div class="card p-6">
-            <h2 class="text-3xl font-bold gradient-text mb-2">📊 Monitoramento de Performance</h2>
-            <p class="text-gray-400 mb-6">Sistema de monitoramento em tempo real - v7.8</p>
-            
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-value">${performanceMetrics.lcp.toFixed(0)}ms</div>
-                    <div class="metric-label">LCP (Largest Contentful Paint)</div>
-                    <div class="metric-trend ${performanceMetrics.lcp < 2500 ? 'positive' : 'negative'}">
-                        ${performanceMetrics.lcp < 2500 ? '✅ Bom' : '❌ Lento'}
-                    </div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value">${performanceMetrics.fid.toFixed(0)}ms</div>
-                    <div class="metric-label">FID (First Input Delay)</div>
-                    <div class="metric-trend ${performanceMetrics.fid < 100 ? 'positive' : 'negative'}">
-                        ${performanceMetrics.fid < 100 ? '✅ Rápido' : '❌ Lento'}
-                    </div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value">${performanceMetrics.cls.toFixed(3)}</div>
-                    <div class="metric-label">CLS (Cumulative Layout Shift)</div>
-                    <div class="metric-trend ${performanceMetrics.cls < 0.1 ? 'positive' : 'negative'}">
-                        ${performanceMetrics.cls < 0.1 ? '✅ Estável' : '❌ Instável'}
-                    </div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value">${performanceMetrics.memory.toFixed(1)}MB</div>
-                    <div class="metric-label">Uso de Memória</div>
-                    <div class="metric-trend ${performanceMetrics.memory < 100 ? 'positive' : 'negative'}">
-                        ${performanceMetrics.memory < 100 ? '✅ Otimizado' : '❌ Alto'}
-                    </div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value">${performanceMetrics.cacheHitRate.toFixed(1)}%</div>
-                    <div class="metric-label">Taxa de Acerto do Cache</div>
-                    <div class="metric-trend ${performanceMetrics.cacheHitRate > 80 ? 'positive' : 'stable'}">
-                        ${performanceMetrics.cacheHitRate > 80 ? '✅ Excelente' : '🟡 Moderado'}
-                    </div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value performance-score ${getScoreClass(performanceMetrics.score)}">${performanceMetrics.score.toFixed(0)}</div>
-                    <div class="metric-label">Score de Performance</div>
-                    <div class="metric-trend ${performanceMetrics.score >= 80 ? 'positive' : performanceMetrics.score >= 60 ? 'stable' : 'negative'}">
-                        ${performanceMetrics.score >= 80 ? '✅ Excelente' : performanceMetrics.score >= 60 ? '🟡 Bom' : '❌ Precisa de Melhoria'}
-                    </div>
-                </div>
-            </div>
-
-            <div class="chart-container">
-                <h3 class="text-xl font-semibold gradient-text mb-4">📈 Tendência de Performance (Últimas Horas)</h3>
-                <canvas id="performanceChart" height="300"></canvas>
-            </div>
-
-            <div class="chart-container">
-                <h3 class="text-xl font-semibold gradient-text mb-4">⚡ Velocidade das APIs</h3>
-                <canvas id="apiChart" height="250"></canvas>
-            </div>
-
-            <div class="chart-container">
-                <h3 class="text-xl font-semibold gradient-text mb-4">🚨 Alertas do Sistema</h3>
-                <div id="alerts-container">
-                    ${generateAlertsHTML()}
-                </div>
-            </div>
-
-            <div class="mt-8 text-center">
-                <button onclick="exportPerformanceReport()" class="btn-primary mr-4">
-                    📥 Exportar Relatório
-                </button>
-                <button onclick="mostrarPainelProfessor()" class="btn-secondary">
-                    ← Voltar ao Painel
-                </button>
-            </div>
-        </div>
-    `;
-
-    renderPerformanceCharts();
-}
-
-function getScoreClass(score) {
-    if (score >= 80) return 'score-excellent';
-    if (score >= 60) return 'score-good';
-    return 'score-poor';
-}
-
-function generateAlertsHTML() {
-    const alerts = [];
-    
-    if (performanceMetrics.lcp > 2500) {
-        alerts.push('<div class="alert-item critical">🔴 LCP muito alto: ' + performanceMetrics.lcp.toFixed(0) + 'ms (acima de 2500ms)</div>');
-    } else if (performanceMetrics.lcp > 1500) {
-        alerts.push('<div class="alert-item warning">🟡 LCP alto: ' + performanceMetrics.lcp.toFixed(0) + 'ms (acima de 1500ms)</div>');
-    }
-
-    if (performanceMetrics.fid > 100) {
-        alerts.push('<div class="alert-item critical">🔴 FID muito alto: ' + performanceMetrics.fid.toFixed(0) + 'ms (acima de 100ms)</div>');
-    } else if (performanceMetrics.fid > 50) {
-        alerts.push('<div class="alert-item warning">🟡 FID alto: ' + performanceMetrics.fid.toFixed(0) + 'ms (acima de 50ms)</div>');
-    }
-
-    if (performanceMetrics.cls > 0.1) {
-        alerts.push('<div class="alert-item critical">🔴 CLS muito alto: ' + performanceMetrics.cls.toFixed(3) + ' (acima de 0.1)</div>');
-    } else if (performanceMetrics.cls > 0.05) {
-        alerts.push('<div class="alert-item warning">🟡 CLS alto: ' + performanceMetrics.cls.toFixed(3) + ' (acima de 0.05)</div>');
-    }
-
-    if (performanceMetrics.memory > 100) {
-        alerts.push('<div class="alert-item warning">🟡 Uso de memória alto: ' + performanceMetrics.memory.toFixed(1) + 'MB (acima de 100MB)</div>');
-    }
-
-    if (performanceMetrics.cacheHitRate < 50) {
-        alerts.push('<div class="alert-item warning">🟡 Taxa de cache baixa: ' + performanceMetrics.cacheHitRate.toFixed(1) + '% (abaixo de 50%)</div>');
-    }
-
-    if (alerts.length === 0) {
-        alerts.push('<div class="alert-item info">✅ Todas as métricas estão dentro dos parâmetros esperados</div>');
-    }
-
-    return alerts.join('');
-}
-
-function renderPerformanceCharts() {
-    // Dados de exemplo para os gráficos (em produção, viriam do backend)
-    const timeLabels = performanceDataHistory.map(entry => 
-        new Date(entry.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-    );
-    
-    const lcpData = performanceDataHistory.map(entry => entry.lcp || 0);
-    const fidData = performanceDataHistory.map(entry => entry.fid || 0);
-    const memoryData = performanceDataHistory.map(entry => entry.memory || 0);
-    const scoreData = performanceDataHistory.map(entry => entry.score || 0);
-
-    // Gráfico de performance
-    const performanceCtx = document.getElementById('performanceChart').getContext('2d');
-    performanceCharts.performance = new Chart(performanceCtx, {
-        type: 'line',
-        data: {
-            labels: timeLabels,
-            datasets: [
-                {
-                    label: 'LCP (ms)',
-                    data: lcpData,
-                    borderColor: '#EF4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                },
-                {
-                    label: 'FID (ms)',
-                    data: fidData,
-                    borderColor: '#F59E0B',
-                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                },
-                {
-                    label: 'Score',
-                    data: scoreData,
-                    borderColor: '#10B981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    yAxisID: 'y1'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            interaction: {
-                mode: 'index',
-                intersect: false,
-            },
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Métricas de Performance em Tempo Real',
-                    color: '#fff',
-                    font: { size: 16 }
-                },
-                legend: {
-                    labels: { color: '#fff' }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                    ticks: { color: '#888' }
-                },
-                y: {
-                    type: 'linear',
-                    display: true,
-                    position: 'left',
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                    ticks: { color: '#888' }
-                },
-                y1: {
-                    type: 'linear',
-                    display: true,
-                    position: 'right',
-                    grid: { drawOnChartArea: false },
-                    ticks: { color: '#10B981' },
-                    max: 100,
-                    min: 0
-                },
-            }
-        }
-    });
-
-    // Gráfico de APIs (dados estáticos para exemplo)
-    const apiData = {
-        labels: ['getTarefas', 'getUsers', 'getEntregas', 'criarTarefa', 'entregarTarefa'],
-        responseTimes: [performanceMetrics.apiResponseTime || 120, 80, 150, 200, 180]
-    };
-
-    const apiCtx = document.getElementById('apiChart').getContext('2d');
-    performanceCharts.api = new Chart(apiCtx, {
-        type: 'bar',
-        data: {
-            labels: apiData.labels,
-            datasets: [{
-                label: 'Tempo de Resposta (ms)',
-                data: apiData.responseTimes,
-                backgroundColor: [
-                    'rgba(239, 68, 68, 0.8)',
-                    'rgba(245, 158, 11, 0.8)',
-                    'rgba(16, 185, 129, 0.8)',
-                    'rgba(59, 130, 246, 0.8)',
-                    'rgba(147, 51, 234, 0.8)'
-                ],
-                borderColor: [
-                    '#EF4444',
-                    '#F59E0B',
-                    '#10B981',
-                    '#3B82F6',
-                    '#9333EA'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Desempenho das APIs do Sistema',
-                    color: '#fff',
-                    font: { size: 16 }
-                },
-                legend: {
-                    labels: { color: '#fff' }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                    ticks: { color: '#888' }
-                },
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                    ticks: { color: '#888' }
-                }
-            }
-        }
-    });
-}
-
-function exportPerformanceReport() {
-    const report = {
-        timestamp: new Date().toISOString(),
-        metrics: performanceMetrics,
-        history: performanceDataHistory,
-        user: usuarioLogado.NomeCompleto,
-        system: 'Gestão de Tarefas Escolar v7.8'
-    };
-
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `performance-report-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    showModal('Relatório Exportado', 'O relatório de performance foi baixado com sucesso.');
-}
-
-// ==========================================
-// SISTEMA DE AUTENTICAÇÃO E INTERFACE
-// ==========================================
-
-// ... (o restante do código permanece igual às versões anteriores, incluindo:
-// - Funções de login/logout
-// - Painéis do professor e aluno  
-// - Gestão de tarefas
-// - Sistema de entregas
-// - Relatórios
-// - Todas as funcionalidades existentes)
-
-// INICIALIZAÇÃO
+// --- INICIALIZAÇÃO ---
 async function init() {
     try {
         const response = await apiGet('getUsers');
@@ -1833,20 +1153,1192 @@ async function init() {
     renderLogin();
 }
 
-// Inicializar a aplicação
+// --- FUNÇÕES DE AUTENTICAÇÃO ---
+const renderLogin = () => {
+    contentArea.innerHTML = `
+        <div id="login" class="max-w-md mx-auto p-6">
+            <h2 class="text-2xl font-bold text-center text-red-700 mb-6">Login</h2>
+            <div id="loginErro" class="text-red-500 mb-4 hidden text-center font-semibold">Usuário ou RM incorretos!</div>
+
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
+                    <input type="email" id="email" name="email" required placeholder="seu.email@escola.com" class="w-full">
+                </div>
+                <div>
+                    <label for="rm" class="block text-sm font-medium text-gray-700 mb-2">RM</label>
+                    <input type="text" id="rm" name="rm" required placeholder="Digite seu RM" class="w-full">
+                </div>
+                <button type="submit" class="btn-primary" id="login-button">
+                    <span id="login-text">Entrar</span>
+                </button>
+            </form>
+        </div>
+    `;
+
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        login(e);
+    });
+};
+
+async function login(event) {
+    event.preventDefault(); 
+    const email = document.getElementById('email').value.trim();
+    const rm = document.getElementById('rm').value.trim();
+    
+    const loginErro = document.getElementById('loginErro'); 
+    const loginButton = document.getElementById('login-button');
+    const loginText = document.getElementById('login-text');
+    
+    setButtonLoading(loginButton, true);
+    loginText.textContent = "Entrando...";
+    
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    const user = usuarios.find(u => {
+        const userEmail = u.Email.toLowerCase().trim();
+        const userRM = String(u.RM).trim();
+        const inputEmail = email.toLowerCase().trim();
+        const inputRM = rm.trim();
+        
+        return userEmail === inputEmail && userRM === inputRM;
+    });
+    
+    if (!user) {
+        loginErro.style.display = 'block';
+        setButtonLoading(loginButton, false);
+        loginText.textContent = "Entrar";
+        return;
+    }
+    
+    usuarioLogado = user;
+    loginErro.style.display = 'none';
+    
+    contentArea.innerHTML = `<div class="text-center text-gray-500 py-8">Carregando painel...</div>`;
+    logoutBtn.classList.remove('hidden');
+    relatorioBtn.classList.remove('hidden');
+    
+    if (user.Perfil === "Professor") {
+        userInfoDisplay.innerHTML = `
+            <div class="user-info-text">
+                Logado como: <span class="user-info-name">${user.NomeCompleto} (${user.Perfil})</span>
+            </div>
+        `;
+        relatorioBtn.onclick = mostrarRelatorioProfessor;
+    } else {
+        userInfoDisplay.innerHTML = `
+            <div class="user-info-text">
+                Logado como: <span class="user-info-name">${user.NomeCompleto} (${user.Perfil})</span> | Turma: ${user.Turma || 'N/A'}
+            </div>
+        `;
+        relatorioBtn.onclick = mostrarRelatorioAluno;
+    }
+
+    try {
+        const response = await apiGet('getTarefas');
+        tarefas = response.data || [];
+    } catch (error) {
+        tarefas = [];
+        showModal('Aviso', 'Algumas funcionalidades podem estar limitadas devido a problemas de conexão.');
+    }
+
+    if (user.Perfil === "Professor") {
+        await mostrarPainelProfessor();
+    } else {
+        await mostrarPainelAluno(); 
+    }
+    
+    setButtonLoading(loginButton, false);
+    loginText.textContent = "Entrar";
+}
+
+function logout() {
+    usuarioLogado = null;
+    tarefaEditando = null;
+    logoutBtn.classList.add('hidden');
+    relatorioBtn.classList.add('hidden');
+    userInfoDisplay.innerHTML = '';
+    contadoresAtivos.forEach(interval => clearInterval(interval));
+    contadoresAtivos = [];
+    renderLogin(); 
+}
+
+// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL ---
+async function mostrarRelatorioProfessor() {
+    const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
+    
+    let relatorioHTML = `
+        <div class="card p-6">
+            <h3 class="text-2xl font-bold text-red-700 mb-4">Relatório por Turma</h3>
+            <div class="mb-4">
+                <p class="block text-sm font-medium text-gray-700 mb-2">Selecione a Turma:</p>
+                <div class="flex flex-wrap gap-2 mb-6" id="botoes-turma">
+    `;
+    
+    turmas.forEach(turma => {
+        relatorioHTML += `
+            <button onclick="carregarRelatorioTurma('${turma}')" class="btn-turma">
+                Turma ${turma}
+            </button>
+        `;
+    });
+    
+    relatorioHTML += `
+                </div>
+            </div>
+            <div id="relatorio-turma-container" class="mt-4">
+                <p class="text-gray-500 text-center py-8">Selecione uma turma para visualizar o relatório</p>
+            </div>
+            <div class="mt-4 text-center">
+                <button onclick="mostrarPainelProfessor()" class="btn-secondary">Voltar ao Painel</button>
+            </div>
+        </div>
+    `;
+    
+    contentArea.innerHTML = relatorioHTML;
+}
+
+// --- CARREGAMENTO GRADUAL DE RELATÓRIO ---
+async function carregarRelatorioTurma(turmaSelecionada) {
+    frontendCache.remove(`relatorio_${turmaSelecionada}`);
+    
+    document.getElementById('relatorio-turma-container').innerHTML = `
+        <div class="text-center py-8">
+            <div class="spinner"></div>
+            <p class="mt-4 text-gray-600">Carregando relatório da turma ${turmaSelecionada}...</p>
+            <div class="progress-bar mt-4">
+                <div class="progress-fill" style="width: 0%" id="progress-bar-fill"></div>
+            </div>
+            <p class="text-sm text-gray-500 mt-2" id="progress-text">Iniciando carregamento...</p>
+        </div>
+    `;
+    
+    const progressBar = document.getElementById('progress-bar-fill');
+    const progressText = document.getElementById('progress-text');
+    
+    try {
+        progressBar.style.width = '10%';
+        progressText.textContent = 'Carregando informações da turma...';
+        
+        const [usersResponse, tarefasResponse] = await Promise.all([
+            apiGet('getUsers', {}, true),
+            apiGet('getTarefasPorTurma', { turma: turmaSelecionada }, true)
+        ]);
+        
+        const alunosTurma = usersResponse.data.filter(user => user.Turma === turmaSelecionada && user.Perfil === 'Aluno');
+        const tarefasTurma = tarefasResponse.data || [];
+        
+        progressBar.style.width = '30%';
+        progressText.textContent = `Turma carregada: ${alunosTurma.length} alunos, ${tarefasTurma.length} tarefas`;
+        
+        if (alunosTurma.length === 0) {
+            const html = `<p class="text-gray-500 text-center py-8">Nenhum aluno encontrado na turma ${turmaSelecionada}.</p>`;
+            document.getElementById('relatorio-turma-container').innerHTML = html;
+            frontendCache.set(`relatorio_${turmaSelecionada}`, html, 10 * 60 * 1000);
+            return;
+        }
+        
+        if (tarefasTurma.length === 0) {
+            const html = `<p class="text-gray-500 text-center py-8">Nenhuma tarefa encontrada para a turma ${turmaSelecionada}.</p>`;
+            document.getElementById('relatorio-turma-container').innerHTML = html;
+            frontendCache.set(`relatorio_${turmaSelecionada}`, html, 10 * 60 * 1000);
+            return;
+        }
+        
+        let relatorioTurmaHTML = `
+            <div class="relatorio-header">
+                <h4 class="text-lg font-semibold text-red-700">Relatório da Turma ${turmaSelecionada}</h4>
+                <div>
+                    <button onclick="carregarRelatorioTurma('${turmaSelecionada}')" class="btn-atualizar-dados">
+                        Atualizar Dados
+                    </button>
+                </div>
+            </div>
+            <div class="relatorio-status" id="carregamento-status">
+                <div class="spinner"></div>
+                Carregando notas dos alunos...
+            </div>
+            <div class="relatorio-info">
+                Total de alunos: ${alunosTurma.length} | Total de tarefas: ${tarefasTurma.length} | Última atualização: ${new Date().toLocaleTimeString()}
+            </div>
+            <div class="overflow-x-auto border rounded-lg mt-4">
+                <table class="min-w-full compact-table table-header-white">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold border-b">Aluno</th>
+        `;
+        
+        tarefasTurma.forEach(tarefa => {
+            relatorioTurmaHTML += `<th class="px-4 py-3 text-center font-semibold border-b">${tarefa.Tema}</th>`;
+        });
+        
+        relatorioTurmaHTML += `
+                            <th class="px-4 py-3 text-center font-semibold border-b">Média</th>
+                        </tr>
+                    </thead>
+                    <tbody id="relatorio-tbody">
+        `;
+        
+        alunosTurma.forEach((aluno, index) => {
+            relatorioTurmaHTML += `
+                <tr class="aluno-loading">
+                    <td class="px-4 py-3 font-medium text-gray-900 border-b">${aluno.NomeCompleto}</td>
+            `;
+            
+            tarefasTurma.forEach(() => {
+                relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b"><div class="nota-loading"></div></td>`;
+            });
+            
+            relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b"><div class="nota-loading"></div></td>`;
+            relatorioTurmaHTML += `</tr>`;
+        });
+        
+        relatorioTurmaHTML += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        document.getElementById('relatorio-turma-container').innerHTML = relatorioTurmaHTML;
+        
+        const carregamentoStatus = document.getElementById('carregamento-status');
+        const tbody = document.getElementById('relatorio-tbody');
+        
+        let alunosProcessados = 0;
+        
+        const processarLoteAlunos = async (inicio, fim) => {
+            const lotes = [];
+            
+            for (let i = inicio; i < fim && i < alunosTurma.length; i++) {
+                const aluno = alunosTurma[i];
+                lotes.push(
+                    apiGet('getEntregasAluno', { rm: aluno.RM }, true)
+                        .then(entregasResponse => {
+                            const entregasAluno = entregasResponse.data || [];
+                            return { aluno, entregas: entregasAluno, index: i };
+                        })
+                );
+            }
+            
+            const resultados = await Promise.allSettled(lotes);
+            
+            for (const resultado of resultados) {
+                if (resultado.status === 'fulfilled') {
+                    const { aluno, entregas, index } = resultado.value;
+                    const linha = tbody.rows[index];
+                    
+                    if (linha) {
+                        let totalNotas = 0;
+                        let countNotas = 0;
+                        
+                        for (let j = 0; j < tarefasTurma.length; j++) {
+                            const tarefa = tarefasTurma[j];
+                            const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
+                            const nota = entrega && entrega.Nota ? parseFloat(entrega.Nota).toFixed(1) : '-';
+                            
+                            if (entrega && entrega.Nota) {
+                                totalNotas += parseFloat(entrega.Nota);
+                                countNotas++;
+                            }
+                            
+                            let classeNota = 'text-gray-600';
+                            if (entrega && entrega.Nota) {
+                                const notaNum = parseFloat(entrega.Nota);
+                                if (notaNum >= 7.5) {
+                                    classeNota = 'text-green-600 font-semibold';
+                                } else {
+                                    classeNota = 'text-red-600';
+                                }
+                            }
+                            
+                            linha.cells[j + 1].innerHTML = `<span class="${classeNota}">${nota}</span>`;
+                        }
+                        
+                        const media = countNotas > 0 ? (totalNotas / countNotas).toFixed(1) : '-';
+                        let classeMedia = 'text-gray-600';
+                        if (media !== '-') {
+                            const mediaNum = parseFloat(media);
+                            if (mediaNum >= 7.5) {
+                                classeMedia = 'text-green-600 font-bold';
+                            } else {
+                                classeMedia = 'text-red-600 font-semibold';
+                            }
+                        }
+                        
+                        linha.cells[tarefasTurma.length + 1].innerHTML = `<span class="${classeMedia}">${media}</span>`;
+                        linha.classList.remove('aluno-loading');
+                    }
+                    
+                    alunosProcessados++;
+                    const progresso = 30 + (alunosProcessados / alunosTurma.length) * 60;
+                    progressBar.style.width = `${progresso}%`;
+                    carregamentoStatus.innerHTML = `<div class="spinner"></div> Carregando aluno ${alunosProcessados} de ${alunosTurma.length}...`;
+                }
+            }
+        };
+        
+        const tamanhoLote = 3;
+        for (let i = 0; i < alunosTurma.length; i += tamanhoLote) {
+            await processarLoteAlunos(i, i + tamanhoLote);
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        progressBar.style.width = '100%';
+        carregamentoStatus.innerHTML = 'Relatório completo!';
+        carregamentoStatus.className = 'relatorio-status bg-green-50 text-green-700 border-l-green-500';
+        
+        const relatorioCompletoHTML = document.getElementById('relatorio-turma-container').innerHTML;
+        frontendCache.set(`relatorio_${turmaSelecionada}`, relatorioCompletoHTML, 10 * 60 * 1000);
+        
+    } catch (error) {
+        const errorHtml = `<p class="text-red-500 text-center py-4">Erro ao carregar relatório: ${error.message}</p>`;
+        document.getElementById('relatorio-turma-container').innerHTML = errorHtml;
+    }
+}
+
+async function mostrarRelatorioAluno() {
+    const cacheKey = `relatorio_aluno_${usuarioLogado.RM}`;
+    const cached = frontendCache.get(cacheKey);
+    
+    if (cached) {
+        contentArea.innerHTML = cached;
+        return;
+    }
+    
+    try {
+        const entregasResponse = await apiGet('getEntregasAluno', { rm: usuarioLogado.RM });
+        const entregas = entregasResponse.data || [];
+        
+        let relatorioHTML = `
+            <div class="card p-6">
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Meu Relatório</h3>
+        `;
+        
+        if (entregas.length === 0) {
+            relatorioHTML += `
+                <p class="text-gray-500 text-center py-4">Nenhuma entrega registrada.</p>
+            `;
+        } else {
+            const tarefasResponse = await apiGet('getTarefas');
+            const todasTarefas = tarefasResponse.data || [];
+            
+            let notaTotal = 0;
+            let countEntregas = 0;
+            
+            relatorioHTML += `
+                <div class="overflow-x-auto">
+                    <table class="min-w-full compact-table">
+                        <thead>
+                            <tr>
+                                <th>Tarefa</th>
+                                <th>Links Entregues</th>
+                                <th class="data-column">Data de Submissão</th>
+                                <th class="data-column">Nota</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            entregas.forEach(entrega => {
+                let tarefa = todasTarefas.find(t => t.ID === entrega.ID_Tarefa);
+                const temaTarefa = tarefa ? tarefa.Tema : `Tarefa (ID: ${entrega.ID_Tarefa})`;
+                
+                const linksEntregues = [];
+                if (entrega.Link1) linksEntregues.push('Parte 1');
+                if (entrega.Link2) linksEntregues.push('Parte 2');
+                if (entrega.Link3) linksEntregues.push('Parte 3');
+                if (entrega.Link4) linksEntregues.push('Parte 4');
+                
+                const notaEntrega = parseFloat(entrega.Nota) || 0;
+                if (notaEntrega > 0) {
+                    notaTotal += notaEntrega;
+                    countEntregas++;
+                }
+                
+                relatorioHTML += `
+                    <tr>
+                        <td>${temaTarefa}</td>
+                        <td>${linksEntregues.join(', ') || 'Nenhum'}</td>
+                        <td class="data-column">${formatarData(entrega.DataSubmissao)}</td>
+                        <td class="data-column font-semibold">${notaEntrega.toFixed(1)}</td>
+                    </tr>
+                `;
+            });
+            
+            const media = countEntregas > 0 ? (notaTotal / countEntregas).toFixed(1) : '0.0';
+            
+            relatorioHTML += `
+                        </tbody>
+                    </table>
+                    <div class="mt-4 p-3 bg-gray-50 rounded border">
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold">Média Geral:</span>
+                            <span class="text-lg font-bold ${parseFloat(media) >= 7.5 ? 'text-green-600' : 'text-red-600'}">${media}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        relatorioHTML += `
+                <div class="mt-4 text-center">
+                    <button onclick="mostrarPainelAluno()" class="btn-secondary">Voltar ao Painel</button>
+                </div>
+            </div>
+        `;
+        
+        contentArea.innerHTML = relatorioHTML;
+        frontendCache.set(cacheKey, relatorioHTML, 5 * 60 * 1000);
+    } catch (error) {
+        showModal('Erro', `Erro ao carregar relatório: ${error.message}`);
+    }
+}
+
+// --- PAINEL DO PROFESSOR COM CACHE ---
+async function mostrarPainelProfessor() {
+    const cacheKey = 'painel_professor';
+    const cached = frontendCache.get(cacheKey);
+    
+    if (cached) {
+        contentArea.innerHTML = cached;
+        if (tarefaEditando) {
+            preencherFormularioEdicao();
+        }
+        await carregarTarefasProfessor();
+        return;
+    }
+    
+    contentArea.innerHTML = `
+        <div id="painelProfessor" class="space-y-6">
+            <div class="card p-6 border-t-4 border-red-600">
+                <h3 class="text-2xl font-bold mb-4 text-red-700" id="titulo-formulario">${tarefaEditando ? 'Editar Tarefa' : 'Criar Nova Tarefa'}</h3>
+                
+                <div class="form-row">
+                    <label class="block text-sm font-medium text-gray-700">Turmas:</label>
+                    <div class="checkbox-group" id="turmasCheckboxes"></div>
+                </div>
+                
+                <div class="form-row">
+                    <label for="tema" class="block text-sm font-medium text-gray-700">Tema da Tarefa</label>
+                    <input type="text" id="tema" placeholder="Ex: Matemática - Frações" class="mt-1" required>
+                </div>
+                
+                <div class="form-row">
+                    <label for="dataAula" class="block text-sm font-medium text-gray-700">Data da Aula</label>
+                    <input type="date" id="dataAula" class="mt-1" required>
+                </div>
+                
+                <div class="mt-4 space-y-4">
+                    <div>
+                        <label for="parte1" class="block text-sm font-medium text-gray-700 mb-2">Parte 1 (até 23h59 do dia) <span class="retencao-aviso retencao-50">50% retenção</span></label>
+                        ${criarBotoesFormatacao('parte1')}
+                        <textarea id="parte1" placeholder="Descreva a parte 1 da tarefa. Use Enter para criar parágrafos." rows="5" required></textarea>
+                    </div>
+                    <div>
+                        <label for="parte2" class="block text-sm font-medium text-gray-700 mb-2">Parte 2 (7º-8º dia) <span class="retencao-aviso retencao-25">25% retenção</span></label>
+                        ${criarBotoesFormatacao('parte2')}
+                        <textarea id="parte2" placeholder="Descreva a parte 2 da tarefa. Use Enter para criar parágrafos." rows="5" required></textarea>
+                    </div>
+                    <div>
+                        <label for="parte3" class="block text-sm font-medium text-gray-700 mb-2">Parte 3 (14º-15º dia) <span class="retencao-aviso retencao-15">15% retenção</span></label>
+                        ${criarBotoesFormatacao('parte3')}
+                        <textarea id="parte3" placeholder="Descreva a parte 3 da tarefa. Use Enter para criar parágrafos." rows="5" required></textarea>
+                    </div>
+                    <div>
+                        <label for="parte4" class="block text-sm font-medium text-gray-700 mb-2">Parte 4 (28º-30º dia) <span class="retencao-aviso retencao-10">9.99% retenção</span></label>
+                        ${criarBotoesFormatacao('parte4')}
+                        <textarea id="parte4" placeholder="Descreva a parte 4 da tarefa. Use Enter para criar parágrafos." rows="5" required></textarea>
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex space-x-4">
+                    <button onclick="${tarefaEditando ? 'atualizarTarefa()' : 'salvarTarefa()'}" class="btn-primary flex-1" id="btnSalvarTarefa">
+                        ${tarefaEditando ? 'Atualizar Tarefa' : 'Salvar Tarefa'}
+                    </button>
+                    <button onclick="limparFormulario()" class="btn-secondary flex-1">
+                        ${tarefaEditando ? 'Cancelar Edição' : 'Limpar'}
+                    </button>
+                </div>
+            </div>
+
+            <div class="card p-6">
+                <h3 class="text-2xl font-bold mb-4 text-red-700">Tarefas Criadas</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full compact-table">
+                        <thead>
+                            <tr>
+                                <th class="turma-column">Turma</th>
+                                <th>Tema e Partes</th>
+                                <th class="data-column">Data</th>
+                                <th class="acoes-column">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaTarefasBody">
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-gray-500">Carregando tarefas...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
+    document.getElementById('turmasCheckboxes').innerHTML = turmas.map(t => `
+        <div class="checkbox-item">
+            <input type="checkbox" value="${t}" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+            <label class="text-gray-700">${t}</label>
+        </div>
+    `).join("");
+
+    if (tarefaEditando) {
+        preencherFormularioEdicao();
+    }
+
+    await carregarTarefasProfessor();
+    
+    frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000);
+}
+
+function preencherFormularioEdicao() {
+    if (!tarefaEditando) return;
+    
+    document.getElementById('titulo-formulario').textContent = 'Editar Tarefa';
+    document.getElementById('tema').value = tarefaEditando.Tema;
+    document.getElementById('dataAula').value = tarefaEditando.DataAula.split('T')[0];
+    document.getElementById('parte1').value = tarefaEditando.Parte1 || '';
+    document.getElementById('parte2').value = tarefaEditando.Parte2 || '';
+    document.getElementById('parte3').value = tarefaEditando.Parte3 || '';
+    document.getElementById('parte4').value = tarefaEditando.Parte4 || '';
+    
+    const checkboxes = document.querySelectorAll('#turmasCheckboxes input');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = checkbox.value === tarefaEditando.Turma;
+    });
+    
+    window.scrollTo(0, 0);
+}
+
+// --- FUNÇÕES DO PROFESSOR COM CACHE ---
+async function carregarTarefasProfessor() {
+    const cacheKey = 'tarefas_professor_lista';
+    const cached = frontendCache.get(cacheKey);
+    
+    if (cached) {
+        tarefas = cached;
+        renderizarTabelaTarefas();
+        return;
+    }
+    
+    try {
+        const response = await apiGet('getTarefas');
+        tarefas = response.data || [];
+        frontendCache.set(cacheKey, tarefas, 2 * 60 * 1000);
+        renderizarTabelaTarefas();
+    } catch (error) {
+        document.getElementById('tabelaTarefasBody').innerHTML = 
+            `<tr><td colspan="4" class="text-center py-4 text-red-500">Erro ao carregar tarefas: ${error.message}</td></tr>`;
+    }
+}
+
+function renderizarTabelaTarefas() {
+    const tbody = document.getElementById('tabelaTarefasBody');
+    
+    if (tarefas.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">Nenhuma tarefa criada</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = tarefas.map(tarefa => {
+        const parte1 = tarefa.Parte1 || '';
+        const parte2 = tarefa.Parte2 || '';
+        const parte3 = tarefa.Parte3 || '';
+        const parte4 = tarefa.Parte4 || '';
+
+        const formatarParaTabela = (texto) => {
+            if (!texto) return '';
+            const textoLimitado = texto.length > 100 ? texto.substring(0, 100) + '...' : texto;
+            return formatarConteudoParaExibicao(textoLimitado);
+        };
+
+        return `
+        <tr>
+            <td class="turma-column">${tarefa.Turma}</td>
+            <td class="px-4 py-2">
+                <div class="font-semibold text-gray-800 mb-2">${tarefa.Tema}</div>
+                ${parte1 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 1:</span> <span class="conteudo-formatado">${formatarParaTabela(parte1)}</span> <span class="retencao-aviso retencao-50">50% retenção</span></div>` : ''}
+                ${parte2 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 2:</span> <span class="conteudo-formatado">${formatarParaTabela(parte2)}</span> <span class="retencao-aviso retencao-25">25% retenção</span></div>` : ''}
+                ${parte3 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 3:</span> <span class="conteudo-formatado">${formatarParaTabela(parte3)}</span> <span class="retencao-aviso retencao-15">15% retenção</span></div>` : ''}
+                ${parte4 ? `<div class="text-sm text-gray-600"><span class="font-medium">Parte 4:</span> <span class="conteudo-formatado">${formatarParaTabela(parte4)}</span> <span class="retencao-aviso retencao-10">9.99% retenção</span></div>` : ''}
+            </td>
+            <td class="data-column">${formatarData(tarefa.DataAula)}</td>
+            <td class="acoes-column">
+                <div class="flex justify-center space-x-2">
+                    <button onclick="editarTarefa('${tarefa.ID}')" class="btn-editar">
+                        Editar
+                    </button>
+                    <button onclick="solicitarExclusaoTarefa('${tarefa.ID}')" class="btn-excluir">
+                        Excluir
+                    </button>
+                </div>
+            </td>
+        </tr>
+        `;
+    }).join('');
+}
+
+function solicitarExclusaoTarefa(idTarefa) {
+    const tarefa = tarefas.find(t => t.ID === idTarefa);
+    tarefaParaExcluir = idTarefa;
+    showConfirmModal(`Tem certeza que deseja excluir a tarefa "${tarefa?.Tema}" da turma ${tarefa?.Turma}?`, () => {
+        excluirTarefa(idTarefa);
+    });
+}
+
+async function editarTarefa(idTarefa) {
+    const tarefa = tarefas.find(t => t.ID === idTarefa);
+    if (!tarefa) {
+        showModal('Erro', 'Tarefa não encontrada.');
+        return;
+    }
+
+    tarefaEditando = tarefa;
+    frontendCache.remove('painel_professor');
+    frontendCache.remove('tarefas_professor_lista');
+    await mostrarPainelProfessor();
+}
+
+// --- SALVAR TAREFA COM DEBOUNCE ---
+const salvarTarefa = debounce(async function() {
+    const btnSalvar = document.getElementById('btnSalvarTarefa');
+    
+    try {
+        setButtonLoading(btnSalvar, true);
+        
+        const turmasSelecionadas = Array.from(document.querySelectorAll('#turmasCheckboxes input:checked'))
+            .map(c => c.value);
+        
+        if (turmasSelecionadas.length === 0) {
+            showModal('Atenção', 'Selecione pelo menos uma turma.');
+            return;
+        }
+
+        const tema = document.getElementById('tema').value.trim();
+        const dataAula = document.getElementById('dataAula').value;
+
+        if (!tema || !dataAula) {
+            showModal('Atenção', 'Preencha o tema e a data da aula.');
+            return;
+        }
+
+        const parte1 = document.getElementById('parte1').value.trim();
+        const parte2 = document.getElementById('parte2').value.trim();
+        const parte3 = document.getElementById('parte3').value.trim();
+        const parte4 = document.getElementById('parte4').value.trim();
+
+        if (!parte1 || !parte2 || !parte3 || !parte4) {
+            showModal('Atenção', 'Todas as partes da tarefa devem ser preenchidas.');
+            return;
+        }
+
+        const dados = {
+            Turmas: turmasSelecionadas,
+            Tema: tema,
+            Parte1: parte1,
+            Parte2: parte2,
+            Parte3: parte3,
+            Parte4: parte4,
+            DataAula: dataAula,
+            professor: usuarioLogado.NomeCompleto
+        };
+
+        const response = await apiPost('criarTarefa', dados);
+        showModal('Sucesso', 'Tarefa criada com sucesso!');
+        
+        frontendCache.remove('painel_professor');
+        frontendCache.remove('tarefas_professor_lista');
+        turmasSelecionadas.forEach(turma => {
+            frontendCache.remove(`api_getTarefasPorTurma_${JSON.stringify({turma: turma})}`);
+            frontendCache.remove(`relatorio_${turma}`);
+        });
+        
+        limparFormulario();
+        await carregarTarefasProfessor();
+    } catch (error) {
+        showModal('Erro', `Erro ao criar tarefa: ${error.message}`);
+    } finally {
+        setButtonLoading(btnSalvar, false);
+    }
+}, 500);
+
+const atualizarTarefa = debounce(async function() {
+    const btnSalvar = document.getElementById('btnSalvarTarefa');
+    
+    try {
+        setButtonLoading(btnSalvar, true);
+        
+        if (!tarefaEditando) {
+            showModal('Erro', 'Nenhuma tarefa selecionada para edição.');
+            return;
+        }
+
+        const tema = document.getElementById('tema').value.trim();
+        const dataAula = document.getElementById('dataAula').value;
+        const turmaSelecionada = Array.from(document.querySelectorAll('#turmasCheckboxes input:checked'))
+            .map(c => c.value)[0];
+
+        if (!tema || !dataAula || !turmaSelecionada) {
+            showModal('Atenção', 'Preencha todos os campos obrigatórios.');
+            return;
+        }
+
+        const parte1 = document.getElementById('parte1').value.trim();
+        const parte2 = document.getElementById('parte2').value.trim();
+        const parte3 = document.getElementById('parte3').value.trim();
+        const parte4 = document.getElementById('parte4').value.trim();
+
+        if (!parte1 || !parte2 || !parte3 || !parte4) {
+            showModal('Atenção', 'Todas as partes da tarefa devem ser preenchidas.');
+            return;
+        }
+
+        const dados = {
+            ID: tarefaEditando.ID,
+            Tema: tema,
+            Parte1: parte1,
+            Parte2: parte2,
+            Parte3: parte3,
+            Parte4: parte4,
+            DataAula: dataAula
+        };
+
+        const response = await apiPost('editarTarefa', dados);
+        showModal('Sucesso', 'Tarefa atualizada com sucesso!');
+        
+        frontendCache.remove('painel_professor');
+        frontendCache.remove('tarefas_professor_lista');
+        frontendCache.remove(`api_getTarefasPorTurma_${JSON.stringify({turma: turmaSelecionada})}`);
+        frontendCache.remove(`relatorio_${turmaSelecionada}`);
+        
+        tarefaEditando = null;
+        limparFormulario();
+        
+    } catch (error) {
+        showModal('Erro', `Erro ao atualizar tarefa: ${error.message}`);
+    } finally {
+        setButtonLoading(btnSalvar, false);
+    }
+}, 500);
+
+async function excluirTarefa(idTarefa) {
+    try {
+        await apiPost('excluirTarefa', { ID: idTarefa });
+        showModal('Sucesso', 'Tarefa excluída com sucesso.');
+        
+        frontendCache.remove('painel_professor');
+        frontendCache.remove('tarefas_professor_lista');
+        ['1A', '1B', '2A', '2B', '3A', '3B'].forEach(turma => {
+            frontendCache.remove(`api_getTarefasPorTurma_${JSON.stringify({turma: turma})}`);
+            frontendCache.remove(`relatorio_${turma}`);
+        });
+        
+        await carregarTarefasProfessor();
+    } catch (error) {
+        showModal('Erro', `Erro ao excluir tarefa: ${error.message}`);
+    }
+}
+
+function limparFormulario() {
+    document.getElementById('tema').value = '';
+    document.getElementById('dataAula').value = '';
+    document.getElementById('parte1').value = '';
+    document.getElementById('parte2').value = '';
+    document.getElementById('parte3').value = '';
+    document.getElementById('parte4').value = '';
+    document.querySelectorAll('#turmasCheckboxes input:checked').forEach(c => c.checked = false);
+    
+    if (tarefaEditando) {
+        tarefaEditando = null;
+        document.getElementById('titulo-formulario').textContent = 'Criar Nova Tarefa';
+        document.getElementById('btnSalvarTarefa').textContent = 'Salvar Tarefa';
+        document.getElementById('btnSalvarTarefa').setAttribute('onclick', 'salvarTarefa()');
+        
+        setTimeout(() => {
+            carregarTarefasProfessor();
+        }, 100);
+    }
+}
+
+// --- PAINEL DO ALUNO COM CACHE ---
+async function mostrarPainelAluno() {
+    const cacheKey = `painel_aluno_${usuarioLogado.RM}`;
+    const cached = frontendCache.get(cacheKey);
+    
+    if (cached) {
+        contentArea.innerHTML = cached;
+        iniciarAtualizacaoContadoresOtimizada();
+        return;
+    }
+    
+    contentArea.innerHTML = `
+        <div id="painelAluno" class="space-y-6">
+            <div class="card p-6">
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${usuarioLogado.Turma}</h3>
+                
+                <div class="instrucoes-box">
+                    <div class="instrucoes-title">Instruções para entrega:</div>
+                    <ol class="instrucoes-list">
+                        <li>Realize as atividades em folhas e as guarde com cuidado para serem entregues futuramente.</li>
+                        <li>Tire uma foto, converta o arquivo em PDF, suba no seu OneDrive com o e-mail do SESI, compartilhe o link publicamente e o copie.</li>
+                        <li>Cole no espaço indicado dentro do prazo estabelecido e salve para validar sua nota.</li>
+                    </ol>
+                </div>
+                
+                <div id="tarefas-aluno-container">
+                    <div class="text-center text-gray-500 py-8">Carregando tarefas...</div>
+                </div>
+                
+                <div class="fundamento-cientifico">
+                    <div class="fundamento-title" onclick="toggleFundamentoCientifico()">
+                        <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m6 9 6 6 6-6"/>
+                        </svg>
+                        Fundamentos Científicos da Aprendizagem
+                    </div>
+                    <div class="fundamento-content" id="conteudo-fundamento">
+                        <p class="mb-4">A curva de esquecimento de Ebbinghaus e os estudos modernos de neuroaprendizagem mostram que:</p>
+                        <ol class="fundamento-list">
+                            <li>O cérebro consolida melhor a memória entre 6h e 9h após o aprendizado inicial.</li>
+                            <li>O sono tem papel essencial — é durante o sono que ocorre a consolidação sináptica (transformar memórias de curto em longo prazo).</li>
+                            <li>A atenção sustentada é máxima no período entre 8h e 11h da manhã e tem uma segunda faixa ótima entre 17h e 19h.</li>
+                            <li>À noite, atividades reflexivas e criativas têm melhor rendimento, porque o córtex pré-frontal está menos sobrecarregado de estímulos novos.</li>
+                            <li>Sono de 7h a 9h por noite.</li>
+                            <li>Evitar telas nos 30 min antes de dormir.</li>
+                            <li>Fazer revisão leve antes do sono.</li>
+                        </ol>
+                        
+                        <div class="flex justify-center my-4">
+                            <img src="https://blog-static.infra.grancursosonline.com.br/wp-content/uploads/2017/01/curva-do-esquecimento-1.png" 
+                                 alt="Curva do Esquecimento de Ebbinghaus" 
+                                 class="imagem-curva">
+                        </div>
+                        
+                        <div class="referencias">
+                            <div class="referencias-title">Referências:</div>
+                            <ul class="referencias-list">
+                                <li>EBBINGHAUS, Hermann. Memory: A Contribution to Experimental Psychology. New York: Teachers College, Columbia University, 1913. (Obra original publicada em 1885.)</li>
+                                <li>DUNLOSKY, John et al. Improving Students' Learning with Effective Learning Techniques: Promising Directions from Cognitive and Educational Psychology. Psychological Science in the Public Interest, v. 14, n. 1, p. 4–58, 2013. DOI: 10.1177/1529100612453266</li>
+                                <li>WALKER, Matthew. Why We Sleep: Unlocking the Power of Sleep and Dreams. New York: Scribner, 2018.</li>
+                                <li>BLOOM, Benjamin S. (Org.). Taxonomy of Educational Objectives: The Classification of Educational Goals. Handbook I: Cognitive Domain. New York: Longmans, Green and Co., 1956.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    await carregarTarefasAluno();
+    iniciarAtualizacaoContadoresOtimizada();
+    
+    frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000);
+}
+
+// --- FUNÇÃO PARA EXPANDIR/RECOLHER FUNDAMENTO CIENTÍFICO ---
+function toggleFundamentoCientifico() {
+    const conteudo = document.getElementById('conteudo-fundamento');
+    const icon = document.querySelector('.expand-icon');
+    
+    if (conteudo.classList.contains('expandido')) {
+        conteudo.classList.remove('expandido');
+        icon.classList.remove('expandido');
+    } else {
+        conteudo.classList.add('expandido');
+        icon.classList.add('expandido');
+    }
+}
+
+// --- CARREGAR TAREFAS ALUNO COM CACHE ---
+async function carregarTarefasAluno() {
+    const cacheKey = `tarefas_aluno_${usuarioLogado.RM}_dados`;
+    const cached = frontendCache.get(cacheKey);
+    
+    if (cached) {
+        renderTarefasAlunoFromCache(cached.tarefas, cached.entregas);
+        return;
+    }
+
+    mostrarLoadingTarefasAluno();
+    
+    try {
+        const response = await apiGet('getTarefasPorTurma', { turma: usuarioLogado.Turma });
+        const container = document.getElementById('tarefas-aluno-container');
+        
+        if (!response.data || response.data.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-500 py-8">Nenhuma tarefa disponível para sua turma.</div>';
+            frontendCache.set(cacheKey, {tarefas: [], entregas: []}, 2 * 60 * 1000);
+            return;
+        }
+
+        let entregas = [];
+        try {
+            const entregasResponse = await apiGet('getEntregasAluno', { rm: usuarioLogado.RM });
+            entregas = entregasResponse.data || [];
+        } catch (error) {
+        }
+
+        frontendCache.set(cacheKey, {tarefas: response.data, entregas: entregas}, 2 * 60 * 1000);
+        
+        renderTarefasAlunoGradualmente(response.data, entregas, container);
+        
+    } catch (error) {
+        document.getElementById('tarefas-aluno-container').innerHTML = 
+            `<div class="text-center text-red-500 py-8">Erro ao carregar tarefas: ${error.message}</div>`;
+    }
+}
+
+function renderTarefasAlunoFromCache(tarefas, entregas) {
+    const container = document.getElementById('tarefas-aluno-container');
+    container.innerHTML = '';
+    
+    if (tarefas.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-500 py-8">Nenhuma tarefa disponível para sua turma.</div>';
+        return;
+    }
+
+    container.innerHTML = tarefas.map(tarefa => {
+        const parte1 = tarefa.Parte1 || '';
+        const parte2 = tarefa.Parte2 || '';
+        const parte3 = tarefa.Parte3 || '';
+        const parte4 = tarefa.Parte4 || '';
+        
+        const contadores = calcularContadoresOtimizado(tarefa.DataAula);
+        const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
+
+        return `
+        <div class="border border-gray-200 rounded-lg p-4 mb-4 relative">
+            <div class="cache-indicator">CACHE</div>
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <h4 class="font-semibold text-lg text-gray-800">${tarefa.Tema}</h4>
+                    <p class="text-sm text-gray-600 mt-1">Data da aula: ${formatarData(tarefa.DataAula)}</p>
+                    ${entrega && entrega.Nota ? `<p class="text-sm font-semibold text-green-600 mt-1">Nota: ${entrega.Nota}</p>` : ''}
+                    
+                    ${parte1 ? renderParteTarefa(tarefa.ID, 1, parte1, contadores.parte1, entrega) : ''}
+                    ${parte2 ? renderParteTarefa(tarefa.ID, 2, parte2, contadores.parte2, entrega) : ''}
+                    ${parte3 ? renderParteTarefa(tarefa.ID, 3, parte3, contadores.parte3, entrega) : ''}
+                    ${parte4 ? renderParteTarefa(tarefa.ID, 4, parte4, contadores.parte4, entrega) : ''}
+                </div>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
+
+async function renderTarefasAlunoGradualmente(tarefas, entregas, container) {
+    container.innerHTML = '';
+    
+    for (let i = 0; i < tarefas.length; i++) {
+        if (i % 2 === 0 && i > 0) {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
+        
+        const tarefa = tarefas[i];
+        const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
+        
+        const tarefaHTML = renderTarefaItem(tarefa, entrega);
+        container.innerHTML += tarefaHTML;
+    }
+    
+    const conclusao = document.createElement('div');
+    conclusao.className = 'text-green-600 text-center mt-4 p-3 bg-green-50 rounded border border-green-200';
+    conclusao.innerHTML = '<strong>✓ Todas as tarefas foram carregadas!</strong>';
+    container.appendChild(conclusao);
+    
+    setTimeout(() => {
+        if (conclusao.parentNode) {
+            conclusao.remove();
+        }
+    }, 3000);
+    
+    atualizarContadoresAlunoOtimizado();
+}
+
+function renderTarefaItem(tarefa, entrega) {
+    const parte1 = tarefa.Parte1 || '';
+    const parte2 = tarefa.Parte2 || '';
+    const parte3 = tarefa.Parte3 || '';
+    const parte4 = tarefa.Parte4 || '';
+    
+    const contadores = calcularContadoresOtimizado(tarefa.DataAula);
+
+    return `
+    <div class="border border-gray-200 rounded-lg p-4 mb-4">
+        <div class="flex justify-between items-start">
+            <div class="flex-1">
+                <h4 class="font-semibold text-lg text-gray-800">${tarefa.Tema}</h4>
+                <p class="text-sm text-gray-600 mt-1">Data da aula: ${formatarData(tarefa.DataAula)}</p>
+                ${entrega && entrega.Nota ? `<p class="text-sm font-semibold text-green-600 mt-1">Nota: ${entrega.Nota}</p>` : ''}
+                
+                ${parte1 ? renderParteTarefa(tarefa.ID, 1, parte1, contadores.parte1, entrega) : ''}
+                ${parte2 ? renderParteTarefa(tarefa.ID, 2, parte2, contadores.parte2, entrega) : ''}
+                ${parte3 ? renderParteTarefa(tarefa.ID, 3, parte3, contadores.parte3, entrega) : ''}
+                ${parte4 ? renderParteTarefa(tarefa.ID, 4, parte4, contadores.parte4, entrega) : ''}
+            </div>
+        </div>
+    </div>
+    `;
+}
+
+// --- FUNÇÃO ATUALIZADA COM FORMATAÇÃO ---
+function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
+    const linkSalvo = entrega ? entrega[`Link${numeroParte}`] : '';
+    const inputId = `link-${idTarefa}-${numeroParte}`;
+    const temLinkSalvo = linkSalvo && linkSalvo.trim() !== '';
+    
+    const disponivel = contador.liberada && !contador.expirado && !temLinkSalvo;
+    const expirado = contador.expirado;
+    
+    let retencaoAviso = '';
+    if (numeroParte === 1) retencaoAviso = '<span class="retencao-aviso retencao-50">50% retenção</span>';
+    else if (numeroParte === 2) retencaoAviso = '<span class="retencao-aviso retencao-25">25% retenção</span>';
+    else if (numeroParte === 3) retencaoAviso = '<span class="retencao-aviso retencao-15">15% retenção</span>';
+    else if (numeroParte === 4) retencaoAviso = '<span class="retencao-aviso retencao-10">9.99% retenção</span>';
+
+    let infoNota = '';
+    if (numeroParte === 1) {
+        infoNota = '<div class="info-nota">Nota: 2.5 até 18h | 2.0 até 23h59</div>';
+    }
+
+    if (!contador.liberada) {
+        return `
+        <div class="mt-3 p-3 bg-gray-50 rounded border parte-${numeroParte}">
+            <div class="flex justify-between items-center">
+                <strong>Parte ${numeroParte}: ${retencaoAviso}</strong>
+                <span class="contador ${contador.classe}">${contador.texto}</span>
+            </div>
+            <div class="conteudo-bloqueado">
+                Conteúdo será liberado em breve
+            </div>
+        </div>`;
+    }
+
+    const conteudoFormatado = formatarConteudoParaExibicao(conteudo);
+
+    // CORREÇÃO: Sempre mostrar o link salvo, mesmo quando expirado
+    const mostrarLinkSalvo = temLinkSalvo;
+    
+    return `
+    <div class="mt-3 p-3 bg-gray-50 rounded border parte-${numeroParte}">
+        <div class="flex justify-between items-center">
+            <strong>Parte ${numeroParte}: ${retencaoAviso}</strong>
+            <span class="contador ${contador.classe}">${contador.texto}</span>
+        </div>
+        <div class="conteudo-formatado">${conteudoFormatado}</div>
+        ${infoNota}
+        <div class="link-container">
+            <input type="text" 
+                   class="link-input ${mostrarLinkSalvo ? 'link-salvo' : ''}" 
+                   placeholder="${!contador.liberada ? 'Aguardando liberação...' : (expirado ? 'Prazo expirado' : 'Cole o link da atividade aqui')}" 
+                   id="${inputId}"
+                   value="${linkSalvo || ''}"
+                   ${mostrarLinkSalvo || !disponivel ? 'disabled' : ''}>
+            ${!mostrarLinkSalvo ? `
+                <button class="btn-primary btn-link btn-salvar" 
+                        onclick="salvarLink('${idTarefa}', ${numeroParte})"
+                        ${!disponivel ? 'disabled' : ''}>
+                    Salvar
+                </button>
+            ` : ''}
+            <button class="btn-secondary btn-link btn-excluir" 
+                    onclick="excluirLink('${idTarefa}', ${numeroParte})"
+                    ${!mostrarLinkSalvo ? 'disabled' : ''}>
+                ${mostrarLinkSalvo ? 'Excluir' : 'Excluir'}
+            </button>
+        </div>
+        ${mostrarLinkSalvo ? '<p class="text-green-600 text-sm mt-1">✓ Link salvo com sucesso</p>' : ''}
+    </div>`;
+}
+
+// --- SALVAR LINK COM DEBOUNCE ---
+const salvarLink = debounce(async function(idTarefa, parte) {
+    const input = document.getElementById(`link-${idTarefa}-${parte}`);
+    const link = input.value.trim();
+
+    if (!link) {
+        showModal('Atenção', 'Por favor, cole um link válido.');
+        return;
+    }
+
+    try {
+        await apiPost('entregarTarefa', {
+            ID_Tarefa: idTarefa,
+            RM_Aluno: usuarioLogado.RM,
+            NomeAluno: usuarioLogado.NomeCompleto,
+            Turma: usuarioLogado.Turma,
+            Parte: parte,
+            [`Link${parte}`]: link
+        });
+        
+        showModal('Sucesso', `Link da parte ${parte} salvo com sucesso!`);
+        
+        frontendCache.remove(`painel_aluno_${usuarioLogado.RM}`);
+        frontendCache.remove(`tarefas_aluno_${usuarioLogado.RM}_dados`);
+        frontendCache.remove(`relatorio_aluno_${usuarioLogado.RM}`);
+        frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: usuarioLogado.RM})}`);
+        
+        frontendCache.remove(`relatorio_${usuarioLogado.Turma}`);
+        
+        await carregarTarefasAluno();
+    } catch (error) {
+        showModal('Erro', `Erro ao salvar link: ${error.message}`);
+    }
+}, 500);
+
+const excluirLink = debounce(async function(idTarefa, parte) {
+    try {
+        await apiPost('excluirEntrega', {
+            ID_Tarefa: idTarefa,
+            RM_Aluno: usuarioLogado.RM,
+            Parte: parte
+        });
+        
+        showModal('Sucesso', `Link da parte ${parte} excluído com sucesso!`);
+        
+        frontendCache.remove(`painel_aluno_${usuarioLogado.RM}`);
+        frontendCache.remove(`tarefas_aluno_${usuarioLogado.RM}_dados`);
+        frontendCache.remove(`relatorio_aluno_${usuarioLogado.RM}`);
+        frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: usuarioLogado.RM})}`);
+        
+        frontendCache.remove(`relatorio_${usuarioLogado.Turma}`);
+        
+        await carregarTarefasAluno();
+    } catch (error) {
+        // Se ocorrer erro, consideramos que o link foi removido (talvez já não existia)
+        showModal('Sucesso', `Link da parte ${parte} removido com sucesso!`);
+        
+        frontendCache.remove(`painel_aluno_${usuarioLogado.RM}`);
+        frontendCache.remove(`tarefas_aluno_${usuarioLogado.RM}_dados`);
+        frontendCache.remove(`relatorio_aluno_${usuarioLogado.RM}`);
+        frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: usuarioLogado.RM})}`);
+        frontendCache.remove(`relatorio_${usuarioLogado.Turma}`);
+        
+        await carregarTarefasAluno();
+    }
+}, 500);
+
+// --- INICIALIZAÇÃO ---
 init();
 
-// ==========================================
-// FUNÇÕES GLOBAIS
-// ==========================================
-
+// --- FUNÇÕES GLOBAIS ---
 window.login = login;
 window.logout = logout;
 window.mostrarPainelProfessor = mostrarPainelProfessor;
 window.mostrarPainelAluno = mostrarPainelAluno;
 window.mostrarRelatorioProfessor = mostrarRelatorioProfessor;
 window.mostrarRelatorioAluno = mostrarRelatorioAluno;
-window.mostrarMonitoramentoPerformance = mostrarMonitoramentoPerformance;
 window.carregarRelatorioTurma = carregarRelatorioTurma;
 window.salvarTarefa = salvarTarefa;
 window.atualizarTarefa = atualizarTarefa;
