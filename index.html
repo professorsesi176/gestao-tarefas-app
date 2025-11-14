@@ -257,7 +257,7 @@
             background-color: #CC0000 !important;
         }
 
-        /* NOVOS ESTILOS PARA LOADING */
+        /* ESTILOS PARA LOADING */
         .spinner {
             border: 2px solid #f3f3f3;
             border-radius: 50%;
@@ -317,7 +317,7 @@
             animation: spin 1s ease-in-out infinite;
         }
 
-        /* NOVOS ESTILOS VERSÃO 7.2 - CARREGAMENTO GRADUAL */
+        /* ESTILOS PARA CARREGAMENTO GRADUAL */
         .cache-indicator {
             position: absolute;
             top: 10px;
@@ -372,7 +372,7 @@
             100% { opacity: 0.6; }
         }
         
-        /* VERSÃO 7.2 - NOVOS ESTILOS PARA O RELATÓRIO */
+        /* ESTILOS PARA O RELATÓRIO */
         .relatorio-header {
             display: flex;
             justify-content: space-between;
@@ -396,7 +396,7 @@
             border-left: 4px solid #3b82f6;
         }
         
-        /* VERSÃO 7.2 - NOVOS ESTILOS PARA RETENÇÃO E CONTEÚDO CONDICIONAL */
+        /* ESTILOS PARA RETENÇÃO E CONTEÚDO CONDICIONAL */
         .retencao-aviso {
             display: inline-block;
             padding: 4px 8px;
@@ -435,7 +435,7 @@
             margin-top: 8px;
         }
 
-        /* NOVOS ESTILOS PARA AS INFORMAÇÕES ADICIONAIS - VERSÃO 7.2 */
+        /* ESTILOS PARA INFORMAÇÕES ADICIONAIS */
         .instrucoes-box {
             background-color: #f0f9ff;
             border: 1px solid #bae6fd;
@@ -544,7 +544,7 @@
             font-style: italic;
         }
         
-        /* VERSÃO 7.3 - NOVOS ESTILOS PARA FORMATAÇÃO DE TEXTO */
+        /* ESTILOS PARA FORMATAÇÃO DE TEXTO */
         .conteudo-formatado {
             white-space: pre-line;
             line-height: 1.6;
@@ -576,7 +576,7 @@
             background-color: #e5e7eb;
         }
         
-        /* VERSÃO 7.4 - CORREÇÕES ESPECÍFICAS */
+        /* ESTILOS ESPECÍFICOS */
         .btn-atualizar-dados {
             background-color: #3b82f6;
             color: white;
@@ -655,7 +655,7 @@ let tarefaParaExcluir = null;
 let contadoresAtivos = [];
 let tarefaEditando = null;
 
-// --- SISTEMA DE CACHE NO FRONTEND - VERSÃO 7.5 ATUALIZADO ---
+// --- SISTEMA DE CACHE NO FRONTEND ---
 const frontendCache = {
     get: (key) => {
         try {
@@ -666,13 +666,11 @@ const frontendCache = {
                     localStorage.removeItem(`task_${key}`);
                     return null;
                 }
-                console.log(`✅ Cache HIT: ${key}`);
                 return data;
             }
         } catch (e) {
             console.warn('Erro ao acessar cache local:', e);
         }
-        console.log(`❌ Cache MISS: ${key}`);
         return null;
     },
     
@@ -683,7 +681,6 @@ const frontendCache = {
                 expiry: Date.now() + ttl
             };
             localStorage.setItem(`task_${key}`, JSON.stringify(item));
-            console.log(`💾 Cache SET: ${key} (${ttl/1000}s)`);
             return true;
         } catch (e) {
             console.warn('LocalStorage não disponível:', e);
@@ -694,7 +691,6 @@ const frontendCache = {
     remove: (key) => {
         try {
             localStorage.removeItem(`task_${key}`);
-            console.log(`🗑️ Cache REMOVED: ${key}`);
         } catch (e) {
             console.warn('Erro ao remover do cache local:', e);
         }
@@ -704,14 +700,13 @@ const frontendCache = {
         try {
             const keys = Object.keys(localStorage).filter(k => k.startsWith('task_'));
             keys.forEach(k => localStorage.removeItem(k));
-            console.log(`🔥 Cache CLEARED: ${keys.length} itens`);
         } catch (e) {
             console.warn('Erro ao limpar cache local:', e);
         }
     }
 };
 
-// --- DEBOUNCE FUNCTION - VERSÃO 7.5 ---
+// --- DEBOUNCE FUNCTION ---
 function debounce(func, wait, immediate = false) {
     let timeout;
     return function executedFunction(...args) {
@@ -782,7 +777,7 @@ const formatarData = (dataISO) => {
     return data.toLocaleDateString('pt-BR');
 };
 
-// --- FUNÇÕES DE FORMATAÇÃO - VERSÃO 7.5 ---
+// --- FUNÇÕES DE FORMATAÇÃO ---
 function formatarConteudoParaExibicao(texto) {
     if (!texto) return '';
     
@@ -890,7 +885,7 @@ function mostrarLoadingRelatorio() {
     `;
 }
 
-// --- FUNÇÕES DE TEMPO ATUALIZADAS - VERSÃO 7.5 ---
+// --- FUNÇÕES DE TEMPO ---
 function calcularContadoresOtimizado(dataAula) {
     const agora = new Date();
     const dataAulaObj = new Date(dataAula);
@@ -984,7 +979,7 @@ function calcularContadoresOtimizado(dataAula) {
     };
 }
 
-// --- CONTADORES OTIMIZADOS - VERSÃO 7.5 ---
+// --- CONTADORES OTIMIZADOS ---
 function iniciarAtualizacaoContadoresOtimizada() {
     contadoresAtivos.forEach(interval => clearInterval(interval));
     contadoresAtivos = [];
@@ -1035,17 +1030,16 @@ function isElementInViewport(el) {
     );
 }
 
-// --- API REQUEST COM JSONP E CACHE - VERSÃO 7.5 ATUALIZADO ---
+// --- API REQUEST COM JSONP E CACHE ---
 function apiRequestJSONP(url, callback) {
     const callbackName = 'jsonp_callback_' + jsonpCallbackId++;
     
-    // Timeout para evitar requisições pendentes
     const timeout = setTimeout(() => {
         if (window[callbackName]) {
             delete window[callbackName];
             callback(new Error('Timeout: A requisição demorou muito para responder'));
         }
-    }, 15000); // 15 segundos de timeout
+    }, 15000);
     
     window[callbackName] = function(data) {
         clearTimeout(timeout);
@@ -1070,14 +1064,13 @@ function apiRequestJSONP(url, callback) {
     document.body.appendChild(script);
 }
 
-// --- API COM CACHE - VERSÃO 7.5 ATUALIZADO ---
+// --- API COM CACHE ---
 async function apiGet(func, params = {}, forceRefresh = false) {
     const cacheKey = `api_${func}_${JSON.stringify(params)}`;
     
     if (!forceRefresh) {
         const cached = frontendCache.get(cacheKey);
         if (cached) {
-            console.log(`📦 Retornando do cache: ${func}`);
             return cached;
         }
     }
@@ -1099,17 +1092,12 @@ async function apiGet(func, params = {}, forceRefresh = false) {
             url += `&_=${Date.now()}`;
         }
         
-        console.log(`🌐 Fazendo requisição: ${func}`);
-        
         apiRequestJSONP(url, (error, data) => {
             if (error) {
-                console.error(`❌ Erro na requisição ${func}:`, error);
                 reject(error);
             } else if (data && data.success === false) {
-                console.error(`❌ Erro no backend ${func}:`, data.error);
                 reject(new Error(data.error));
             } else {
-                console.log(`✅ Sucesso na requisição ${func}`);
                 frontendCache.set(cacheKey, data, 2 * 60 * 1000);
                 resolve(data);
             }
@@ -1131,17 +1119,12 @@ async function apiPost(action, dados) {
             }
         }
         
-        console.log(`🌐 Fazendo POST: ${action}`);
-        
         apiRequestJSONP(url, (error, data) => {
             if (error) {
-                console.error(`❌ Erro no POST ${action}:`, error);
                 reject(error);
             } else if (data && data.success === false) {
-                console.error(`❌ Erro no backend ${action}:`, data.error);
                 reject(new Error(data.error));
             } else {
-                console.log(`✅ Sucesso no POST ${action}`);
                 resolve(data);
             }
         });
@@ -1151,15 +1134,11 @@ async function apiPost(action, dados) {
 // --- INICIALIZAÇÃO ---
 async function init() {
     try {
-        console.log('🔄 Inicializando aplicação...');
         const response = await apiGet('getUsers');
         usuarios = response.data || [];
-        console.log(`✅ ${usuarios.length} usuários carregados`);
     } catch (error) {
-        console.error('❌ Erro ao carregar usuários:', error);
         usuarios = [];
         
-        // Adicionar usuário padrão caso não consiga carregar
         usuarios = [
             { 
                 NomeCompleto: "Geovane Módena", 
@@ -1257,12 +1236,9 @@ async function login(event) {
     }
 
     try {
-        console.log('🔄 Carregando tarefas...');
         const response = await apiGet('getTarefas');
         tarefas = response.data || [];
-        console.log(`✅ ${tarefas.length} tarefas carregadas`);
     } catch (error) {
-        console.error('❌ Erro ao carregar tarefas:', error);
         tarefas = [];
         showModal('Aviso', 'Algumas funcionalidades podem estar limitadas devido a problemas de conexão.');
     }
@@ -1288,7 +1264,7 @@ function logout() {
     renderLogin(); 
 }
 
-// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL - VERSÃO 7.5 CORRIGIDO ---
+// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL ---
 async function mostrarRelatorioProfessor() {
     const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
     
@@ -1323,9 +1299,8 @@ async function mostrarRelatorioProfessor() {
     contentArea.innerHTML = relatorioHTML;
 }
 
-// --- CARREGAMENTO GRADUAL DE RELATÓRIO - VERSÃO 7.5 CORRIGIDO ---
+// --- CARREGAMENTO GRADUAL DE RELATÓRIO ---
 async function carregarRelatorioTurma(turmaSelecionada) {
-    // VERSÃO 7.5: Invalidar cache para forçar atualização
     frontendCache.remove(`relatorio_${turmaSelecionada}`);
     
     document.getElementById('relatorio-turma-container').innerHTML = `
@@ -1346,7 +1321,6 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         progressBar.style.width = '10%';
         progressText.textContent = 'Carregando informações da turma...';
         
-        // VERSÃO 7.5: Forçar atualização dos dados
         const [usersResponse, tarefasResponse] = await Promise.all([
             apiGet('getUsers', {}, true),
             apiGet('getTarefasPorTurma', { turma: turmaSelecionada }, true)
@@ -1528,7 +1502,6 @@ async function mostrarRelatorioAluno() {
     const cached = frontendCache.get(cacheKey);
     
     if (cached) {
-        console.log('✅ Relatório do aluno carregado do cache');
         contentArea.innerHTML = cached;
         return;
     }
@@ -1622,13 +1595,12 @@ async function mostrarRelatorioAluno() {
     }
 }
 
-// --- PAINEL DO PROFESSOR COM CACHE - VERSÃO 7.5 ---
+// --- PAINEL DO PROFESSOR COM CACHE ---
 async function mostrarPainelProfessor() {
     const cacheKey = 'painel_professor';
     const cached = frontendCache.get(cacheKey);
     
     if (cached) {
-        console.log('✅ Painel do professor carregado do cache');
         contentArea.innerHTML = cached;
         if (tarefaEditando) {
             preencherFormularioEdicao();
@@ -1755,7 +1727,6 @@ async function carregarTarefasProfessor() {
     const cached = frontendCache.get(cacheKey);
     
     if (cached) {
-        console.log('✅ Lista de tarefas do professor carregada do cache');
         tarefas = cached;
         renderizarTabelaTarefas();
         return;
@@ -1839,7 +1810,7 @@ async function editarTarefa(idTarefa) {
     await mostrarPainelProfessor();
 }
 
-// --- SALVAR TAREFA COM DEBOUNCE - VERSÃO 7.5 ---
+// --- SALVAR TAREFA COM DEBOUNCE ---
 const salvarTarefa = debounce(async function() {
     const btnSalvar = document.getElementById('btnSalvarTarefa');
     
@@ -1886,7 +1857,6 @@ const salvarTarefa = debounce(async function() {
         const response = await apiPost('criarTarefa', dados);
         showModal('Sucesso', 'Tarefa criada com sucesso!');
         
-        // VERSÃO 7.5: Invalidar cache de forma mais abrangente
         frontendCache.remove('painel_professor');
         frontendCache.remove('tarefas_professor_lista');
         turmasSelecionadas.forEach(turma => {
@@ -1947,7 +1917,6 @@ const atualizarTarefa = debounce(async function() {
         const response = await apiPost('editarTarefa', dados);
         showModal('Sucesso', 'Tarefa atualizada com sucesso!');
         
-        // VERSÃO 7.5: Invalidar cache de forma mais abrangente
         frontendCache.remove('painel_professor');
         frontendCache.remove('tarefas_professor_lista');
         frontendCache.remove(`api_getTarefasPorTurma_${JSON.stringify({turma: turmaSelecionada})}`);
@@ -1968,7 +1937,6 @@ async function excluirTarefa(idTarefa) {
         await apiPost('excluirTarefa', { ID: idTarefa });
         showModal('Sucesso', 'Tarefa excluída com sucesso.');
         
-        // VERSÃO 7.5: Invalidar cache de forma mais abrangente
         frontendCache.remove('painel_professor');
         frontendCache.remove('tarefas_professor_lista');
         ['1A', '1B', '2A', '2B', '3A', '3B'].forEach(turma => {
@@ -2003,13 +1971,12 @@ function limparFormulario() {
     }
 }
 
-// --- PAINEL DO ALUNO COM CACHE - VERSÃO 7.5 ---
+// --- PAINEL DO ALUNO COM CACHE ---
 async function mostrarPainelAluno() {
     const cacheKey = `painel_aluno_${usuarioLogado.RM}`;
     const cached = frontendCache.get(cacheKey);
     
     if (cached) {
-        console.log('✅ Painel do aluno carregado do cache');
         contentArea.innerHTML = cached;
         iniciarAtualizacaoContadoresOtimizada();
         return;
@@ -2079,7 +2046,7 @@ async function mostrarPainelAluno() {
     frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000);
 }
 
-// --- FUNÇÃO PARA EXPANDIR/RECOLHER FUNDAMENTO CIENTÍFICO - VERSÃO 7.5 ---
+// --- FUNÇÃO PARA EXPANDIR/RECOLHER FUNDAMENTO CIENTÍFICO ---
 function toggleFundamentoCientifico() {
     const conteudo = document.getElementById('conteudo-fundamento');
     const icon = document.querySelector('.expand-icon');
@@ -2093,13 +2060,12 @@ function toggleFundamentoCientifico() {
     }
 }
 
-// --- CARREGAR TAREFAS ALUNO COM CACHE - VERSÃO 7.5 ---
+// --- CARREGAR TAREFAS ALUNO COM CACHE ---
 async function carregarTarefasAluno() {
     const cacheKey = `tarefas_aluno_${usuarioLogado.RM}_dados`;
     const cached = frontendCache.get(cacheKey);
     
     if (cached) {
-        console.log('✅ Dados de tarefas do aluno carregados do cache');
         renderTarefasAlunoFromCache(cached.tarefas, cached.entregas);
         return;
     }
@@ -2107,7 +2073,6 @@ async function carregarTarefasAluno() {
     mostrarLoadingTarefasAluno();
     
     try {
-        console.log('🔄 Carregando tarefas do aluno...');
         const response = await apiGet('getTarefasPorTurma', { turma: usuarioLogado.Turma });
         const container = document.getElementById('tarefas-aluno-container');
         
@@ -2119,12 +2084,9 @@ async function carregarTarefasAluno() {
 
         let entregas = [];
         try {
-            console.log('🔄 Carregando entregas do aluno...');
             const entregasResponse = await apiGet('getEntregasAluno', { rm: usuarioLogado.RM });
             entregas = entregasResponse.data || [];
-            console.log(`✅ ${entregas.length} entregas carregadas`);
         } catch (error) {
-            console.error('❌ Erro ao carregar entregas:', error);
         }
 
         frontendCache.set(cacheKey, {tarefas: response.data, entregas: entregas}, 2 * 60 * 1000);
@@ -2132,7 +2094,6 @@ async function carregarTarefasAluno() {
         renderTarefasAlunoGradualmente(response.data, entregas, container);
         
     } catch (error) {
-        console.error('❌ Erro ao carregar tarefas do aluno:', error);
         document.getElementById('tarefas-aluno-container').innerHTML = 
             `<div class="text-center text-red-500 py-8">Erro ao carregar tarefas: ${error.message}</div>`;
     }
@@ -2231,7 +2192,7 @@ function renderTarefaItem(tarefa, entrega) {
     `;
 }
 
-// --- VERSÃO 7.5: FUNÇÃO ATUALIZADA COM FORMATAÇÃO ---
+// --- FUNÇÃO ATUALIZADA COM FORMATAÇÃO ---
 function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     const linkSalvo = entrega ? entrega[`Link${numeroParte}`] : '';
     const inputId = `link-${idTarefa}-${numeroParte}`;
@@ -2296,7 +2257,7 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     </div>`;
 }
 
-// --- SALVAR LINK COM DEBOUNCE - VERSÃO 7.5 ---
+// --- SALVAR LINK COM DEBOUNCE ---
 const salvarLink = debounce(async function(idTarefa, parte) {
     const input = document.getElementById(`link-${idTarefa}-${parte}`);
     const link = input.value.trim();
@@ -2318,13 +2279,11 @@ const salvarLink = debounce(async function(idTarefa, parte) {
         
         showModal('Sucesso', `Link da parte ${parte} salvo com sucesso!`);
         
-        // VERSÃO 7.5: Invalidar cache de forma mais abrangente
         frontendCache.remove(`painel_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`tarefas_aluno_${usuarioLogado.RM}_dados`);
         frontendCache.remove(`relatorio_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: usuarioLogado.RM})}`);
         
-        // VERSÃO 7.5: Invalidar também o cache do relatório do professor
         frontendCache.remove(`relatorio_${usuarioLogado.Turma}`);
         
         await carregarTarefasAluno();
@@ -2343,13 +2302,11 @@ const excluirLink = debounce(async function(idTarefa, parte) {
         
         showModal('Sucesso', `Link da parte ${parte} excluído com sucesso!`);
         
-        // VERSÃO 7.5: Invalidar cache de forma mais abrangente
         frontendCache.remove(`painel_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`tarefas_aluno_${usuarioLogado.RM}_dados`);
         frontendCache.remove(`relatorio_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: usuarioLogado.RM})}`);
         
-        // VERSÃO 7.5: Invalidar também o cache do relatório do professor
         frontendCache.remove(`relatorio_${usuarioLogado.Turma}`);
         
         await carregarTarefasAluno();
