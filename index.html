@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Tarefas Escolar - Versão 7.5</title>
+    <title>Gestão de Tarefas Escolar - Versão 7.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
     
@@ -604,7 +604,7 @@
 <div id="app-container" class="w-full max-w-6xl bg-white shadow-xl rounded-2xl p-6 sm:p-8 transition-all duration-300">
     <header class="mb-8 border-b pb-4">
         <div class="header-content">
-            <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar </h1>
+            <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar - V7.6</h1>
             <div id="user-info" class="user-info-container"></div>
             <div class="absolute top-0 right-0 flex space-x-2">
                 <button id="relatorioBtn" class="btn-relatorio hidden">Relatório</button>
@@ -616,7 +616,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 7.5
+        Desenvolvido por Geovane Modena | Versão 7.6
     </footer>
 </div>
 
@@ -1270,7 +1270,7 @@ async function mostrarRelatorioProfessor() {
     
     let relatorioHTML = `
         <div class="card p-6">
-            <h3 class="text-2xl font-bold text-red-700 mb-4">Relatório por Turma - V7.5</h3>
+            <h3 class="text-2xl font-bold text-red-700 mb-4">Relatório por Turma - V7.6</h3>
             <div class="mb-4">
                 <p class="block text-sm font-medium text-gray-700 mb-2">Selecione a Turma:</p>
                 <div class="flex flex-wrap gap-2 mb-6" id="botoes-turma">
@@ -1512,7 +1512,7 @@ async function mostrarRelatorioAluno() {
         
         let relatorioHTML = `
             <div class="card p-6">
-                <h3 class="text-2xl font-bold text-red-700 mb-4">Meu Relatório - V7.5</h3>
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Meu Relatório - V7.6</h3>
         `;
         
         if (entregas.length === 0) {
@@ -1985,7 +1985,7 @@ async function mostrarPainelAluno() {
     contentArea.innerHTML = `
         <div id="painelAluno" class="space-y-6">
             <div class="card p-6">
-                <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${usuarioLogado.Turma} - V7.5</h3>
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${usuarioLogado.Turma} - V7.6</h3>
                 
                 <div class="instrucoes-box">
                     <div class="instrucoes-title">Instruções para entrega:</div>
@@ -2227,6 +2227,9 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
 
     const conteudoFormatado = formatarConteudoParaExibicao(conteudo);
 
+    // CORREÇÃO: Sempre mostrar o link salvo, mesmo quando expirado
+    const mostrarLinkSalvo = temLinkSalvo;
+    
     return `
     <div class="mt-3 p-3 bg-gray-50 rounded border parte-${numeroParte}">
         <div class="flex justify-between items-center">
@@ -2237,23 +2240,25 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
         ${infoNota}
         <div class="link-container">
             <input type="text" 
-                   class="link-input ${temLinkSalvo ? 'link-salvo' : ''}" 
+                   class="link-input ${mostrarLinkSalvo ? 'link-salvo' : ''}" 
                    placeholder="${!contador.liberada ? 'Aguardando liberação...' : (expirado ? 'Prazo expirado' : 'Cole o link da atividade aqui')}" 
                    id="${inputId}"
                    value="${linkSalvo || ''}"
-                   ${!disponivel ? 'disabled' : ''}>
-            <button class="btn-primary btn-link btn-salvar" 
-                    onclick="salvarLink('${idTarefa}', ${numeroParte})"
-                    ${!disponivel ? 'disabled' : ''}>
-                Salvar
-            </button>
+                   ${mostrarLinkSalvo || !disponivel ? 'disabled' : ''}>
+            ${!mostrarLinkSalvo ? `
+                <button class="btn-primary btn-link btn-salvar" 
+                        onclick="salvarLink('${idTarefa}', ${numeroParte})"
+                        ${!disponivel ? 'disabled' : ''}>
+                    Salvar
+                </button>
+            ` : ''}
             <button class="btn-secondary btn-link btn-excluir" 
                     onclick="excluirLink('${idTarefa}', ${numeroParte})"
-                    ${!temLinkSalvo || expirado ? 'disabled' : ''}>
-                Excluir
+                    ${!mostrarLinkSalvo ? 'disabled' : ''}>
+                ${mostrarLinkSalvo ? 'Excluir' : 'Excluir'}
             </button>
         </div>
-        ${temLinkSalvo ? '<p class="text-green-600 text-sm mt-1">✓ Link salvo com sucesso</p>' : ''}
+        ${mostrarLinkSalvo ? '<p class="text-green-600 text-sm mt-1">✓ Link salvo com sucesso</p>' : ''}
     </div>`;
 }
 
