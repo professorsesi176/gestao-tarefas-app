@@ -11,7 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     
     <style>
-        /* Estilos existentes permanecem inalterados */
+        /* Estilos anteriores permanecem os mesmos */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
         .card { background-color: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.2); }
@@ -1321,13 +1321,14 @@ async function init() {
     
     try {
         console.log('Carregando usuários...');
-        const response = await apiGet('getUsers');
+        const response = await apiGet('getUsers', {}, true); // forceRefresh true
         usuarios = response.data || [];
         console.log('Usuários carregados:', usuarios.length);
         
         // DEBUG: Verificar estrutura dos usuários
         if (usuarios.length > 0) {
             console.log('Exemplo de usuário:', usuarios[0]);
+            console.log('Campos disponíveis:', Object.keys(usuarios[0]));
         }
     } catch (error) {
         console.error('Erro ao carregar usuários:', error);
@@ -1390,6 +1391,7 @@ const renderLogin = () => {
     });
 };
 
+// --- FUNÇÃO DE LOGIN MELHORADA ---
 async function login(event) {
     event.preventDefault(); 
     const email = document.getElementById('email').value.trim();
@@ -1402,26 +1404,36 @@ async function login(event) {
     loginButton.disabled = true;
     loginText.textContent = "Entrando...";
     
-    // Debug: mostrar usuários disponíveis
-    console.log('Usuários disponíveis:', usuarios);
     console.log('Tentando login com:', { email, rm });
+    console.log('Usuários disponíveis:', usuarios);
     
     // Aguardar um pouco para mostrar o loading
     await new Promise(resolve => setTimeout(resolve, 500));
     
+    // Função de comparação mais robusta
     const user = usuarios.find(u => {
-        const userEmail = u.Email.toLowerCase().trim();
-        const userRM = String(u.RM).trim();
+        // Normalizar e-mails (case insensitive)
+        const userEmail = (u.Email || '').toLowerCase().trim();
         const inputEmail = email.toLowerCase().trim();
+        
+        // Normalizar RM (converter para string e trim)
+        const userRM = String(u.RM || '').trim();
         const inputRM = rm.trim();
         
-        console.log('Comparando:', { userEmail, inputEmail, userRM, inputRM });
+        console.log('Comparando:', { 
+            userEmail, 
+            inputEmail, 
+            userRM, 
+            inputRM,
+            emailMatch: userEmail === inputEmail,
+            rmMatch: userRM === inputRM
+        });
         
         return userEmail === inputEmail && userRM === inputRM;
     });
     
     if (!user) {
-        console.log('Usuário não encontrado');
+        console.log('Usuário não encontrado. Verifique os dados informados.');
         loginErro.style.display = 'block';
         loginButton.disabled = false;
         loginText.textContent = "Entrar";
@@ -1436,7 +1448,7 @@ async function login(event) {
     logoutBtn.classList.remove('hidden');
     relatorioBtn.classList.remove('hidden');
     
-    // NÃO exibir o RM no frontend
+    // Atualizar informações do usuário
     if (user.Perfil === "Professor") {
         userInfoDisplay.innerHTML = `
             <div class="user-info-text">
