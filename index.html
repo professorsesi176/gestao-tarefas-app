@@ -623,32 +623,14 @@
             color: #991b1b;
         }
 
-        /* ESTILOS PARA CTRL+CLIQUE */
-        .ctrl-hint {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: #3b82f6;
-            color: white;
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            font-size: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
+        /* ESTILOS PARA ATUALIZAÇÃO DE TAREFAS */
+        .tarefa-atualizada {
+            animation: highlight 2s ease;
         }
 
-        .btn-with-hint {
-            position: relative;
-        }
-
-        .btn-with-hint:hover .ctrl-hint {
-            opacity: 1;
+        @keyframes highlight {
+            0% { background-color: #d1fae5; }
+            100% { background-color: transparent; }
         }
     </style>
 </head>
@@ -660,10 +642,7 @@
             <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar</h1>
             <div id="user-info" class="user-info-container"></div>
             <div class="absolute top-0 right-0 flex space-x-2">
-                <button id="relatorioBtn" class="btn-relatorio hidden btn-with-hint">
-                    Relatório
-                    <span class="ctrl-hint">⌘</span>
-                </button>
+                <button id="relatorioBtn" class="btn-relatorio hidden">Relatório</button>
                 <button onclick="logout()" id="logoutBtn" class="btn-secondary hidden">Sair</button>
             </div>
         </div>
@@ -1352,9 +1331,8 @@ async function mostrarRelatorioProfessor() {
     
     turmas.forEach(turma => {
         relatorioHTML += `
-            <button onclick="carregarRelatorioTurma('${turma}')" class="btn-turma btn-with-hint">
+            <button onclick="carregarRelatorioTurma('${turma}')" class="btn-turma">
                 Turma ${turma}
-                <span class="ctrl-hint">⌘</span>
             </button>
         `;
     });
@@ -1366,16 +1344,12 @@ async function mostrarRelatorioProfessor() {
                 <p class="text-gray-500 text-center py-8">Selecione uma turma para visualizar o relatório</p>
             </div>
             <div class="mt-4 text-center">
-                <button onclick="mostrarPainelProfessor()" class="btn-secondary btn-with-hint">
-                    Voltar ao Painel
-                    <span class="ctrl-hint">⌘</span>
-                </button>
+                <button onclick="mostrarPainelProfessor()" class="btn-secondary">Voltar ao Painel</button>
             </div>
         </div>
     `;
     
     contentArea.innerHTML = relatorioHTML;
-    setTimeout(atualizarBotoesParaNovaJanela, 500);
 }
 
 // --- CARREGAMENTO GRADUAL DE RELATÓRIO ---
@@ -1429,9 +1403,8 @@ async function carregarRelatorioTurma(turmaSelecionada) {
             <div class="relatorio-header">
                 <h4 class="text-lg font-semibold text-red-700">Relatório da Turma ${turmaSelecionada}</h4>
                 <div>
-                    <button onclick="carregarRelatorioTurma('${turmaSelecionada}')" class="btn-atualizar-dados btn-with-hint">
+                    <button onclick="carregarRelatorioTurma('${turmaSelecionada}')" class="btn-atualizar-dados">
                         Atualizar Dados
-                        <span class="ctrl-hint">⌘</span>
                     </button>
                 </div>
             </div>
@@ -1663,17 +1636,13 @@ async function mostrarRelatorioAluno() {
         
         relatorioHTML += `
                 <div class="mt-4 text-center">
-                    <button onclick="mostrarPainelAluno()" class="btn-secondary btn-with-hint">
-                        Voltar ao Painel
-                        <span class="ctrl-hint">⌘</span>
-                    </button>
+                    <button onclick="mostrarPainelAluno()" class="btn-secondary">Voltar ao Painel</button>
                 </div>
             </div>
         `;
         
         contentArea.innerHTML = relatorioHTML;
         frontendCache.set(cacheKey, relatorioHTML, 5 * 60 * 1000);
-        setTimeout(atualizarBotoesParaNovaJanela, 500);
     } catch (error) {
         showModal('Erro', `Erro ao carregar relatório: ${error.message}`);
     }
@@ -1690,7 +1659,6 @@ async function mostrarPainelProfessor() {
             preencherFormularioEdicao();
         }
         await carregarTarefasProfessor();
-        setTimeout(atualizarBotoesParaNovaJanela, 500);
         return;
     }
     
@@ -1785,7 +1753,6 @@ async function mostrarPainelProfessor() {
     await carregarTarefasProfessor();
     
     frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000);
-    setTimeout(atualizarBotoesParaNovaJanela, 500);
 }
 
 function preencherFormularioEdicao() {
@@ -1808,25 +1775,27 @@ function preencherFormularioEdicao() {
 }
 
 // --- FUNÇÕES DO PROFESSOR COM CACHE ---
-async function carregarTarefasProfessor(forceRefresh = false) {
-    const cacheKey = 'tarefas_professor_lista';
+async function carregarTarefasProfessor() {
+    const tbody = document.getElementById('tabelaTarefasBody');
     
-    if (!forceRefresh) {
-        const cached = frontendCache.get(cacheKey);
-        if (cached) {
-            tarefas = cached;
-            renderizarTabelaTarefas();
-            return;
-        }
-    }
+    // Mostrar loading
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="4" class="text-center py-4 text-gray-500">
+                <div class="spinner"></div>
+                Carregando tarefas...
+            </td>
+        </tr>
+    `;
     
     try {
-        const response = await apiGet('getTarefas', {}, true); // Forçar refresh
+        const response = await apiGet('getTarefas', {}, true); // Force refresh
         tarefas = response.data || [];
-        frontendCache.set(cacheKey, tarefas, 2 * 60 * 1000);
+        frontendCache.remove('tarefas_professor_lista');
+        frontendCache.set('tarefas_professor_lista', tarefas, 2 * 60 * 1000);
         renderizarTabelaTarefas();
     } catch (error) {
-        document.getElementById('tabelaTarefasBody').innerHTML = 
+        tbody.innerHTML = 
             `<tr><td colspan="4" class="text-center py-4 text-red-500">Erro ao carregar tarefas: ${error.message}</td></tr>`;
     }
 }
@@ -1852,7 +1821,7 @@ function renderizarTabelaTarefas() {
         };
 
         return `
-        <tr>
+        <tr class="tarefa-item">
             <td class="turma-column">${tarefa.Turma}</td>
             <td class="px-4 py-2">
                 <div class="font-semibold text-gray-800 mb-2">${tarefa.Tema}</div>
@@ -1864,9 +1833,8 @@ function renderizarTabelaTarefas() {
             <td class="data-column">${formatarData(tarefa.DataAula)}</td>
             <td class="acoes-column">
                 <div class="flex justify-center space-x-2">
-                    <button onclick="editarTarefa('${tarefa.ID}')" class="btn-editar btn-with-hint">
+                    <button onclick="editarTarefa('${tarefa.ID}')" class="btn-editar">
                         Editar
-                        <span class="ctrl-hint">⌘</span>
                     </button>
                     <button onclick="solicitarExclusaoTarefa('${tarefa.ID}')" class="btn-excluir">
                         Excluir
@@ -1947,8 +1915,9 @@ const salvarTarefa = debounce(async function() {
         };
 
         const response = await apiPost('criarTarefa', dados);
+        showModal('Sucesso', 'Tarefa criada com sucesso!');
         
-        // LIMPAR CACHE E RECARREGAR
+        // Limpar cache e forçar atualização
         frontendCache.remove('painel_professor');
         frontendCache.remove('tarefas_professor_lista');
         turmasSelecionadas.forEach(turma => {
@@ -1956,11 +1925,15 @@ const salvarTarefa = debounce(async function() {
             frontendCache.remove(`relatorio_${turma}`);
         });
         
-        // FORÇAR ATUALIZAÇÃO IMEDIATA
-        await carregarTarefasProfessor(true);
-        
-        showModal('Sucesso', 'Tarefa criada com sucesso!');
         limparFormulario();
+        
+        // Recarregar tarefas imediatamente
+        await carregarTarefasProfessor();
+        
+        // Adicionar efeito visual nas novas tarefas
+        document.querySelectorAll('.tarefa-item').forEach(item => {
+            item.classList.add('tarefa-atualizada');
+        });
         
     } catch (error) {
         showModal('Erro', `Erro ao criar tarefa: ${error.message}`);
@@ -2024,6 +1997,9 @@ const atualizarTarefa = debounce(async function() {
         tarefaEditando = null;
         limparFormulario();
         
+        // Recarregar tarefas imediatamente
+        await carregarTarefasProfessor();
+        
     } catch (error) {
         showModal('Erro', `Erro ao atualizar tarefa: ${error.message}`);
     } finally {
@@ -2043,7 +2019,7 @@ async function excluirTarefa(idTarefa) {
             frontendCache.remove(`relatorio_${turma}`);
         });
         
-        await carregarTarefasProfessor(true);
+        await carregarTarefasProfessor();
     } catch (error) {
         showModal('Erro', `Erro ao excluir tarefa: ${error.message}`);
     }
@@ -2063,10 +2039,6 @@ function limparFormulario() {
         document.getElementById('titulo-formulario').textContent = 'Criar Nova Tarefa';
         document.getElementById('btnSalvarTarefa').textContent = 'Salvar Tarefa';
         document.getElementById('btnSalvarTarefa').setAttribute('onclick', 'salvarTarefa()');
-        
-        setTimeout(() => {
-            carregarTarefasProfessor();
-        }, 100);
     }
 }
 
@@ -2078,7 +2050,6 @@ async function mostrarPainelAluno() {
     if (cached) {
         contentArea.innerHTML = cached;
         iniciarAtualizacaoContadoresOtimizada();
-        setTimeout(atualizarBotoesParaNovaJanela, 500);
         return;
     }
     
@@ -2144,7 +2115,6 @@ async function mostrarPainelAluno() {
     iniciarAtualizacaoContadoresOtimizada();
     
     frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000);
-    setTimeout(atualizarBotoesParaNovaJanela, 500);
 }
 
 // --- FUNÇÃO PARA EXPANDIR/RECOLHER FUNDAMENTO CIENTÍFICO ---
@@ -2174,7 +2144,7 @@ async function carregarTarefasAluno() {
     mostrarLoadingTarefasAluno();
     
     try {
-        const response = await apiGet('getTarefasPorTurma', { turma: usuarioLogado.Turma });
+        const response = await apiGet('getTarefasPorTurma', { turma: usuarioLogado.Turma }, true);
         const container = document.getElementById('tarefas-aluno-container');
         
         if (!response.data || response.data.length === 0) {
@@ -2185,7 +2155,7 @@ async function carregarTarefasAluno() {
 
         let entregas = [];
         try {
-            const entregasResponse = await apiGet('getEntregasAluno', { rm: usuarioLogado.RM });
+            const entregasResponse = await apiGet('getEntregasAluno', { rm: usuarioLogado.RM }, true);
             entregas = entregasResponse.data || [];
         } catch (error) {
         }
@@ -2436,75 +2406,6 @@ const excluirLink = debounce(async function(idTarefa, parte) {
     }
 }, 500);
 
-// --- FUNCIONALIDADE CTRL+CLIQUE PARA NOVA JANELA ---
-function executarEmNovaJanela(acao, ...parametros) {
-    const newWindow = window.open(window.location.href, '_blank');
-    if (newWindow) {
-        newWindow.onload = function() {
-            setTimeout(() => {
-                try {
-                    if (parametros.length > 0) {
-                        newWindow[acao](...parametros);
-                    } else {
-                        newWindow[acao]();
-                    }
-                } catch (error) {
-                    console.warn('Erro ao executar ação na nova janela:', error);
-                }
-            }, 1500);
-        };
-    }
-}
-
-function atualizarBotoesParaNovaJanela() {
-    // Atualizar botões principais
-    document.querySelectorAll('.btn-with-hint').forEach(btn => {
-        const originalOnClick = btn.getAttribute('onclick');
-        if (originalOnClick) {
-            const match = originalOnClick.match(/(\w+)\(([^)]*)\)/);
-            if (match) {
-                const functionName = match[1];
-                const params = match[2];
-                
-                btn.setAttribute('onclick', `executarEmNovaJanela('${functionName}'${params ? `, ${params}` : ''})`);
-            }
-        }
-    });
-}
-
-// Adicionar event listener global para Ctrl+clique
-document.addEventListener('click', function(e) {
-    if (e.ctrlKey && e.button === 0) {
-        const target = e.target.closest('button');
-        if (target && target.getAttribute('onclick')) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const onclick = target.getAttribute('onclick');
-            const match = onclick.match(/(\w+)\(([^)]*)\)/);
-            if (match) {
-                const functionName = match[1];
-                const params = match[2];
-                
-                if (params) {
-                    // Converter string de parâmetros para array
-                    const paramArray = params.split(',').map(p => {
-                        p = p.trim();
-                        // Remover aspas se existirem
-                        if ((p.startsWith("'") && p.endsWith("'")) || (p.startsWith('"') && p.endsWith('"'))) {
-                            return p.slice(1, -1);
-                        }
-                        return p;
-                    });
-                    executarEmNovaJanela(functionName, ...paramArray);
-                } else {
-                    executarEmNovaJanela(functionName);
-                }
-            }
-        }
-    }
-});
-
 // --- INICIALIZAÇÃO ---
 init();
 
@@ -2527,7 +2428,6 @@ window.salvarLink = salvarLink;
 window.excluirLink = excluirLink;
 window.toggleFundamentoCientifico = toggleFundamentoCientifico;
 window.adicionarFormatacao = adicionarFormatacao;
-window.executarEmNovaJanela = executarEmNovaJanela;
 </script>
 </body>
 </html>
