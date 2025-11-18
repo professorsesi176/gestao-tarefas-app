@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Tarefas Escolar</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
     <!-- Bibliotecas para exportação -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -673,7 +672,7 @@
             font-weight: bold;
         }
 
-        /* NOVOS ESTILOS V8.1 */
+        /* NOVOS ESTILOS V8.2 */
         .password-container {
             position: relative;
             width: 100%;
@@ -688,15 +687,11 @@
             border: none;
             cursor: pointer;
             color: #6b7280;
+            z-index: 10;
         }
 
         .password-toggle:hover {
             color: #374151;
-        }
-
-        .rm-hidden {
-            -webkit-text-security: disc;
-            text-security: disc;
         }
 
         .turma-info {
@@ -733,6 +728,22 @@
             color: #6b7280;
             font-size: 0.75rem;
         }
+
+        .debug-info {
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .debug-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #374151;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -752,7 +763,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 8.1
+        Desenvolvido por Geovane Modena | Versão 8.2
     </footer>
 </div>
 
@@ -898,7 +909,21 @@ const showConfirmModal = (message, onConfirm) => {
     };
 };
 
-const renderIcons = () => window.lucide && window.lucide.createIcons();
+const renderIcons = () => {
+    // Função para inicializar ícones SVG inline
+    const eyeIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+    </svg>`;
+    
+    const eyeOffIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+    </svg>`;
+    
+    // Armazenar os ícones globalmente para uso
+    window.eyeIcons = { eye: eyeIcon, eyeOff: eyeOffIcon };
+};
 
 const formatarData = (dataISO) => {
     if (!dataISO) return 'N/A';
@@ -1291,19 +1316,38 @@ async function apiPost(action, dados) {
 
 // --- INICIALIZAÇÃO ---
 async function init() {
+    renderIcons(); // Inicializar ícones SVG
+    
     try {
+        console.log('Carregando usuários...');
         const response = await apiGet('getUsers');
         usuarios = response.data || [];
+        console.log('Usuários carregados:', usuarios.length);
     } catch (error) {
-        usuarios = [];
         console.error('Erro ao carregar usuários:', error);
-        // NÃO adicionar usuário professor em caso de erro - isso é importante para segurança
+        usuarios = [];
+        showModal('Aviso', 'Não foi possível carregar a lista de usuários. Verifique sua conexão.');
     }
     
     renderLogin();
 }
 
 // --- FUNÇÕES DE AUTENTICAÇÃO ---
+function toggleRmVisibility() {
+    const rmInput = document.getElementById('rm');
+    const toggleButton = document.getElementById('toggleRm');
+    
+    rmVisible = !rmVisible;
+    
+    if (rmVisible) {
+        rmInput.type = 'text';
+        toggleButton.innerHTML = window.eyeIcons.eyeOff;
+    } else {
+        rmInput.type = 'password';
+        toggleButton.innerHTML = window.eyeIcons.eye;
+    }
+}
+
 const renderLogin = () => {
     contentArea.innerHTML = `
         <div id="login" class="max-w-md mx-auto p-6">
@@ -1313,55 +1357,39 @@ const renderLogin = () => {
             <form id="login-form" class="space-y-4">
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
-                    <input type="email" id="email" name="email" required placeholder="seu.email@escola.com" class="w-full">
+                    <input type="email" id="email" name="email" required placeholder="seu.email@escola.com" class="w-full p-3 border rounded-lg">
                 </div>
                 <div>
                     <label for="rm" class="block text-sm font-medium text-gray-700 mb-2">RM</label>
                     <div class="password-container">
-                        <input type="password" id="rm" name="rm" required placeholder="Digite seu RM" class="w-full rm-hidden">
+                        <input type="password" id="rm" name="rm" required placeholder="Digite seu RM" class="w-full p-3 border rounded-lg pr-12">
                         <button type="button" class="password-toggle" id="toggleRm">
-                            <i data-lucide="eye"></i>
+                            ${window.eyeIcons.eye}
                         </button>
                     </div>
                 </div>
-                <button type="submit" class="btn-primary" id="login-button">
+                <button type="submit" class="btn-primary w-full py-3" id="login-button">
                     <span id="login-text">Entrar</span>
                 </button>
             </form>
+            
+            <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p class="text-sm text-yellow-800 text-center">
+                    <strong>Problemas para entrar?</strong><br>
+                    Verifique se seu e-mail e RM estão corretos. Caso persista, entre em contato com o administrador.
+                </p>
+            </div>
         </div>
     `;
-
-    // Inicializar ícones
-    renderIcons();
 
     // Configurar toggle de visibilidade do RM
     document.getElementById('toggleRm').addEventListener('click', toggleRmVisibility);
 
-    document.getElementById('login-form').addEventListener('submit', (e) => {
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        login(e);
+        await login(e);
     });
 };
-
-function toggleRmVisibility() {
-    const rmInput = document.getElementById('rm');
-    const toggleIcon = document.getElementById('toggleRm').querySelector('i');
-    
-    rmVisible = !rmVisible;
-    
-    if (rmVisible) {
-        rmInput.type = 'text';
-        toggleIcon.setAttribute('data-lucide', 'eye-off');
-        rmInput.classList.remove('rm-hidden');
-    } else {
-        rmInput.type = 'password';
-        toggleIcon.setAttribute('data-lucide', 'eye');
-        rmInput.classList.add('rm-hidden');
-    }
-    
-    // Atualizar ícone
-    renderIcons();
-}
 
 async function login(event) {
     event.preventDefault(); 
@@ -1372,10 +1400,15 @@ async function login(event) {
     const loginButton = document.getElementById('login-button');
     const loginText = document.getElementById('login-text');
     
-    setButtonLoading(loginButton, true);
+    loginButton.disabled = true;
     loginText.textContent = "Entrando...";
     
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Debug: mostrar usuários disponíveis
+    console.log('Usuários disponíveis:', usuarios);
+    console.log('Tentando login com:', { email, rm });
+    
+    // Aguardar um pouco para mostrar o loading
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     const user = usuarios.find(u => {
         const userEmail = u.Email.toLowerCase().trim();
@@ -1383,24 +1416,28 @@ async function login(event) {
         const inputEmail = email.toLowerCase().trim();
         const inputRM = rm.trim();
         
+        console.log('Comparando:', { userEmail, inputEmail, userRM, inputRM });
+        
         return userEmail === inputEmail && userRM === inputRM;
     });
     
     if (!user) {
+        console.log('Usuário não encontrado');
         loginErro.style.display = 'block';
-        setButtonLoading(loginButton, false);
+        loginButton.disabled = false;
         loginText.textContent = "Entrar";
         return;
     }
     
+    console.log('Usuário encontrado:', user);
     usuarioLogado = user;
     loginErro.style.display = 'none';
     
-    contentArea.innerHTML = `<div class="text-center text-gray-500 py-8">Carregando painel...</div>`;
+    contentArea.innerHTML = `<div class="text-center text-gray-500 py-8"><div class="spinner"></div>Carregando painel...</div>`;
     logoutBtn.classList.remove('hidden');
     relatorioBtn.classList.remove('hidden');
     
-    // NÃO exibir o RM no frontend por questões de segurança
+    // NÃO exibir o RM no frontend
     if (user.Perfil === "Professor") {
         userInfoDisplay.innerHTML = `
             <div class="user-info-text">
@@ -1420,7 +1457,9 @@ async function login(event) {
     try {
         const response = await apiGet('getTarefas');
         tarefas = response.data || [];
+        console.log('Tarefas carregadas:', tarefas.length);
     } catch (error) {
+        console.error('Erro ao carregar tarefas:', error);
         tarefas = [];
         showModal('Aviso', 'Algumas funcionalidades podem estar limitadas devido a problemas de conexão.');
     }
@@ -1431,7 +1470,7 @@ async function login(event) {
         await mostrarPainelAluno(); 
     }
     
-    setButtonLoading(loginButton, false);
+    loginButton.disabled = false;
     loginText.textContent = "Entrar";
 }
 
@@ -1489,38 +1528,49 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         <div class="text-center py-8">
             <div class="spinner"></div>
             <p class="mt-4 text-gray-600">Carregando relatório da turma ${turmaSelecionada}...</p>
-            <div class="progress-bar mt-4">
-                <div class="progress-fill" style="width: 0%" id="progress-bar-fill"></div>
-            </div>
-            <p class="text-sm text-gray-500 mt-2" id="progress-text">Iniciando carregamento...</p>
         </div>
     `;
     
-    const progressBar = document.getElementById('progress-bar-fill');
-    const progressText = document.getElementById('progress-text');
-    
     try {
-        progressBar.style.width = '10%';
-        progressText.textContent = 'Carregando informações da turma...';
+        console.log(`Carregando relatório para turma ${turmaSelecionada}...`);
         
         const [usersResponse, tarefasResponse] = await Promise.all([
             apiGet('getUsers', {}, true),
             apiGet('getTarefasPorTurma', { turma: turmaSelecionada }, true)
         ]);
         
-        const alunosTurma = usersResponse.data.filter(user => user.Turma === turmaSelecionada && user.Perfil === 'Aluno');
-        
-        // Ordenar alunos pelo número
-        alunosTurma.sort((a, b) => {
-            const numA = parseInt(a.Numero) || 0;
-            const numB = parseInt(b.Numero) || 0;
-            return numA - numB;
+        console.log('Dados carregados:', { 
+            users: usersResponse.data, 
+            tarefas: tarefasResponse.data 
         });
+        
+        const alunosTurma = usersResponse.data.filter(user => 
+            user.Turma === turmaSelecionada && user.Perfil === 'Aluno'
+        );
+        
+        console.log(`Alunos da turma ${turmaSelecionada}:`, alunosTurma);
         
         const tarefasTurma = tarefasResponse.data || [];
         
-        progressBar.style.width = '30%';
-        progressText.textContent = `Turma carregada: ${alunosTurma.length} alunos, ${tarefasTurma.length} tarefas`;
+        if (alunosTurma.length === 0) {
+            document.getElementById('relatorio-turma-container').innerHTML = `
+                <div class="text-center py-8">
+                    <p class="text-gray-500 mb-4">Nenhum aluno encontrado na turma ${turmaSelecionada}.</p>
+                    <p class="text-sm text-gray-400">Verifique se os alunos estão cadastrados no sistema.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        if (tarefasTurma.length === 0) {
+            document.getElementById('relatorio-turma-container').innerHTML = `
+                <div class="text-center py-8">
+                    <p class="text-gray-500 mb-4">Nenhuma tarefa encontrada para a turma ${turmaSelecionada}.</p>
+                    <p class="text-sm text-gray-400">Crie tarefas para esta turma no painel principal.</p>
+                </div>
+            `;
+            return;
+        }
         
         // Informações da turma
         let turmaInfoHTML = '';
@@ -1544,26 +1594,6 @@ async function carregarRelatorioTurma(turmaSelecionada) {
                     </div>
                 </div>
             `;
-        }
-        
-        if (alunosTurma.length === 0) {
-            const html = `
-                ${turmaInfoHTML}
-                <p class="text-gray-500 text-center py-8">Nenhum aluno encontrado na turma ${turmaSelecionada}.</p>
-            `;
-            document.getElementById('relatorio-turma-container').innerHTML = html;
-            frontendCache.set(`relatorio_${turmaSelecionada}`, html, 10 * 60 * 1000);
-            return;
-        }
-        
-        if (tarefasTurma.length === 0) {
-            const html = `
-                ${turmaInfoHTML}
-                <p class="text-gray-500 text-center py-8">Nenhuma tarefa encontrada para a turma ${turmaSelecionada}.</p>
-            `;
-            document.getElementById('relatorio-turma-container').innerHTML = html;
-            frontendCache.set(`relatorio_${turmaSelecionada}`, html, 10 * 60 * 1000);
-            return;
         }
         
         let relatorioTurmaHTML = `
@@ -1700,8 +1730,6 @@ async function carregarRelatorioTurma(turmaSelecionada) {
                     }
                     
                     alunosProcessados++;
-                    const progresso = 30 + (alunosProcessados / alunosTurma.length) * 60;
-                    progressBar.style.width = `${progresso}%`;
                     carregamentoStatus.innerHTML = `<div class="spinner"></div> Carregando aluno ${alunosProcessados} de ${alunosTurma.length}...`;
                 }
             }
@@ -1713,7 +1741,6 @@ async function carregarRelatorioTurma(turmaSelecionada) {
             await new Promise(resolve => setTimeout(resolve, 100));
         }
         
-        progressBar.style.width = '100%';
         carregamentoStatus.innerHTML = 'Relatório completo!';
         carregamentoStatus.className = 'relatorio-status bg-green-50 text-green-700 border-l-green-500';
         
@@ -1721,8 +1748,15 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         frontendCache.set(`relatorio_${turmaSelecionada}`, relatorioCompletoHTML, 10 * 60 * 1000);
         
     } catch (error) {
-        const errorHtml = `<p class="text-red-500 text-center py-4">Erro ao carregar relatório: ${error.message}</p>`;
-        document.getElementById('relatorio-turma-container').innerHTML = errorHtml;
+        console.error('Erro ao carregar relatório:', error);
+        document.getElementById('relatorio-turma-container').innerHTML = `
+            <div class="text-center py-8">
+                <p class="text-red-500">Erro ao carregar relatório: ${error.message}</p>
+                <button onclick="carregarRelatorioTurma('${turmaSelecionada}')" class="btn-secondary mt-4">
+                    Tentar Novamente
+                </button>
+            </div>
+        `;
     }
 }
 
