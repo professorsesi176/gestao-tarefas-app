@@ -1296,17 +1296,8 @@ async function init() {
         usuarios = response.data || [];
     } catch (error) {
         usuarios = [];
-        
-        usuarios = [
-            { 
-                NomeCompleto: "Geovane Módena", 
-                Email: "geovane.modena@portalsesisp.org.br", 
-                RM: "9999",
-                Turma: "Professor", 
-                Numero: "9999",
-                Perfil: "Professor" 
-            }
-        ];
+        console.error('Erro ao carregar usuários:', error);
+        // NÃO adicionar usuário professor em caso de erro - isso é importante para segurança
     }
     
     renderLogin();
@@ -1409,7 +1400,7 @@ async function login(event) {
     logoutBtn.classList.remove('hidden');
     relatorioBtn.classList.remove('hidden');
     
-    // NÃO exibir o RM 9999 no frontend
+    // NÃO exibir o RM no frontend por questões de segurança
     if (user.Perfil === "Professor") {
         userInfoDisplay.innerHTML = `
             <div class="user-info-text">
