@@ -672,6 +672,67 @@
             text-align: center;
             font-weight: bold;
         }
+
+        /* NOVOS ESTILOS V8.1 */
+        .password-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .password-toggle:hover {
+            color: #374151;
+        }
+
+        .rm-hidden {
+            -webkit-text-security: disc;
+            text-security: disc;
+        }
+
+        .turma-info {
+            background-color: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+        }
+
+        .turma-title {
+            color: #0369a1;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .turma-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 0.875rem;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: #0369a1;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.75rem;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -691,7 +752,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 8.0
+        Desenvolvido por Geovane Modena | Versão 8.1
     </footer>
 </div>
 
@@ -729,6 +790,7 @@ let jsonpCallbackId = 0;
 let tarefaParaExcluir = null;
 let contadoresAtivos = [];
 let tarefaEditando = null;
+let rmVisible = false;
 
 // --- SISTEMA DE CACHE NO FRONTEND ---
 const frontendCache = {
@@ -1264,7 +1326,12 @@ const renderLogin = () => {
                 </div>
                 <div>
                     <label for="rm" class="block text-sm font-medium text-gray-700 mb-2">RM</label>
-                    <input type="text" id="rm" name="rm" required placeholder="Digite seu RM" class="w-full">
+                    <div class="password-container">
+                        <input type="password" id="rm" name="rm" required placeholder="Digite seu RM" class="w-full rm-hidden">
+                        <button type="button" class="password-toggle" id="toggleRm">
+                            <i data-lucide="eye"></i>
+                        </button>
+                    </div>
                 </div>
                 <button type="submit" class="btn-primary" id="login-button">
                     <span id="login-text">Entrar</span>
@@ -1273,11 +1340,37 @@ const renderLogin = () => {
         </div>
     `;
 
+    // Inicializar ícones
+    renderIcons();
+
+    // Configurar toggle de visibilidade do RM
+    document.getElementById('toggleRm').addEventListener('click', toggleRmVisibility);
+
     document.getElementById('login-form').addEventListener('submit', (e) => {
         e.preventDefault();
         login(e);
     });
 };
+
+function toggleRmVisibility() {
+    const rmInput = document.getElementById('rm');
+    const toggleIcon = document.getElementById('toggleRm').querySelector('i');
+    
+    rmVisible = !rmVisible;
+    
+    if (rmVisible) {
+        rmInput.type = 'text';
+        toggleIcon.setAttribute('data-lucide', 'eye-off');
+        rmInput.classList.remove('rm-hidden');
+    } else {
+        rmInput.type = 'password';
+        toggleIcon.setAttribute('data-lucide', 'eye');
+        rmInput.classList.add('rm-hidden');
+    }
+    
+    // Atualizar ícone
+    renderIcons();
+}
 
 async function login(event) {
     event.preventDefault(); 
@@ -1316,6 +1409,7 @@ async function login(event) {
     logoutBtn.classList.remove('hidden');
     relatorioBtn.classList.remove('hidden');
     
+    // NÃO exibir o RM 9999 no frontend
     if (user.Perfil === "Professor") {
         userInfoDisplay.innerHTML = `
             <div class="user-info-text">
@@ -1437,21 +1531,52 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         progressBar.style.width = '30%';
         progressText.textContent = `Turma carregada: ${alunosTurma.length} alunos, ${tarefasTurma.length} tarefas`;
         
+        // Informações da turma
+        let turmaInfoHTML = '';
+        if (alunosTurma.length > 0) {
+            turmaInfoHTML = `
+                <div class="turma-info">
+                    <div class="turma-title">Turma ${turmaSelecionada}</div>
+                    <div class="turma-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">${alunosTurma.length}</span>
+                            <span class="stat-label">Alunos</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">${tarefasTurma.length}</span>
+                            <span class="stat-label">Tarefas</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">${new Date().toLocaleDateString()}</span>
+                            <span class="stat-label">Atualizado em</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
         if (alunosTurma.length === 0) {
-            const html = `<p class="text-gray-500 text-center py-8">Nenhum aluno encontrado na turma ${turmaSelecionada}.</p>`;
+            const html = `
+                ${turmaInfoHTML}
+                <p class="text-gray-500 text-center py-8">Nenhum aluno encontrado na turma ${turmaSelecionada}.</p>
+            `;
             document.getElementById('relatorio-turma-container').innerHTML = html;
             frontendCache.set(`relatorio_${turmaSelecionada}`, html, 10 * 60 * 1000);
             return;
         }
         
         if (tarefasTurma.length === 0) {
-            const html = `<p class="text-gray-500 text-center py-8">Nenhuma tarefa encontrada para a turma ${turmaSelecionada}.</p>`;
+            const html = `
+                ${turmaInfoHTML}
+                <p class="text-gray-500 text-center py-8">Nenhuma tarefa encontrada para a turma ${turmaSelecionada}.</p>
+            `;
             document.getElementById('relatorio-turma-container').innerHTML = html;
             frontendCache.set(`relatorio_${turmaSelecionada}`, html, 10 * 60 * 1000);
             return;
         }
         
         let relatorioTurmaHTML = `
+            ${turmaInfoHTML}
             <div class="relatorio-header">
                 <h4 class="text-lg font-semibold text-red-700">Relatório da Turma ${turmaSelecionada}</h4>
                 <div class="flex space-x-2">
@@ -2543,6 +2668,7 @@ window.toggleFundamentoCientifico = toggleFundamentoCientifico;
 window.adicionarFormatacao = adicionarFormatacao;
 window.exportarParaExcel = exportarParaExcel;
 window.exportarParaPDF = exportarParaPDF;
+window.toggleRmVisibility = toggleRmVisibility;
 </script>
 </body>
 </html>
