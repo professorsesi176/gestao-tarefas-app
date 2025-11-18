@@ -6,6 +6,10 @@
     <title>Gestão de Tarefas Escolar</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/dist/lucide.min.js"></script>
+    <!-- Bibliotecas para exportação -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -630,7 +634,43 @@
 
         @keyframes highlight {
             0% { background-color: #d1fae5; }
-            100% { background-color: transparent; }
+            100% { background-color: transparent;
+            }
+        }
+
+        /* ESTILOS PARA EXPORTAÇÃO */
+        .btn-exportar {
+            background-color: #059669;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            border: none;
+            margin-left: 10px;
+        }
+
+        .btn-exportar:hover {
+            background-color: #047857;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+
+        .numero-coluna {
+            width: 50px;
+            text-align: center;
+        }
+
+        .media-coluna {
+            width: 100px;
+            text-align: center;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -651,7 +691,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 7.9
+        Desenvolvido por Geovane Modena | Versão 8.0
     </footer>
 </div>
 
@@ -816,7 +856,10 @@ const formatarData = (dataISO) => {
 function formatarConteudoParaExibicao(texto) {
     if (!texto) return '';
     
-    return texto
+    // Garantir que é string antes de usar replace
+    const textoStr = String(texto);
+    
+    return textoStr
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -1198,6 +1241,7 @@ async function init() {
                 Email: "geovane.modena@portalsesisp.org.br", 
                 RM: "9999",
                 Turma: "Professor", 
+                Numero: "9999",
                 Perfil: "Professor" 
             }
         ];
@@ -1282,7 +1326,7 @@ async function login(event) {
     } else {
         userInfoDisplay.innerHTML = `
             <div class="user-info-text">
-                Logado como: <span class="user-info-name">${user.NomeCompleto} (${user.Perfil})</span> | Turma: ${user.Turma || 'N/A'}
+                Logado como: <span class="user-info-name">${user.NomeCompleto} (${user.Perfil})</span> | Turma: ${user.Turma || 'N/A'} | Nº: ${user.Numero || 'N/A'}
             </div>
         `;
         relatorioBtn.onclick = mostrarRelatorioAluno;
@@ -1380,6 +1424,14 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         ]);
         
         const alunosTurma = usersResponse.data.filter(user => user.Turma === turmaSelecionada && user.Perfil === 'Aluno');
+        
+        // Ordenar alunos pelo número
+        alunosTurma.sort((a, b) => {
+            const numA = parseInt(a.Numero) || 0;
+            const numB = parseInt(b.Numero) || 0;
+            return numA - numB;
+        });
+        
         const tarefasTurma = tarefasResponse.data || [];
         
         progressBar.style.width = '30%';
@@ -1402,7 +1454,13 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         let relatorioTurmaHTML = `
             <div class="relatorio-header">
                 <h4 class="text-lg font-semibold text-red-700">Relatório da Turma ${turmaSelecionada}</h4>
-                <div>
+                <div class="flex space-x-2">
+                    <button onclick="exportarParaExcel('${turmaSelecionada}')" class="btn-exportar" id="btn-excel">
+                        Exportar Excel
+                    </button>
+                    <button onclick="exportarParaPDF('${turmaSelecionada}')" class="btn-exportar" id="btn-pdf">
+                        Exportar PDF
+                    </button>
                     <button onclick="carregarRelatorioTurma('${turmaSelecionada}')" class="btn-atualizar-dados">
                         Atualizar Dados
                     </button>
@@ -1416,10 +1474,12 @@ async function carregarRelatorioTurma(turmaSelecionada) {
                 Total de alunos: ${alunosTurma.length} | Total de tarefas: ${tarefasTurma.length} | Última atualização: ${new Date().toLocaleTimeString()}
             </div>
             <div class="overflow-x-auto border rounded-lg mt-4">
-                <table class="min-w-full compact-table table-header-white">
+                <table class="min-w-full compact-table table-header-white" id="tabela-relatorio">
                     <thead>
                         <tr>
+                            <th class="px-4 py-3 text-center font-semibold border-b numero-coluna">Nº</th>
                             <th class="px-4 py-3 text-left font-semibold border-b">Aluno</th>
+                            <th class="px-4 py-3 text-center font-semibold border-b media-coluna">Média</th>
         `;
         
         tarefasTurma.forEach(tarefa => {
@@ -1427,7 +1487,6 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         });
         
         relatorioTurmaHTML += `
-                            <th class="px-4 py-3 text-center font-semibold border-b">Média</th>
                         </tr>
                     </thead>
                     <tbody id="relatorio-tbody">
@@ -1436,14 +1495,15 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         alunosTurma.forEach((aluno, index) => {
             relatorioTurmaHTML += `
                 <tr class="aluno-loading">
+                    <td class="px-4 py-3 text-center border-b numero-coluna">${aluno.Numero || (index + 1)}</td>
                     <td class="px-4 py-3 font-medium text-gray-900 border-b">${aluno.NomeCompleto}</td>
+                    <td class="px-4 py-3 text-center border-b media-coluna"><div class="nota-loading"></div></td>
             `;
             
             tarefasTurma.forEach(() => {
                 relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b"><div class="nota-loading"></div></td>`;
             });
             
-            relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b"><div class="nota-loading"></div></td>`;
             relatorioTurmaHTML += `</tr>`;
         });
         
@@ -1505,7 +1565,7 @@ async function carregarRelatorioTurma(turmaSelecionada) {
                                 }
                             }
                             
-                            linha.cells[j + 1].innerHTML = `<span class="${classeNota}">${nota}</span>`;
+                            linha.cells[j + 3].innerHTML = `<span class="${classeNota}">${nota}</span>`;
                         }
                         
                         const media = countNotas > 0 ? (totalNotas / countNotas).toFixed(1) : '-';
@@ -1519,7 +1579,7 @@ async function carregarRelatorioTurma(turmaSelecionada) {
                             }
                         }
                         
-                        linha.cells[tarefasTurma.length + 1].innerHTML = `<span class="${classeMedia}">${media}</span>`;
+                        linha.cells[2].innerHTML = `<span class="${classeMedia}">${media}</span>`;
                         linha.classList.remove('aluno-loading');
                     }
                     
@@ -1550,6 +1610,52 @@ async function carregarRelatorioTurma(turmaSelecionada) {
     }
 }
 
+// --- FUNÇÕES DE EXPORTAÇÃO ---
+function exportarParaExcel(turma) {
+    try {
+        const table = document.getElementById('tabela-relatorio');
+        if (!table) {
+            showModal('Erro', 'Tabela não encontrada para exportação.');
+            return;
+        }
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.table_to_sheet(table);
+        XLSX.utils.book_append_sheet(wb, ws, `Turma ${turma}`);
+        XLSX.writeFile(wb, `relatorio_turma_${turma}.xlsx`);
+    } catch (error) {
+        showModal('Erro', `Erro ao exportar para Excel: ${error.message}`);
+    }
+}
+
+function exportarParaPDF(turma) {
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Título
+        doc.setFontSize(16);
+        doc.text(`Relatório da Turma ${turma}`, 14, 15);
+
+        // Data de emissão
+        doc.setFontSize(10);
+        doc.text(`Emitido em: ${new Date().toLocaleDateString()}`, 14, 22);
+
+        // Tabela
+        const table = document.getElementById('tabela-relatorio');
+        doc.autoTable({
+            html: table,
+            startY: 30,
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [204, 0, 0] }
+        });
+
+        doc.save(`relatorio_turma_${turma}.pdf`);
+    } catch (error) {
+        showModal('Erro', `Erro ao exportar para PDF: ${error.message}`);
+    }
+}
+
 async function mostrarRelatorioAluno() {
     const cacheKey = `relatorio_aluno_${usuarioLogado.RM}`;
     const cached = frontendCache.get(cacheKey);
@@ -1566,6 +1672,9 @@ async function mostrarRelatorioAluno() {
         let relatorioHTML = `
             <div class="card p-6">
                 <h3 class="text-2xl font-bold text-red-700 mb-4">Meu Relatório</h3>
+                <div class="mb-4 p-3 bg-blue-50 rounded border">
+                    <p class="text-sm text-blue-700">Número do aluno: <strong>${usuarioLogado.Numero || 'N/A'}</strong></p>
+                </div>
         `;
         
         if (entregas.length === 0) {
@@ -1809,10 +1918,11 @@ function renderizarTabelaTarefas() {
     }
 
     tbody.innerHTML = tarefas.map(tarefa => {
-        const parte1 = tarefa.Parte1 || '';
-        const parte2 = tarefa.Parte2 || '';
-        const parte3 = tarefa.Parte3 || '';
-        const parte4 = tarefa.Parte4 || '';
+        // CORREÇÃO: Garantir que os conteúdos são strings antes de usar replace
+        const parte1 = String(tarefa.Parte1 || '');
+        const parte2 = String(tarefa.Parte2 || '');
+        const parte3 = String(tarefa.Parte3 || '');
+        const parte4 = String(tarefa.Parte4 || '');
 
         const formatarParaTabela = (texto) => {
             if (!texto) return '';
@@ -2057,6 +2167,9 @@ async function mostrarPainelAluno() {
         <div id="painelAluno" class="space-y-6">
             <div class="card p-6">
                 <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${usuarioLogado.Turma}</h3>
+                <div class="mb-4 p-3 bg-blue-50 rounded border">
+                    <p class="text-sm text-blue-700">Número do aluno: <strong>${usuarioLogado.Numero || 'N/A'}</strong></p>
+                </div>
                 
                 <div class="instrucoes-box">
                     <div class="instrucoes-title">Instruções para entrega:</div>
@@ -2428,6 +2541,8 @@ window.salvarLink = salvarLink;
 window.excluirLink = excluirLink;
 window.toggleFundamentoCientifico = toggleFundamentoCientifico;
 window.adicionarFormatacao = adicionarFormatacao;
+window.exportarParaExcel = exportarParaExcel;
+window.exportarParaPDF = exportarParaPDF;
 </script>
 </body>
 </html>
