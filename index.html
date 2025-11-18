@@ -597,6 +597,31 @@
             background-color: #9ca3af;
             cursor: not-allowed;
         }
+        
+        /* ESTILOS PARA HORÁRIOS DE ENTREGA */
+        .horario-info {
+            font-size: 0.75rem;
+            margin-top: 4px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .horario-maxima {
+            background-color: #d1fae5;
+            color: #065f46;
+            font-weight: 600;
+        }
+        
+        .horario-regular {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .horario-fora {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -616,7 +641,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 7.7
+        Desenvolvido por Geovane Modena | Versão 7.8
     </footer>
 </div>
 
@@ -885,35 +910,34 @@ function mostrarLoadingRelatorio() {
     `;
 }
 
-// --- FUNÇÕES DE TEMPO ---
+// --- FUNÇÕES DE TEMPO ATUALIZADAS ---
 function calcularContadoresOtimizado(dataAula) {
     const agora = new Date();
     const dataAulaObj = new Date(dataAula);
     
-    const calcularTempoRestante = (diasAdicionais, horasLimite = 23, minutosLimite = 59) => {
+    const calcularStatusParte = (diasAdicionais) => {
+        // Data de liberação: dataAula + diasAdicionais às 13:00
         const liberacao = new Date(dataAulaObj);
         liberacao.setDate(liberacao.getDate() + diasAdicionais);
-        if (diasAdicionais === 0) liberacao.setHours(0, 0, 0, 0);
+        liberacao.setHours(13, 0, 0, 0);
         
-        const limite = new Date(dataAulaObj);
+        // Data de fim: dataAula + diasAdicionais às 22:00
+        const fim = new Date(dataAulaObj);
+        fim.setDate(fim.getDate() + diasAdicionais);
+        fim.setHours(22, 0, 0, 0);
         
-        if (diasAdicionais === 0) {
-            limite.setHours(horasLimite, minutosLimite, 0, 0);
-        } else if (diasAdicionais === 7) {
-            limite.setDate(limite.getDate() + 8);
-        } else if (diasAdicionais === 14) {
-            limite.setDate(limite.getDate() + 15);
-        } else if (diasAdicionais === 28) {
-            limite.setDate(limite.getDate() + 30);
-        }
+        // Período de nota máxima: 17:00 às 20:00
+        const inicioNotaMaxima = new Date(liberacao);
+        inicioNotaMaxima.setHours(17, 0, 0, 0);
+        const fimNotaMaxima = new Date(liberacao);
+        fimNotaMaxima.setHours(20, 0, 0, 0);
         
-        const diffLiberacao = liberacao - agora;
-        const diffLimite = limite - agora;
-        
-        if (diffLiberacao > 0) {
-            const dias = Math.floor(diffLiberacao / (1000 * 60 * 60 * 24));
-            const horas = Math.floor((diffLiberacao % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutos = Math.floor((diffLiberacao % (1000 * 60 * 60)) / (1000 * 60));
+        // Se ainda não chegou a data de liberação
+        if (agora < liberacao) {
+            const diff = liberacao - agora;
+            const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             
             let texto = '';
             if (dias > 0) {
@@ -931,51 +955,70 @@ function calcularContadoresOtimizado(dataAula) {
                 classe: 'aguardando', 
                 liberada: false,
                 expirado: false,
-                timestamp: liberacao.getTime()
+                dentroHorarioNotaMaxima: false,
+                dentroHorarioEntrega: false
             };
         }
         
-        if (diffLimite <= 0) {
+        // Se passou do horário de entrega
+        if (agora > fim) {
             return { 
                 texto: 'Expirado', 
                 classe: 'expirado', 
                 liberada: true,
                 expirado: true,
-                timestamp: limite.getTime()
+                dentroHorarioNotaMaxima: false,
+                dentroHorarioEntrega: false
             };
         }
         
-        const dias = Math.floor(diffLimite / (1000 * 60 * 60 * 24));
-        const horas = Math.floor((diffLimite % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutos = Math.floor((diffLimite % (1000 * 60 * 60)) / (1000 * 60));
+        // Dentro do período de entrega
+        const diffFim = fim - agora;
+        const diasFim = Math.floor(diffFim / (1000 * 60 * 60 * 24));
+        const horasFim = Math.floor((diffFim % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutosFim = Math.floor((diffFim % (1000 * 60 * 60)) / (1000 * 60));
         
         let texto = '';
-        if (dias > 0) {
-            texto = `${dias}d ${horas}h ${minutos}m`;
-        } else if (horas > 0) {
-            texto = `${horas}h ${minutos}m`;
-        } else if (minutos > 0) {
-            texto = `${minutos}m`;
+        if (diasFim > 0) {
+            texto = `${diasFim}d ${horasFim}h ${minutosFim}m`;
+        } else if (horasFim > 0) {
+            texto = `${horasFim}h ${minutosFim}m`;
+        } else if (minutosFim > 0) {
+            texto = `${minutosFim}m`;
         } else {
             texto = `<1m`;
         }
         
-        const classe = dias === 0 && horas < 2 ? 'urgente' : 'disponivel';
+        // Verificar se está no horário de entrega (13h-22h)
+        const dentroHorarioEntrega = agora >= liberacao && agora <= fim;
+        
+        // Verificar se está no horário de nota máxima (17h-20h)
+        const dentroHorarioNotaMaxima = agora >= inicioNotaMaxima && agora <= fimNotaMaxima;
+        
+        let classe = 'disponivel';
+        if (!dentroHorarioEntrega) {
+            classe = 'aguardando';
+        } else if (dentroHorarioNotaMaxima) {
+            classe = 'disponivel';
+        } else {
+            classe = 'urgente';
+        }
         
         return { 
             texto, 
             classe, 
-            liberada: true,
+            liberada: dentroHorarioEntrega,
             expirado: false,
-            timestamp: limite.getTime()
+            dentroHorarioNotaMaxima,
+            dentroHorarioEntrega
         };
     };
     
     return {
-        parte1: calcularTempoRestante(0, 23, 59),
-        parte2: calcularTempoRestante(7),
-        parte3: calcularTempoRestante(14),
-        parte4: calcularTempoRestante(28)
+        parte1: calcularStatusParte(0),
+        parte2: calcularStatusParte(7),
+        parte3: calcularStatusParte(14),
+        parte4: calcularStatusParte(28)
     };
 }
 
@@ -1163,10 +1206,10 @@ const renderLogin = () => {
             <form id="login-form" class="space-y-4">
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
-                    <input type="email" id="email" name="email" required placeholder="seu.email@portalsesisp.org.br" class="w-full">
+                    <input type="email" id="email" name="email" required placeholder="seu.email@escola.com" class="w-full">
                 </div>
                 <div>
-                    <label for="rm" class="block text-sm font-medium text-gray-700 mb-2">Senha</label>
+                    <label for="rm" class="block text-sm font-medium text-gray-700 mb-2">RM</label>
                     <input type="text" id="rm" name="rm" required placeholder="Digite seu RM" class="w-full">
                 </div>
                 <button type="submit" class="btn-primary" id="login-button">
@@ -2192,7 +2235,7 @@ function renderTarefaItem(tarefa, entrega) {
     `;
 }
 
-// --- FUNÇÃO ATUALIZADA COM FORMATAÇÃO ---
+// --- FUNÇÃO ATUALIZADA COM FORMATAÇÃO E NOVOS HORÁRIOS ---
 function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     const linkSalvo = entrega ? entrega[`Link${numeroParte}`] : '';
     const inputId = `link-${idTarefa}-${numeroParte}`;
@@ -2207,9 +2250,15 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     else if (numeroParte === 3) retencaoAviso = '<span class="retencao-aviso retencao-15">15% retenção</span>';
     else if (numeroParte === 4) retencaoAviso = '<span class="retencao-aviso retencao-10">9.99% retenção</span>';
 
-    let infoNota = '';
-    if (numeroParte === 1) {
-        infoNota = '<div class="info-nota">Nota: 2.5 até 18h | 2.0 até 23h59</div>';
+    let horarioInfo = '';
+    if (contador.liberada && !expirado) {
+        if (contador.dentroHorarioNotaMaxima) {
+            horarioInfo = '<div class="horario-info horario-maxima">✓ Período de nota máxima (2.5 pontos) - 17h às 20h</div>';
+        } else if (contador.dentroHorarioEntrega) {
+            horarioInfo = '<div class="horario-info horario-regular">Período de nota regular (2.0 pontos) - 13h às 17h ou 20h às 22h</div>';
+        }
+    } else if (!contador.liberada) {
+        horarioInfo = '<div class="horario-info horario-fora">Entrega disponível apenas das 13h às 22h</div>';
     }
 
     if (!contador.liberada) {
@@ -2220,14 +2269,14 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
                 <span class="contador ${contador.classe}">${contador.texto}</span>
             </div>
             <div class="conteudo-bloqueado">
-                Conteúdo será liberado em breve
+                Conteúdo será liberado das 13h às 22h
             </div>
+            ${horarioInfo}
         </div>`;
     }
 
     const conteudoFormatado = formatarConteudoParaExibicao(conteudo);
-
-    // CORREÇÃO: Sempre mostrar o link salvo, mesmo quando expirado
+    
     const mostrarLinkSalvo = temLinkSalvo;
     
     return `
@@ -2237,7 +2286,7 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
             <span class="contador ${contador.classe}">${contador.texto}</span>
         </div>
         <div class="conteudo-formatado">${conteudoFormatado}</div>
-        ${infoNota}
+        ${horarioInfo}
         <div class="link-container">
             <input type="text" 
                    class="link-input ${mostrarLinkSalvo ? 'link-salvo' : ''}" 
