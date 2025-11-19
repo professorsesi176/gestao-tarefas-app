@@ -92,7 +92,7 @@
             color: #991b1b;
         }
         .contador.aguardando {
-           	background-color: #e5e7eb;
+            background-color: #e5e7eb;
             color: #374151;
         }
         
@@ -547,7 +547,6 @@
             font-style: italic;
         }
         
-        /* ESTILOS PARA FORMATAÇÃO DE TEXTO */
         .conteudo-formatado {
             white-space: pre-line;
             line-height: 1.6;
@@ -579,7 +578,6 @@
             background-color: #e5e7eb;
         }
         
-        /* ESTILOS ESPECÍFICOS */
         .btn-atualizar-dados {
             background-color: #3b82f6;
             color: white;
@@ -601,7 +599,6 @@
             cursor: not-allowed;
         }
         
-        /* ESTILOS PARA HORÁRIOS DE ENTREGA */
         .horario-info {
             font-size: 0.75rem;
             margin-top: 4px;
@@ -626,18 +623,15 @@
             color: #991b1b;
         }
 
-        /* ESTILOS PARA ATUALIZAÇÃO DE TAREFAS */
         .tarefa-atualizada {
             animation: highlight 2s ease;
         }
 
         @keyframes highlight {
             0% { background-color: #d1fae5; }
-            100% { background-color: transparent;
-            }
+            100% { background-color: transparent; }
         }
 
-        /* ESTILOS PARA EXPORTAÇÃO */
         .btn-exportar {
             background-color: #059669;
             color: white;
@@ -672,7 +666,6 @@
             font-weight: bold;
         }
 
-        /* NOVOS ESTILOS V8.2 */
         .password-container {
             position: relative;
             width: 100%;
@@ -763,7 +756,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 8.3
+        Desenvolvido por Geovane Modena | Versão 8.5
     </footer>
 </div>
 
@@ -789,9 +782,13 @@
 </div>
 
 <script>
-// --- CONFIGURAÇÃO ---
+/* ==================== CONFIGURAÇÃO GERAL ==================== */
 const API_URL = "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec";
 const SECURITY_TOKEN = 'SESI_EDUCATION_2024';
+
+// limites de texto
+const MAX_TEMA_LEN = 200;
+const MAX_PARTE_LEN = 4000;
 
 // --- ESTADO DA APLICAÇÃO ---
 let usuarios = [];
@@ -802,6 +799,21 @@ let tarefaParaExcluir = null;
 let contadoresAtivos = [];
 let tarefaEditando = null;
 let rmVisible = false;
+
+// --- RATE LIMITING SIMPLES ---
+const rateLimiter = {
+    last: {},
+    minIntervalMs: 2000,
+    canRun(action) {
+        const now = Date.now();
+        const last = this.last[action] || 0;
+        if (now - last < this.minIntervalMs) {
+            return false;
+        }
+        this.last[action] = now;
+        return true;
+    }
+};
 
 // --- SISTEMA DE CACHE NO FRONTEND ---
 const frontendCache = {
@@ -838,7 +850,7 @@ const frontendCache = {
     
     remove: (key) => {
         try {
-            localStorage.removeItem(`task_${key}`);
+            localStorage.removeItem(key.startsWith('task_') ? key : `task_${key}`);
         } catch (e) {
             console.warn('Erro ao remover do cache local:', e);
         }
@@ -882,7 +894,8 @@ const confirmMessage = document.getElementById('confirm-message');
 const confirmCancel = document.getElementById('confirm-cancel');
 const confirmDelete = document.getElementById('confirm-delete');
 
-// --- FUNÇÕES UTILITÁRIAS ---
+/* ==================== FUNÇÕES UTILITÁRIAS ==================== */
+
 const showModal = (title, message) => {
     modalTitle.textContent = title;
     modalMessage.textContent = message;
@@ -910,7 +923,6 @@ const showConfirmModal = (message, onConfirm) => {
 };
 
 const renderIcons = () => {
-    // Função para inicializar ícones SVG inline
     const eyeIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
         <circle cx="12" cy="12" r="3"></circle>
@@ -921,7 +933,6 @@ const renderIcons = () => {
         <line x1="1" y1="1" x2="23" y2="23"></line>
     </svg>`;
     
-    // Armazenar os ícones globalmente para uso
     window.eyeIcons = { eye: eyeIcon, eyeOff: eyeOffIcon };
 };
 
@@ -939,19 +950,27 @@ const formatarData = (dataISO) => {
     return data.toLocaleDateString('pt-BR');
 };
 
-// --- FUNÇÕES DE FORMATAÇÃO ---
 function formatarConteudoParaExibicao(texto) {
     if (!texto) return '';
-    
-    // Garantir que é string antes de usar replace
     const textoStr = String(texto);
-    
     return textoStr
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+const escapeHTML = formatarConteudoParaExibicao;
+
+// sanitização anti-fórmula (Excel/CSV injection)
+function sanitizeForSheet(str) {
+    if (!str) return '';
+    const s = String(str);
+    const trimmed = s.trimStart();
+    if (/^[=+\-@]/.test(trimmed)) {
+        return "'" + s;
+    }
+    return s;
 }
 
 function adicionarFormatacao(parteId, tipo) {
@@ -1010,8 +1029,8 @@ function criarBotoesFormatacao(parteId) {
     `;
 }
 
-// --- FUNÇÕES DE LOADING ---
 function setButtonLoading(button, isLoading) {
+    if (!button) return;
     if (isLoading) {
         button.disabled = true;
         button.classList.add('btn-loading');
@@ -1050,115 +1069,91 @@ function mostrarLoadingRelatorio() {
     `;
 }
 
-// --- FUNÇÕES DE TEMPO ATUALIZADAS ---
-function calcularContadoresOtimizado(dataAula) {
+/* ==================== LÓGICA DE TEMPO (ALINHADA COM BACK) ==================== */
+/*
+    Parte 1: apenas dia da aula (13h–22h).
+    Parte 2: apenas o 7º dia após a aula (13h–22h).
+    Parte 3: apenas o 14º dia após a aula (13h–22h).
+    Parte 4: apenas o 28º dia após a aula (13h–22h).
+*/
+
+function calcularStatusParteDiaUnico(dataAula, diasOffset) {
     const agora = new Date();
-    const dataAulaObj = new Date(dataAula);
-    
-    const calcularStatusParte = (diasAdicionais) => {
-        // Data de liberação: dataAula + diasAdicionais às 13:00
-        const liberacao = new Date(dataAulaObj);
-        liberacao.setDate(liberacao.getDate() + diasAdicionais);
-        liberacao.setHours(13, 0, 0, 0);
-        
-        // Data de fim: dataAula + diasAdicionais às 22:00
-        const fim = new Date(dataAulaObj);
-        fim.setDate(fim.getDate() + diasAdicionais);
-        fim.setHours(22, 0, 0, 0);
-        
-        // Período de nota máxima: 17:00 às 20:00
-        const inicioNotaMaxima = new Date(liberacao);
-        inicioNotaMaxima.setHours(17, 0, 0, 0);
-        const fimNotaMaxima = new Date(liberacao);
-        fimNotaMaxima.setHours(20, 0, 0, 0);
-        
-        // Se ainda não chegou a data de liberação
-        if (agora < liberacao) {
-            const diff = liberacao - agora;
-            const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            
-            let texto = '';
-            if (dias > 0) {
-                texto = `Libera em ${dias}d ${horas}h ${minutos}m`;
-            } else if (horas > 0) {
-                texto = `Libera em ${horas}h ${minutos}m`;
-            } else if (minutos > 0) {
-                texto = `Libera em ${minutos}m`;
-            } else {
-                texto = `Libera em <1m`;
-            }
-            
-            return { 
-                texto, 
-                classe: 'aguardando', 
-                liberada: false,
-                expirado: false,
-                dentroHorarioNotaMaxima: false,
-                dentroHorarioEntrega: false
-            };
-        }
-        
-        // Se passou do horário de entrega
-        if (agora > fim) {
-            return { 
-                texto: 'Expirado', 
-                classe: 'expirado', 
-                liberada: true,
-                expirado: true,
-                dentroHorarioNotaMaxima: false,
-                dentroHorarioEntrega: false
-            };
-        }
-        
-        // Dentro do período de entrega
-        const diffFim = fim - agora;
-        const diasFim = Math.floor(diffFim / (1000 * 60 * 60 * 24));
-        const horasFim = Math.floor((diffFim % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutosFim = Math.floor((diffFim % (1000 * 60 * 60)) / (1000 * 60));
-        
-        let texto = '';
-        if (diasFim > 0) {
-            texto = `${diasFim}d ${horasFim}h ${minutosFim}m`;
-        } else if (horasFim > 0) {
-            texto = `${horasFim}h ${minutosFim}m`;
-        } else if (minutosFim > 0) {
-            texto = `${minutosFim}m`;
-        } else {
-            texto = `<1m`;
-        }
-        
-        // Verificar se está no horário de entrega (13h-22h)
-        const dentroHorarioEntrega = agora >= liberacao && agora <= fim;
-        
-        // Verificar se está no horário de nota máxima (17h-20h)
-        const dentroHorarioNotaMaxima = agora >= inicioNotaMaxima && agora <= fimNotaMaxima;
-        
-        let classe = 'disponivel';
-        if (!dentroHorarioEntrega) {
-            classe = 'aguardando';
-        } else if (dentroHorarioNotaMaxima) {
-            classe = 'disponivel';
-        } else {
-            classe = 'urgente';
-        }
-        
-        return { 
-            texto, 
-            classe, 
-            liberada: dentroHorarioEntrega,
+    const base = new Date(dataAula);
+
+    if (isNaN(base.getTime())) {
+        return {
+            texto: 'Data inválida',
+            classe: 'aguardando',
+            liberada: false,
             expirado: false,
-            dentroHorarioNotaMaxima,
-            dentroHorarioEntrega
+            dentroHorarioEntrega: false
         };
-    };
-    
+    }
+
+    base.setHours(0, 0, 0, 0);
+    const diaEntrega = new Date(base);
+    diaEntrega.setDate(diaEntrega.getDate() + diasOffset);
+
+    const inicio = new Date(diaEntrega);
+    inicio.setHours(13, 0, 0, 0);
+
+    const fim = new Date(diaEntrega);
+    fim.setHours(22, 0, 0, 0);
+
+    if (agora < inicio) {
+        const diff = inicio - agora;
+        const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+        let texto = '';
+        if (dias > 0) texto = `Libera em ${dias}d ${horas}h`;
+        else if (horas > 0) texto = `Libera em ${horas}h ${minutos}m`;
+        else texto = `Libera em ${minutos}m`;
+
+        return {
+            texto,
+            classe: 'aguardando',
+            liberada: false,
+            expirado: false,
+            dentroHorarioEntrega: false
+        };
+    }
+
+    if (agora > fim) {
+        return {
+            texto: 'Expirado',
+            classe: 'expirado',
+            liberada: false,
+            expirado: true,
+            dentroHorarioEntrega: false
+        };
+    }
+
+    // Dentro do único dia de entrega (13h–22h)
+    const diffFim = fim - agora;
+    const horasFim = Math.floor(diffFim / (1000 * 60 * 60));
+    const minutosFim = Math.floor((diffFim % (1000 * 60 * 60)) / (1000 * 60));
+    let texto = '';
+    if (horasFim > 0) texto = `Termina em ${horasFim}h ${minutosFim}m`;
+    else texto = `Termina em ${minutosFim}m`;
+
     return {
-        parte1: calcularStatusParte(0),
-        parte2: calcularStatusParte(7),
-        parte3: calcularStatusParte(14),
-        parte4: calcularStatusParte(28)
+        texto,
+        classe: 'disponivel',
+        liberada: true,
+        expirado: false,
+        dentroHorarioEntrega: true
+    };
+}
+
+function calcularContadoresOtimizado(dataAula) {
+    return {
+        parte1: calcularStatusParteDiaUnico(dataAula, 0),
+        parte2: calcularStatusParteDiaUnico(dataAula, 7),
+        parte3: calcularStatusParteDiaUnico(dataAula, 14),
+        parte4: calcularStatusParteDiaUnico(dataAula, 28)
     };
 }
 
@@ -1213,7 +1208,8 @@ function isElementInViewport(el) {
     );
 }
 
-// --- API REQUEST COM JSONP E CACHE ---
+/* ==================== API JSONP ==================== */
+
 function apiRequestJSONP(url, callback) {
     const callbackName = 'jsonp_callback_' + jsonpCallbackId++;
     
@@ -1247,7 +1243,6 @@ function apiRequestJSONP(url, callback) {
     document.body.appendChild(script);
 }
 
-// --- API COM CACHE ---
 async function apiGet(func, params = {}, forceRefresh = false) {
     const cacheKey = `api_${func}_${JSON.stringify(params)}`;
     
@@ -1314,14 +1309,15 @@ async function apiPost(action, dados) {
     });
 }
 
-// --- INICIALIZAÇÃO ---
+/* ==================== INICIALIZAÇÃO E LOGIN ==================== */
+
 async function init() {
-    renderIcons(); // Inicializar ícones SVG
+    renderIcons();
     
     try {
-        console.log('Carregando usuários...');
-        const response = await apiGet('getUsers');
-        usuarios = response.data || [];
+        console.log('Carregando usuários (forceRefresh)...');
+        const response = await apiGet('getUsers', {}, true);
+        usuarios = response.data || response; // dependendo da estrutura do backend
         console.log('Usuários carregados:', usuarios.length);
     } catch (error) {
         console.error('Erro ao carregar usuários:', error);
@@ -1332,7 +1328,6 @@ async function init() {
     renderLogin();
 }
 
-// --- FUNÇÕES DE AUTENTICAÇÃO ---
 function toggleRmVisibility() {
     const rmInput = document.getElementById('rm');
     const toggleButton = document.getElementById('toggleRm');
@@ -1382,7 +1377,6 @@ const renderLogin = () => {
         </div>
     `;
 
-    // Configurar toggle de visibilidade do RM
     document.getElementById('toggleRm').addEventListener('click', toggleRmVisibility);
 
     document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -1403,20 +1397,25 @@ async function login(event) {
     loginButton.disabled = true;
     loginText.textContent = "Entrando...";
     
-    // Debug: mostrar usuários disponíveis
-    console.log('Usuários disponíveis:', usuarios);
+    // Se não temos usuários carregados, tenta de novo com forceRefresh
+    if (!usuarios || usuarios.length === 0) {
+        try {
+            const response = await apiGet('getUsers', {}, true);
+            usuarios = response.data || response;
+        } catch (e) {
+            console.error('Erro ao recarregar usuários no login:', e);
+        }
+    }
+    
     console.log('Tentando login com:', { email, rm });
     
-    // Aguardar um pouco para mostrar o loading
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 300));
     
     const user = usuarios.find(u => {
-        const userEmail = u.Email.toLowerCase().trim();
-        const userRM = String(u.RM).trim();
+        const userEmail = String(u.Email || '').toLowerCase().trim();
+        const userRM = String(u.RM || '').trim();
         const inputEmail = email.toLowerCase().trim();
         const inputRM = rm.trim();
-        
-        console.log('Comparando:', { userEmail, inputEmail, userRM, inputRM });
         
         return userEmail === inputEmail && userRM === inputRM;
     });
@@ -1429,7 +1428,6 @@ async function login(event) {
         return;
     }
     
-    console.log('Usuário encontrado:', user);
     usuarioLogado = user;
     loginErro.style.display = 'none';
     
@@ -1437,25 +1435,24 @@ async function login(event) {
     logoutBtn.classList.remove('hidden');
     relatorioBtn.classList.remove('hidden');
     
-    // NÃO exibir o RM no frontend
     if (user.Perfil === "Professor") {
         userInfoDisplay.innerHTML = `
             <div class="user-info-text">
-                Logado como: <span class="user-info-name">${user.NomeCompleto} (${user.Perfil})</span>
+                Logado como: <span class="user-info-name">${escapeHTML(user.NomeCompleto)} (${user.Perfil})</span>
             </div>
         `;
         relatorioBtn.onclick = mostrarRelatorioProfessor;
     } else {
         userInfoDisplay.innerHTML = `
             <div class="user-info-text">
-                Logado como: <span class="user-info-name">${user.NomeCompleto} (${user.Perfil})</span> | Turma: ${user.Turma || 'N/A'} | Nº: ${user.Numero || 'N/A'}
+                Logado como: <span class="user-info-name">${escapeHTML(user.NomeCompleto)} (${user.Perfil})</span> | Turma: ${escapeHTML(user.Turma || 'N/A')} | Nº: ${escapeHTML(user.Numero || 'N/A')}
             </div>
         `;
         relatorioBtn.onclick = mostrarRelatorioAluno;
     }
 
     try {
-        const response = await apiGet('getTarefas');
+        const response = await apiGet('getTarefas', {}, true);
         tarefas = response.data || [];
         console.log('Tarefas carregadas:', tarefas.length);
     } catch (error) {
@@ -1482,10 +1479,12 @@ function logout() {
     userInfoDisplay.innerHTML = '';
     contadoresAtivos.forEach(interval => clearInterval(interval));
     contadoresAtivos = [];
+    frontendCache.clear();
     renderLogin(); 
 }
 
-// --- FUNÇÕES DE RELATÓRIO COM CARREGAMENTO GRADUAL ---
+/* ==================== RELATÓRIO PROFESSOR ==================== */
+
 async function mostrarRelatorioProfessor() {
     const turmas = ["1A", "1B", "2A", "2B", "3A", "3B"];
     
@@ -1519,42 +1518,33 @@ async function mostrarRelatorioProfessor() {
     
     contentArea.innerHTML = relatorioHTML;
 }
-// --- CARREGAMENTO GRADUAL DE RELATÓRIO ---
+
 async function carregarRelatorioTurma(turmaSelecionada) {
     frontendCache.remove(`relatorio_${turmaSelecionada}`);
     
     document.getElementById('relatorio-turma-container').innerHTML = `
         <div class="text-center py-8">
             <div class="spinner"></div>
-            <p class="mt-4 text-gray-600">Carregando relatório da turma ${turmaSelecionada}...</p>
+            <p class="mt-4 text-gray-600">Carregando relatório da turma ${escapeHTML(turmaSelecionada)}...</p>
         </div>
     `;
     
     try {
-        console.log(`Carregando relatório para turma ${turmaSelecionada}...`);
-        
         const [usersResponse, tarefasResponse] = await Promise.all([
             apiGet('getUsers', {}, true),
             apiGet('getTarefasPorTurma', { turma: turmaSelecionada }, true)
         ]);
         
-        console.log('Dados carregados:', { 
-            users: usersResponse.data, 
-            tarefas: tarefasResponse.data 
-        });
-        
-        const alunosTurma = usersResponse.data.filter(user => 
+        const alunosTurma = (usersResponse.data || usersResponse).filter(user => 
             user.Turma === turmaSelecionada && user.Perfil === 'Aluno'
         );
-        
-        console.log(`Alunos da turma ${turmaSelecionada}:`, alunosTurma);
         
         const tarefasTurma = tarefasResponse.data || [];
         
         if (alunosTurma.length === 0) {
             document.getElementById('relatorio-turma-container').innerHTML = `
                 <div class="text-center py-8">
-                    <p class="text-gray-500 mb-4">Nenhum aluno encontrado na turma ${turmaSelecionada}.</p>
+                    <p class="text-gray-500 mb-4">Nenhum aluno encontrado na turma ${escapeHTML(turmaSelecionada)}.</p>
                     <p class="text-sm text-gray-400">Verifique se os alunos estão cadastrados no sistema.</p>
                 </div>
             `;
@@ -1564,19 +1554,18 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         if (tarefasTurma.length === 0) {
             document.getElementById('relatorio-turma-container').innerHTML = `
                 <div class="text-center py-8">
-                    <p class="text-gray-500 mb-4">Nenhuma tarefa encontrada para a turma ${turmaSelecionada}.</p>
+                    <p class="text-gray-500 mb-4">Nenhuma tarefa encontrada para a turma ${escapeHTML(turmaSelecionada)}.</p>
                     <p class="text-sm text-gray-400">Crie tarefas para esta turma no painel principal.</p>
                 </div>
             `;
             return;
         }
         
-        // Informações da turma
         let turmaInfoHTML = '';
         if (alunosTurma.length > 0) {
             turmaInfoHTML = `
                 <div class="turma-info">
-                    <div class="turma-title">Turma ${turmaSelecionada}</div>
+                    <div class="turma-title">Turma ${escapeHTML(turmaSelecionada)}</div>
                     <div class="turma-stats">
                         <div class="stat-item">
                             <span class="stat-value">${alunosTurma.length}</span>
@@ -1598,7 +1587,7 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         let relatorioTurmaHTML = `
             ${turmaInfoHTML}
             <div class="relatorio-header">
-                <h4 class="text-lg font-semibold text-red-700">Relatório da Turma ${turmaSelecionada}</h4>
+                <h4 class="text-lg font-semibold text-red-700">Relatório da Turma ${escapeHTML(turmaSelecionada)}</h4>
                 <div class="flex space-x-2">
                     <button onclick="exportarParaExcel('${turmaSelecionada}')" class="btn-exportar" id="btn-excel">
                         Exportar Excel
@@ -1628,7 +1617,7 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         `;
         
         tarefasTurma.forEach(tarefa => {
-            relatorioTurmaHTML += `<th class="px-4 py-3 text-center font-semibold border-b">${tarefa.Tema}</th>`;
+            relatorioTurmaHTML += `<th class="px-4 py-3 text-center font-semibold border-b">${escapeHTML(tarefa.Tema)}</th>`;
         });
         
         relatorioTurmaHTML += `
@@ -1641,7 +1630,7 @@ async function carregarRelatorioTurma(turmaSelecionada) {
             relatorioTurmaHTML += `
                 <tr class="aluno-loading">
                     <td class="px-4 py-3 text-center border-b numero-coluna">${aluno.Numero || (index + 1)}</td>
-                    <td class="px-4 py-3 font-medium text-gray-900 border-b">${aluno.NomeCompleto}</td>
+                    <td class="px-4 py-3 font-medium text-gray-900 border-b">${escapeHTML(aluno.NomeCompleto)}</td>
                     <td class="px-4 py-3 text-center border-b media-coluna"><div class="nota-loading"></div></td>
             `;
             
@@ -1750,7 +1739,7 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         console.error('Erro ao carregar relatório:', error);
         document.getElementById('relatorio-turma-container').innerHTML = `
             <div class="text-center py-8">
-                <p class="text-red-500">Erro ao carregar relatório: ${error.message}</p>
+                <p class="text-red-500">Erro ao carregar relatório: ${escapeHTML(error.message || String(error))}</p>
                 <button onclick="carregarRelatorioTurma('${turmaSelecionada}')" class="btn-secondary mt-4">
                     Tentar Novamente
                 </button>
@@ -1759,7 +1748,6 @@ async function carregarRelatorioTurma(turmaSelecionada) {
     }
 }
 
-// --- FUNÇÕES DE EXPORTAÇÃO ---
 function exportarParaExcel(turma) {
     try {
         const table = document.getElementById('tabela-relatorio');
@@ -1782,15 +1770,12 @@ function exportarParaPDF(turma) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
-        // Título
         doc.setFontSize(16);
         doc.text(`Relatório da Turma ${turma}`, 14, 15);
 
-        // Data de emissão
         doc.setFontSize(10);
         doc.text(`Emitido em: ${new Date().toLocaleDateString()}`, 14, 22);
 
-        // Tabela
         const table = document.getElementById('tabela-relatorio');
         doc.autoTable({
             html: table,
@@ -1805,6 +1790,8 @@ function exportarParaPDF(turma) {
     }
 }
 
+/* ==================== RELATÓRIO ALUNO ==================== */
+
 async function mostrarRelatorioAluno() {
     const cacheKey = `relatorio_aluno_${usuarioLogado.RM}`;
     const cached = frontendCache.get(cacheKey);
@@ -1815,14 +1802,14 @@ async function mostrarRelatorioAluno() {
     }
     
     try {
-        const entregasResponse = await apiGet('getEntregasAluno', { rm: usuarioLogado.RM });
+        const entregasResponse = await apiGet('getEntregasAluno', { rm: usuarioLogado.RM }, true);
         const entregas = entregasResponse.data || [];
         
         let relatorioHTML = `
             <div class="card p-6">
                 <h3 class="text-2xl font-bold text-red-700 mb-4">Meu Relatório</h3>
                 <div class="mb-4 p-3 bg-blue-50 rounded border">
-                    <p class="text-sm text-blue-700">Número do aluno: <strong>${usuarioLogado.Numero || 'N/A'}</strong></p>
+                    <p class="text-sm text-blue-700">Número do aluno: <strong>${escapeHTML(usuarioLogado.Numero || 'N/A')}</strong></p>
                 </div>
         `;
         
@@ -1831,7 +1818,7 @@ async function mostrarRelatorioAluno() {
                 <p class="text-gray-500 text-center py-4">Nenhuma entrega registrada.</p>
             `;
         } else {
-            const tarefasResponse = await apiGet('getTarefas');
+            const tarefasResponse = await apiGet('getTarefas', {}, true);
             const todasTarefas = tarefasResponse.data || [];
             
             let notaTotal = 0;
@@ -1869,7 +1856,7 @@ async function mostrarRelatorioAluno() {
                 
                 relatorioHTML += `
                     <tr>
-                        <td>${temaTarefa}</td>
+                        <td>${escapeHTML(temaTarefa)}</td>
                         <td>${linksEntregues.join(', ') || 'Nenhum'}</td>
                         <td class="data-column">${formatarData(entrega.DataSubmissao)}</td>
                         <td class="data-column font-semibold">${notaEntrega.toFixed(1)}</td>
@@ -1906,16 +1893,14 @@ async function mostrarRelatorioAluno() {
     }
 }
 
-// --- PAINEL DO PROFESSOR COM CACHE ---
+/* ==================== PAINEL DO PROFESSOR ==================== */
+
 async function mostrarPainelProfessor() {
     const cacheKey = 'painel_professor';
     const cached = frontendCache.get(cacheKey);
     
-    if (cached) {
+    if (cached && !tarefaEditando) {
         contentArea.innerHTML = cached;
-        if (tarefaEditando) {
-            preencherFormularioEdicao();
-        }
         await carregarTarefasProfessor();
         return;
     }
@@ -1932,7 +1917,7 @@ async function mostrarPainelProfessor() {
                 
                 <div class="form-row">
                     <label for="tema" class="block text-sm font-medium text-gray-700">Tema da Tarefa</label>
-                    <input type="text" id="tema" placeholder="Ex: Matemática - Frações" class="mt-1" required>
+                    <input type="text" id="tema" placeholder="Ex: Matemática - Frações" class="mt-1" required maxlength="${MAX_TEMA_LEN}">
                 </div>
                 
                 <div class="form-row">
@@ -1942,24 +1927,24 @@ async function mostrarPainelProfessor() {
                 
                 <div class="mt-4 space-y-4">
                     <div>
-                        <label for="parte1" class="block text-sm font-medium text-gray-700 mb-2">Parte 1 (apenas dia da aula - 13h às 22h) <span class="retencao-aviso retencao-50">50% retenção</span></label>
+                        <label for="parte1" class="block text-sm font-medium text-gray-700 mb-2">Parte 1 (dia da aula, 13h–22h) <span class="retencao-aviso retencao-50">50% retenção</span></label>
                         ${criarBotoesFormatacao('parte1')}
-                        <textarea id="parte1" placeholder="Descreva a parte 1 da tarefa. Use Enter para criar parágrafos." rows="5" required></textarea>
+                        <textarea id="parte1" placeholder="Descreva a parte 1 da tarefa. Use Enter para criar parágrafos." rows="5" required maxlength="${MAX_PARTE_LEN}"></textarea>
                     </div>
                     <div>
-                        <label for="parte2" class="block text-sm font-medium text-gray-700 mb-2">Parte 2 (apenas 7º dia após a aula - 13h às 22h) <span class="retencao-aviso retencao-25">25% retenção</span></label>
+                        <label for="parte2" class="block text-sm font-medium text-gray-700 mb-2">Parte 2 (7º dia, 13h–22h) <span class="retencao-aviso retencao-25">25% retenção</span></label>
                         ${criarBotoesFormatacao('parte2')}
-                        <textarea id="parte2" placeholder="Descreva a parte 2 da tarefa. Use Enter para criar parágrafos." rows="5" required></textarea>
+                        <textarea id="parte2" placeholder="Descreva a parte 2 da tarefa. Use Enter para criar parágrafos." rows="5" required maxlength="${MAX_PARTE_LEN}"></textarea>
                     </div>
                     <div>
-                        <label for="parte3" class="block text-sm font-medium text-gray-700 mb-2">Parte 3 (apenas 14º dia após a aula - 13h às 22h) <span class="retencao-aviso retencao-15">15% retenção</span></label>
+                        <label for="parte3" class="block text-sm font-medium text-gray-700 mb-2">Parte 3 (14º dia, 13h–22h) <span class="retencao-aviso retencao-15">15% retenção</span></label>
                         ${criarBotoesFormatacao('parte3')}
-                        <textarea id="parte3" placeholder="Descreva a parte 3 da tarefa. Use Enter para criar parágrafos." rows="5" required></textarea>
+                        <textarea id="parte3" placeholder="Descreva a parte 3 da tarefa. Use Enter para criar parágrafos." rows="5" required maxlength="${MAX_PARTE_LEN}"></textarea>
                     </div>
                     <div>
-                        <label for="parte4" class="block text-sm font-medium text-gray-700 mb-2">Parte 4 (apenas 28º dia após a aula - 13h às 22h) <span class="retencao-aviso retencao-10">9.99% retenção</span></label>
+                        <label for="parte4" class="block text-sm font-medium text-gray-700 mb-2">Parte 4 (28º dia, 13h–22h) <span class="retencao-aviso retencao-10">9.99% retenção</span></label>
                         ${criarBotoesFormatacao('parte4')}
-                        <textarea id="parte4" placeholder="Descreva a parte 4 da tarefa. Use Enter para criar parágrafos." rows="5" required></textarea>
+                        <textarea id="parte4" placeholder="Descreva a parte 4 da tarefa. Use Enter para criar parágrafos." rows="5" required maxlength="${MAX_PARTE_LEN}"></textarea>
                     </div>
                 </div>
                 
@@ -2018,7 +2003,7 @@ function preencherFormularioEdicao() {
     
     document.getElementById('titulo-formulario').textContent = 'Editar Tarefa';
     document.getElementById('tema').value = tarefaEditando.Tema;
-    document.getElementById('dataAula').value = tarefaEditando.DataAula.split('T')[0];
+    document.getElementById('dataAula').value = String(tarefaEditando.DataAula).split('T')[0];
     document.getElementById('parte1').value = tarefaEditando.Parte1 || '';
     document.getElementById('parte2').value = tarefaEditando.Parte2 || '';
     document.getElementById('parte3').value = tarefaEditando.Parte3 || '';
@@ -2032,11 +2017,9 @@ function preencherFormularioEdicao() {
     window.scrollTo(0, 0);
 }
 
-// --- FUNÇÕES DO PROFESSOR COM CACHE ---
 async function carregarTarefasProfessor() {
     const tbody = document.getElementById('tabelaTarefasBody');
     
-    // Mostrar loading
     tbody.innerHTML = `
         <tr>
             <td colspan="4" class="text-center py-4 text-gray-500">
@@ -2047,27 +2030,26 @@ async function carregarTarefasProfessor() {
     `;
     
     try {
-        const response = await apiGet('getTarefas', {}, true); // Force refresh
+        const response = await apiGet('getTarefas', {}, true);
         tarefas = response.data || [];
         frontendCache.remove('tarefas_professor_lista');
         frontendCache.set('tarefas_professor_lista', tarefas, 2 * 60 * 1000);
         renderizarTabelaTarefas();
     } catch (error) {
         tbody.innerHTML = 
-            `<tr><td colspan="4" class="text-center py-4 text-red-500">Erro ao carregar tarefas: ${error.message}</td></tr>`;
+            `<tr><td colspan="4" class="text-center py-4 text-red-500">Erro ao carregar tarefas: ${escapeHTML(error.message || String(error))}</td></tr>`;
     }
 }
 
 function renderizarTabelaTarefas() {
     const tbody = document.getElementById('tabelaTarefasBody');
     
-    if (tarefas.length === 0) {
+    if (!tarefas || tarefas.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">Nenhuma tarefa criada</td></tr>`;
         return;
     }
 
     tbody.innerHTML = tarefas.map(tarefa => {
-        // CORREÇÃO: Garantir que os conteúdos são strings antes de usar replace
         const parte1 = String(tarefa.Parte1 || '');
         const parte2 = String(tarefa.Parte2 || '');
         const parte3 = String(tarefa.Parte3 || '');
@@ -2081,9 +2063,9 @@ function renderizarTabelaTarefas() {
 
         return `
         <tr class="tarefa-item">
-            <td class="turma-column">${tarefa.Turma}</td>
+            <td class="turma-column">${escapeHTML(tarefa.Turma)}</td>
             <td class="px-4 py-2">
-                <div class="font-semibold text-gray-800 mb-2">${tarefa.Tema}</div>
+                <div class="font-semibold text-gray-800 mb-2">${escapeHTML(tarefa.Tema)}</div>
                 ${parte1 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 1:</span> <span class="conteudo-formatado">${formatarParaTabela(parte1)}</span> <span class="retencao-aviso retencao-50">50% retenção</span></div>` : ''}
                 ${parte2 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 2:</span> <span class="conteudo-formatado">${formatarParaTabela(parte2)}</span> <span class="retencao-aviso retencao-25">25% retenção</span></div>` : ''}
                 ${parte3 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 3:</span> <span class="conteudo-formatado">${formatarParaTabela(parte3)}</span> <span class="retencao-aviso retencao-15">15% retenção</span></div>` : ''}
@@ -2126,11 +2108,15 @@ async function editarTarefa(idTarefa) {
     await mostrarPainelProfessor();
 }
 
-// --- SALVAR TAREFA COM DEBOUNCE ---
 const salvarTarefa = debounce(async function() {
     const btnSalvar = document.getElementById('btnSalvarTarefa');
     
     try {
+        if (!rateLimiter.canRun('salvarTarefa')) {
+            showModal('Aguarde', 'Você acabou de salvar uma tarefa. Tente novamente em alguns segundos.');
+            return;
+        }
+
         setButtonLoading(btnSalvar, true);
         
         const turmasSelecionadas = Array.from(document.querySelectorAll('#turmasCheckboxes input:checked'))
@@ -2138,7 +2124,6 @@ const salvarTarefa = debounce(async function() {
         
         if (turmasSelecionadas.length === 0) {
             showModal('Atenção', 'Selecione pelo menos uma turma.');
-            setButtonLoading(btnSalvar, false);
             return;
         }
 
@@ -2147,7 +2132,11 @@ const salvarTarefa = debounce(async function() {
 
         if (!tema || !dataAula) {
             showModal('Atenção', 'Preencha o tema e a data da aula.');
-            setButtonLoading(btnSalvar, false);
+            return;
+        }
+
+        if (tema.length > MAX_TEMA_LEN) {
+            showModal('Atenção', `O tema deve ter no máximo ${MAX_TEMA_LEN} caracteres.`);
             return;
         }
 
@@ -2158,25 +2147,28 @@ const salvarTarefa = debounce(async function() {
 
         if (!parte1 || !parte2 || !parte3 || !parte4) {
             showModal('Atenção', 'Todas as partes da tarefa devem ser preenchidas.');
-            setButtonLoading(btnSalvar, false);
+            return;
+        }
+
+        if ([parte1, parte2, parte3, parte4].some(p => p.length > MAX_PARTE_LEN)) {
+            showModal('Atenção', `Cada parte deve ter no máximo ${MAX_PARTE_LEN} caracteres.`);
             return;
         }
 
         const dados = {
             Turmas: turmasSelecionadas,
-            Tema: tema,
-            Parte1: parte1,
-            Parte2: parte2,
-            Parte3: parte3,
-            Parte4: parte4,
+            Tema: sanitizeForSheet(tema),
+            Parte1: sanitizeForSheet(parte1),
+            Parte2: sanitizeForSheet(parte2),
+            Parte3: sanitizeForSheet(parte3),
+            Parte4: sanitizeForSheet(parte4),
             DataAula: dataAula,
-            professor: usuarioLogado.NomeCompleto
+            professor: sanitizeForSheet(usuarioLogado.NomeCompleto)
         };
 
-        const response = await apiPost('criarTarefa', dados);
+        await apiPost('criarTarefa', dados);
         showModal('Sucesso', 'Tarefa criada com sucesso!');
         
-        // Limpar cache e forçar atualização
         frontendCache.remove('painel_professor');
         frontendCache.remove('tarefas_professor_lista');
         turmasSelecionadas.forEach(turma => {
@@ -2185,11 +2177,8 @@ const salvarTarefa = debounce(async function() {
         });
         
         limparFormulario();
-        
-        // Recarregar tarefas imediatamente
         await carregarTarefasProfessor();
         
-        // Adicionar efeito visual nas novas tarefas
         document.querySelectorAll('.tarefa-item').forEach(item => {
             item.classList.add('tarefa-atualizada');
         });
@@ -2205,11 +2194,15 @@ const atualizarTarefa = debounce(async function() {
     const btnSalvar = document.getElementById('btnSalvarTarefa');
     
     try {
+        if (!rateLimiter.canRun('atualizarTarefa')) {
+            showModal('Aguarde', 'Você acabou de atualizar uma tarefa. Tente novamente em alguns segundos.');
+            return;
+        }
+
         setButtonLoading(btnSalvar, true);
         
         if (!tarefaEditando) {
             showModal('Erro', 'Nenhuma tarefa selecionada para edição.');
-            setButtonLoading(btnSalvar, false);
             return;
         }
 
@@ -2220,7 +2213,11 @@ const atualizarTarefa = debounce(async function() {
 
         if (!tema || !dataAula || !turmaSelecionada) {
             showModal('Atenção', 'Preencha todos os campos obrigatórios.');
-            setButtonLoading(btnSalvar, false);
+            return;
+        }
+
+        if (tema.length > MAX_TEMA_LEN) {
+            showModal('Atenção', `O tema deve ter no máximo ${MAX_TEMA_LEN} caracteres.`);
             return;
         }
 
@@ -2231,21 +2228,25 @@ const atualizarTarefa = debounce(async function() {
 
         if (!parte1 || !parte2 || !parte3 || !parte4) {
             showModal('Atenção', 'Todas as partes da tarefa devem ser preenchidas.');
-            setButtonLoading(btnSalvar, false);
+            return;
+        }
+
+        if ([parte1, parte2, parte3, parte4].some(p => p.length > MAX_PARTE_LEN)) {
+            showModal('Atenção', `Cada parte deve ter no máximo ${MAX_PARTE_LEN} caracteres.`);
             return;
         }
 
         const dados = {
             ID: tarefaEditando.ID,
-            Tema: tema,
-            Parte1: parte1,
-            Parte2: parte2,
-            Parte3: parte3,
-            Parte4: parte4,
+            Tema: sanitizeForSheet(tema),
+            Parte1: sanitizeForSheet(parte1),
+            Parte2: sanitizeForSheet(parte2),
+            Parte3: sanitizeForSheet(parte3),
+            Parte4: sanitizeForSheet(parte4),
             DataAula: dataAula
         };
 
-        const response = await apiPost('editarTarefa', dados);
+        await apiPost('editarTarefa', dados);
         showModal('Sucesso', 'Tarefa atualizada com sucesso!');
         
         frontendCache.remove('painel_professor');
@@ -2255,8 +2256,6 @@ const atualizarTarefa = debounce(async function() {
         
         tarefaEditando = null;
         limparFormulario();
-        
-        // Recarregar tarefas imediatamente
         await carregarTarefasProfessor();
         
     } catch (error) {
@@ -2285,23 +2284,31 @@ async function excluirTarefa(idTarefa) {
 }
 
 function limparFormulario() {
-    document.getElementById('tema').value = '';
-    document.getElementById('dataAula').value = '';
-    document.getElementById('parte1').value = '';
-    document.getElementById('parte2').value = '';
-    document.getElementById('parte3').value = '';
-    document.getElementById('parte4').value = '';
+    const temaEl = document.getElementById('tema');
+    const dataEl = document.getElementById('dataAula');
+    const p1 = document.getElementById('parte1');
+    const p2 = document.getElementById('parte2');
+    const p3 = document.getElementById('parte3');
+    const p4 = document.getElementById('parte4');
+    if (temaEl) temaEl.value = '';
+    if (dataEl) dataEl.value = '';
+    if (p1) p1.value = '';
+    if (p2) p2.value = '';
+    if (p3) p3.value = '';
+    if (p4) p4.value = '';
     document.querySelectorAll('#turmasCheckboxes input:checked').forEach(c => c.checked = false);
     
     if (tarefaEditando) {
         tarefaEditando = null;
         document.getElementById('titulo-formulario').textContent = 'Criar Nova Tarefa';
-        document.getElementById('btnSalvarTarefa').textContent = 'Salvar Tarefa';
-        document.getElementById('btnSalvarTarefa').setAttribute('onclick', 'salvarTarefa()');
+        const btn = document.getElementById('btnSalvarTarefa');
+        btn.textContent = 'Salvar Tarefa';
+        btn.setAttribute('onclick', 'salvarTarefa()');
     }
 }
 
-// --- PAINEL DO ALUNO COM CACHE ---
+/* ==================== PAINEL DO ALUNO ==================== */
+
 async function mostrarPainelAluno() {
     const cacheKey = `painel_aluno_${usuarioLogado.RM}`;
     const cached = frontendCache.get(cacheKey);
@@ -2315,9 +2322,9 @@ async function mostrarPainelAluno() {
     contentArea.innerHTML = `
         <div id="painelAluno" class="space-y-6">
             <div class="card p-6">
-                <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${usuarioLogado.Turma}</h3>
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${escapeHTML(usuarioLogado.Turma)}</h3>
                 <div class="mb-4 p-3 bg-blue-50 rounded border">
-                    <p class="text-sm text-blue-700">Número do aluno: <strong>${usuarioLogado.Numero || 'N/A'}</strong></p>
+                    <p class="text-sm text-blue-700">Número do aluno: <strong>${escapeHTML(usuarioLogado.Numero || 'N/A')}</strong></p>
                 </div>
                 
                 <div class="instrucoes-box">
@@ -2361,10 +2368,10 @@ async function mostrarPainelAluno() {
                         <div class="referencias">
                             <div class="referencias-title">Referências:</div>
                             <ul class="referencias-list">
-                                <li>EBBINGHAUS, Hermann. Memory: A Contribution to Experimental Psychology. New York: Teachers College, Columbia University, 1913. (Obra original publicada em 1885.)</li>
-                                <li>DUNLOSKY, John et al. Improving Students' Learning with Effective Learning Techniques: Promising Directions from Cognitive and Educational Psychology. Psychological Science in the Public Interest, v. 14, n. 1, p. 4–58, 2013. DOI: 10.1177/1529100612453266</li>
-                                <li>WALKER, Matthew. Why We Sleep: Unlocking the Power of Sleep and Dreams. New York: Scribner, 2018.</li>
-                                <li>BLOOM, Benjamin S. (Org.). Taxonomy of Educational Objectives: The Classification of Educational Goals. Handbook I: Cognitive Domain. New York: Longmans, Green and Co., 1956.</li>
+                                <li>EBBINGHAUS, Hermann. Memory: A Contribution to Experimental Psychology. 1913.</li>
+                                <li>DUNLOSKY, John et al. Improving Students' Learning with Effective Learning Techniques. 2013.</li>
+                                <li>WALKER, Matthew. Why We Sleep. 2018.</li>
+                                <li>BLOOM, Benjamin S. Taxonomy of Educational Objectives. 1956.</li>
                             </ul>
                         </div>
                     </div>
@@ -2379,7 +2386,6 @@ async function mostrarPainelAluno() {
     frontendCache.set(cacheKey, contentArea.innerHTML, 2 * 60 * 1000);
 }
 
-// --- FUNÇÃO PARA EXPANDIR/RECOLHER FUNDAMENTO CIENTÍFICO ---
 function toggleFundamentoCientifico() {
     const conteudo = document.getElementById('conteudo-fundamento');
     const icon = document.querySelector('.expand-icon');
@@ -2393,7 +2399,6 @@ function toggleFundamentoCientifico() {
     }
 }
 
-// --- CARREGAR TAREFAS ALUNO COM CACHE ---
 async function carregarTarefasAluno() {
     const cacheKey = `tarefas_aluno_${usuarioLogado.RM}_dados`;
     const cached = frontendCache.get(cacheKey);
@@ -2420,6 +2425,7 @@ async function carregarTarefasAluno() {
             const entregasResponse = await apiGet('getEntregasAluno', { rm: usuarioLogado.RM }, true);
             entregas = entregasResponse.data || [];
         } catch (error) {
+            console.warn('Erro ao carregar entregas do aluno (não crítico):', error);
         }
 
         frontendCache.set(cacheKey, {tarefas: response.data, entregas: entregas}, 2 * 60 * 1000);
@@ -2428,60 +2434,40 @@ async function carregarTarefasAluno() {
         
     } catch (error) {
         document.getElementById('tarefas-aluno-container').innerHTML = 
-            `<div class="text-center text-red-500 py-8">Erro ao carregar tarefas: ${error.message}</div>`;
+            `<div class="text-center text-red-500 py-8">Erro ao carregar tarefas: ${escapeHTML(error.message || String(error))}</div>`;
     }
 }
 
-function renderTarefasAlunoFromCache(tarefas, entregas) {
+function renderTarefasAlunoFromCache(tarefasLocal, entregas) {
     const container = document.getElementById('tarefas-aluno-container');
     container.innerHTML = '';
     
-    if (tarefas.length === 0) {
+    if (!tarefasLocal || tarefasLocal.length === 0) {
         container.innerHTML = '<div class="text-center text-gray-500 py-8">Nenhuma tarefa disponível para sua turma.</div>';
         return;
     }
 
-    container.innerHTML = tarefas.map(tarefa => {
-        const parte1 = tarefa.Parte1 || '';
-        const parte2 = tarefa.Parte2 || '';
-        const parte3 = tarefa.Parte3 || '';
-        const parte4 = tarefa.Parte4 || '';
-        
+    container.innerHTML = tarefasLocal.map(tarefa => {
         const contadores = calcularContadoresOtimizado(tarefa.DataAula);
         const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
 
-        return `
-        <div class="border border-gray-200 rounded-lg p-4 mb-4 relative">
-            <div class="cache-indicator">CACHE</div>
-            <div class="flex justify-between items-start">
-                <div class="flex-1">
-                    <h4 class="font-semibold text-lg text-gray-800">${tarefa.Tema}</h4>
-                    <p class="text-sm text-gray-600 mt-1">Data da aula: ${formatarData(tarefa.DataAula)}</p>
-                    ${entrega && entrega.Nota ? `<p class="text-sm font-semibold text-green-600 mt-1">Nota: ${entrega.Nota}</p>` : ''}
-                    
-                    ${parte1 ? renderParteTarefa(tarefa.ID, 1, parte1, contadores.parte1, entrega) : ''}
-                    ${parte2 ? renderParteTarefa(tarefa.ID, 2, parte2, contadores.parte2, entrega) : ''}
-                    ${parte3 ? renderParteTarefa(tarefa.ID, 3, parte3, contadores.parte3, entrega) : ''}
-                    ${parte4 ? renderParteTarefa(tarefa.ID, 4, parte4, contadores.parte4, entrega) : ''}
-                </div>
-            </div>
-        </div>
-        `;
+        return renderTarefaItem(tarefa, entrega, contadores, true);
     }).join('');
 }
 
-async function renderTarefasAlunoGradualmente(tarefas, entregas, container) {
+async function renderTarefasAlunoGradualmente(tarefasLocal, entregas, container) {
     container.innerHTML = '';
     
-    for (let i = 0; i < tarefas.length; i++) {
+    for (let i = 0; i < tarefasLocal.length; i++) {
         if (i % 2 === 0 && i > 0) {
             await new Promise(resolve => setTimeout(resolve, 0));
         }
         
-        const tarefa = tarefas[i];
+        const tarefa = tarefasLocal[i];
         const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
+        const contadores = calcularContadoresOtimizado(tarefa.DataAula);
         
-        const tarefaHTML = renderTarefaItem(tarefa, entrega);
+        const tarefaHTML = renderTarefaItem(tarefa, entrega, contadores, false);
         container.innerHTML += tarefaHTML;
     }
     
@@ -2499,19 +2485,18 @@ async function renderTarefasAlunoGradualmente(tarefas, entregas, container) {
     atualizarContadoresAlunoOtimizado();
 }
 
-function renderTarefaItem(tarefa, entrega) {
+function renderTarefaItem(tarefa, entrega, contadores, fromCache) {
     const parte1 = tarefa.Parte1 || '';
     const parte2 = tarefa.Parte2 || '';
     const parte3 = tarefa.Parte3 || '';
     const parte4 = tarefa.Parte4 || '';
-    
-    const contadores = calcularContadoresOtimizado(tarefa.DataAula);
 
     return `
-    <div class="border border-gray-200 rounded-lg p-4 mb-4">
+    <div class="border border-gray-200 rounded-lg p-4 mb-4 ${fromCache ? '' : ''}">
+        ${fromCache ? '<div class="cache-indicator">CACHE</div>' : ''}
         <div class="flex justify-between items-start">
             <div class="flex-1">
-                <h4 class="font-semibold text-lg text-gray-800">${tarefa.Tema}</h4>
+                <h4 class="font-semibold text-lg text-gray-800">${escapeHTML(tarefa.Tema)}</h4>
                 <p class="text-sm text-gray-600 mt-1">Data da aula: ${formatarData(tarefa.DataAula)}</p>
                 ${entrega && entrega.Nota ? `<p class="text-sm font-semibold text-green-600 mt-1">Nota: ${entrega.Nota}</p>` : ''}
                 
@@ -2525,11 +2510,10 @@ function renderTarefaItem(tarefa, entrega) {
     `;
 }
 
-// --- FUNÇÃO ATUALIZADA COM FORMATAÇÃO E NOVOS HORÁRIOS ---
 function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
     const linkSalvo = entrega ? entrega[`Link${numeroParte}`] : '';
     const inputId = `link-${idTarefa}-${numeroParte}`;
-    const temLinkSalvo = linkSalvo && linkSalvo.trim() !== '';
+    const temLinkSalvo = linkSalvo && String(linkSalvo).trim() !== '';
     
     const disponivel = contador.liberada && !contador.expirado && !temLinkSalvo;
     const expirado = contador.expirado;
@@ -2542,16 +2526,14 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
 
     let horarioInfo = '';
     if (contador.liberada && !expirado) {
-        if (contador.dentroHorarioNotaMaxima) {
-            horarioInfo = '<div class="horario-info horario-maxima">✓ Período de nota máxima (2.5 pontos) - 17h às 20h</div>';
-        } else if (contador.dentroHorarioEntrega) {
-            horarioInfo = '<div class="horario-info horario-regular">Período de nota regular (2.0 pontos) - 13h às 17h ou 20h às 22h</div>';
-        }
-    } else if (!contador.liberada) {
-        horarioInfo = '<div class="horario-info horario-fora">Entrega disponível apenas das 13h às 22h</div>';
+        horarioInfo = '<div class="horario-info horario-maxima">Entrega disponível hoje das 13h às 22h.</div>';
+    } else if (!contador.liberada && !expirado) {
+        horarioInfo = '<div class="horario-info horario-fora">Entrega disponível apenas em seu dia específico, das 13h às 22h.</div>';
+    } else if (expirado) {
+        horarioInfo = '<div class="horario-info horario-fora">Prazo de entrega desta parte já expirou.</div>';
     }
 
-    if (!contador.liberada) {
+    if (!contador.liberada && !expirado) {
         return `
         <div class="mt-3 p-3 bg-gray-50 rounded border parte-${numeroParte}">
             <div class="flex justify-between items-center">
@@ -2559,7 +2541,7 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
                 <span class="contador ${contador.classe}">${contador.texto}</span>
             </div>
             <div class="conteudo-bloqueado">
-                Conteúdo será liberado das 13h às 22h
+                Conteúdo liberado para entrega apenas no dia específico desta parte, entre 13h e 22h.
             </div>
             ${horarioInfo}
         </div>`;
@@ -2594,17 +2576,21 @@ function renderParteTarefa(idTarefa, numeroParte, conteudo, contador, entrega) {
             <button class="btn-secondary btn-link btn-excluir" 
                     onclick="excluirLink('${idTarefa}', ${numeroParte})"
                     ${!mostrarLinkSalvo ? 'disabled' : ''}>
-                ${mostrarLinkSalvo ? 'Excluir' : 'Excluir'}
+                Excluir
             </button>
         </div>
         ${mostrarLinkSalvo ? '<p class="text-green-600 text-sm mt-1">✓ Link salvo com sucesso</p>' : ''}
     </div>`;
 }
 
-// --- SALVAR LINK COM DEBOUNCE ---
 const salvarLink = debounce(async function(idTarefa, parte) {
+    if (!rateLimiter.canRun('salvarLink')) {
+        showModal('Aguarde', 'Você acabou de salvar um link. Tente novamente em alguns segundos.');
+        return;
+    }
+
     const input = document.getElementById(`link-${idTarefa}-${parte}`);
-    const link = input.value.trim();
+    const link = input ? input.value.trim() : '';
 
     if (!link) {
         showModal('Atenção', 'Por favor, cole um link válido.');
@@ -2615,10 +2601,10 @@ const salvarLink = debounce(async function(idTarefa, parte) {
         await apiPost('entregarTarefa', {
             ID_Tarefa: idTarefa,
             RM_Aluno: usuarioLogado.RM,
-            NomeAluno: usuarioLogado.NomeCompleto,
-            Turma: usuarioLogado.Turma,
+            NomeAluno: sanitizeForSheet(usuarioLogado.NomeCompleto),
+            Turma: sanitizeForSheet(usuarioLogado.Turma),
             Parte: parte,
-            [`Link${parte}`]: link
+            [`Link${parte}`]: sanitizeForSheet(link)
         });
         
         showModal('Sucesso', `Link da parte ${parte} salvo com sucesso!`);
@@ -2627,16 +2613,28 @@ const salvarLink = debounce(async function(idTarefa, parte) {
         frontendCache.remove(`tarefas_aluno_${usuarioLogado.RM}_dados`);
         frontendCache.remove(`relatorio_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: usuarioLogado.RM})}`);
-        
         frontendCache.remove(`relatorio_${usuarioLogado.Turma}`);
         
         await carregarTarefasAluno();
     } catch (error) {
-        showModal('Erro', `Erro ao salvar link: ${error.message}`);
+        const msg = error.message || String(error);
+        if (msg.includes('Fora do período de entrega')) {
+            showModal(
+                'Fora do horário de entrega',
+                'Essa parte só pode ser entregue no dia específico dela, entre 13h e 22h. Verifique o cronograma na descrição da tarefa.'
+            );
+        } else {
+            showModal('Erro', `Erro ao salvar link: ${msg}`);
+        }
     }
 }, 500);
 
 const excluirLink = debounce(async function(idTarefa, parte) {
+    if (!rateLimiter.canRun('excluirLink')) {
+        showModal('Aguarde', 'Você acabou de atualizar um link. Tente novamente em alguns segundos.');
+        return;
+    }
+
     try {
         await apiPost('excluirEntrega', {
             ID_Tarefa: idTarefa,
@@ -2650,28 +2648,16 @@ const excluirLink = debounce(async function(idTarefa, parte) {
         frontendCache.remove(`tarefas_aluno_${usuarioLogado.RM}_dados`);
         frontendCache.remove(`relatorio_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: usuarioLogado.RM})}`);
-        
         frontendCache.remove(`relatorio_${usuarioLogado.Turma}`);
         
         await carregarTarefasAluno();
     } catch (error) {
-        // Se ocorrer erro, consideramos que o link foi removido (talvez já não existia)
-        showModal('Sucesso', `Link da parte ${parte} removido com sucesso!`);
-        
-        frontendCache.remove(`painel_aluno_${usuarioLogado.RM}`);
-        frontendCache.remove(`tarefas_aluno_${usuarioLogado.RM}_dados`);
-        frontendCache.remove(`relatorio_aluno_${usuarioLogado.RM}`);
-        frontendCache.remove(`api_getEntregasAluno_${JSON.stringify({rm: usuarioLogado.RM})}`);
-        frontendCache.remove(`relatorio_${usuarioLogado.Turma}`);
-        
-        await carregarTarefasAluno();
+        showModal('Erro', `Erro ao excluir link: ${error.message}`);
     }
 }, 500);
 
-// --- INICIALIZAÇÃO ---
-init();
+/* ==================== EXPOR FUNÇÕES GLOBAIS ==================== */
 
-// --- FUNÇÕES GLOBAIS ---
 window.login = login;
 window.logout = logout;
 window.mostrarPainelProfessor = mostrarPainelProfessor;
@@ -2693,6 +2679,8 @@ window.adicionarFormatacao = adicionarFormatacao;
 window.exportarParaExcel = exportarParaExcel;
 window.exportarParaPDF = exportarParaPDF;
 window.toggleRmVisibility = toggleRmVisibility;
+
+init();
 </script>
 </body>
 </html>
