@@ -1800,7 +1800,76 @@ async function verificarEstruturaDados() {
         `;
     }
 }
+async function testarEstruturaPlanilhas() {
+    const resultado = document.getElementById('resultado-estrutura');
+    resultado.innerHTML = '<div class="spinner"></div> Verificando estrutura das planilhas...';
+    
+    adicionarLog('Verificando estrutura das planilhas...', 'info');
+    
+    try {
+        const [users, tarefas, entregas] = await Promise.all([
+            apiGet('getUsers', {}, true),
+            apiGet('getTarefas', {}, true),
+            apiGet('getEntregas', {}, true)
+        ]);
 
+        let html = '<div class="test-result test-success">';
+        html += '<strong>✓ Estrutura das planilhas verificada!</strong><br><br>';
+        
+        // Verificar USERS
+        if (users.data && users.data.length > 0) {
+            const primeiroUser = users.data[0];
+            const camposEsperados = ['Numero', 'NomeCompleto', 'Email', 'RM', 'Turma', 'Perfil'];
+            const camposFaltantes = camposEsperados.filter(campo => !(campo in primeiroUser));
+            
+            if (camposFaltantes.length === 0) {
+                html += `<strong>USERS:</strong> ✓ Estrutura correta (${users.data.length} registros)<br>`;
+                
+                // Contar por turma
+                const turmas = {};
+                users.data.forEach(user => {
+                    if (user.Turma) {
+                        turmas[user.Turma] = (turmas[user.Turma] || 0) + 1;
+                    }
+                });
+                
+                html += '<strong>Alunos por turma:</strong> ';
+                html += Object.entries(turmas).map(([turma, count]) => `${turma}: ${count}`).join(', ');
+                html += '<br>';
+            } else {
+                html += `<strong>USERS:</strong> ✗ Campos faltantes: ${camposFaltantes.join(', ')}<br>`;
+            }
+        } else {
+            html += '<strong>USERS:</strong> ✗ Nenhum usuário encontrado<br>';
+        }
+        
+        // Verificar TAREFAS
+        if (tarefas.data && tarefas.data.length > 0) {
+            html += `<strong>TAREFAS:</strong> ✓ ${tarefas.data.length} registros<br>`;
+        } else {
+            html += '<strong>TAREFAS:</strong> ✗ Nenhuma tarefa encontrada<br>';
+        }
+        
+        // Verificar ENTREGAS
+        if (entregas.data && entregas.data.length > 0) {
+            html += `<strong>ENTREGAS:</strong> ✓ ${entregas.data.length} registros<br>`;
+        } else {
+            html += '<strong>ENTREGAS:</strong> ✗ Nenhuma entrega encontrada<br>';
+        }
+        
+        html += '</div>';
+        resultado.innerHTML = html;
+        
+        adicionarLog('Verificação de estrutura completa', 'success');
+    } catch (error) {
+        adicionarLog(`✗ Erro ao verificar estrutura: ${error.message}`, 'error');
+        resultado.innerHTML = `
+            <div class="test-result test-error">
+                <strong>✗ Erro ao verificar estrutura:</strong> ${escapeHTML(error.message)}
+            </div>
+        `;
+    }
+}
 async function testarFuncionalidades() {
     const resultado = document.getElementById('resultado-funcionalidades');
     resultado.innerHTML = '<div class="spinner"></div> Testando funcionalidades...';
