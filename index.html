@@ -860,7 +860,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 8.6
+        Desenvolvido por Geovane Modena | Versão 8.8
     </footer>
 </div>
 
@@ -1434,8 +1434,8 @@ async function init() {
 }
 
 function toggleRmVisibility() {
-    const rmInput = document.getElementById('rm');
-    const toggleButton = document.getElementById('toggleRm');
+    const rmInput = document.getElementById('senha');
+    const toggleButton = document.getElementById('toggleSenha');
     
     rmVisible = !rmVisible;
     
@@ -1452,18 +1452,18 @@ const renderLogin = () => {
     contentArea.innerHTML = `
         <div id="login" class="max-w-md mx-auto p-6">
             <h2 class="text-2xl font-bold text-center text-red-700 mb-6">Login</h2>
-            <div id="loginErro" class="text-red-500 mb-4 hidden text-center font-semibold">Usuário ou RM incorretos!</div>
+            <div id="loginErro" class="text-red-500 mb-4 hidden text-center font-semibold">Usuário ou senha incorretos!</div>
 
             <form id="login-form" class="space-y-4">
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
-                    <input type="email" id="email" name="email" required placeholder="seu.email@escola.com" class="w-full p-3 border rounded-lg">
+                    <input type="email" id="email" name="email" required placeholder="nome.sobrenome@portalsesisp.org.br" class="w-full p-3 border rounded-lg">
                 </div>
                 <div>
-                    <label for="rm" class="block text-sm font-medium text-gray-700 mb-2">RM</label>
+                    <label for="senha" class="block text-sm font-medium text-gray-700 mb-2">Senha</label>
                     <div class="password-container">
-                        <input type="password" id="rm" name="rm" required placeholder="Digite seu RM" class="w-full p-3 border rounded-lg pr-12">
-                        <button type="button" class="password-toggle" id="toggleRm">
+                        <input type="password" id="senha" name="senha" required placeholder="Digite seu RM" class="w-full p-3 border rounded-lg pr-12">
+                        <button type="button" class="password-toggle" id="toggleSenha">
                             ${window.eyeIcons.eye}
                         </button>
                     </div>
@@ -1475,7 +1475,7 @@ const renderLogin = () => {
         </div>
     `;
 
-    document.getElementById('toggleRm').addEventListener('click', toggleRmVisibility);
+    document.getElementById('toggleSenha').addEventListener('click', toggleRmVisibility);
 
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -1486,7 +1486,7 @@ const renderLogin = () => {
 async function login(event) {
     event.preventDefault(); 
     const email = document.getElementById('email').value.trim();
-    const rm = document.getElementById('rm').value.trim();
+    const senha = document.getElementById('senha').value.trim();
     
     const loginErro = document.getElementById('loginErro'); 
     const loginButton = document.getElementById('login-button');
@@ -1505,7 +1505,7 @@ async function login(event) {
         }
     }
     
-    console.log('Tentando login com:', { email, rm });
+    console.log('Tentando login com:', { email, senha });
     
     await new Promise(resolve => setTimeout(resolve, 300));
     
@@ -1530,14 +1530,14 @@ async function login(event) {
         const userEmail = String(u.Email || '').toLowerCase().trim();
         const userRM = String(u.RM || '').trim();
         const inputEmail = email.toLowerCase().trim();
-        const inputRM = rm.trim();
+        const inputRM = senha.trim();
         
         return userEmail === inputEmail && userRM === inputRM;
     });
     
     if (!user) {
-        console.log('RM incorreto');
-        loginErro.textContent = 'RM incorreto para este e-mail!';
+        console.log('Senha incorreta');
+        loginErro.textContent = 'Senha incorreta para este e-mail!';
         loginErro.style.display = 'block';
         loginButton.disabled = false;
         loginText.textContent = "Entrar";
@@ -1608,17 +1608,7 @@ function logout() {
 async function mostrarPainelDiagnostico() {
     contentArea.innerHTML = `
         <div class="card p-6">
-            <h3 class="text-2xl font-bold text-red-700 mb-4">Painel de Diagnóstico - Versão 8.6</h3>
-            
-            <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <h4 class="font-semibold text-blue-800 mb-2">Problemas Comuns de Login</h4>
-                <ul class="list-disc pl-5 text-blue-700 space-y-1">
-                    <li><strong>E-mail não encontrado:</strong> Verifique se o e-mail está cadastrado na planilha USERS</li>
-                    <li><strong>RM incorreto:</strong> Confira se o RM está correto na planilha USERS</li>
-                    <li><strong>Planilha não acessível:</strong> Verifique as permissões da planilha</li>
-                    <li><strong>Problema de conexão:</strong> Teste a conexão com o Google Apps Script</li>
-                </ul>
-            </div>
+            <h3 class="text-2xl font-bold text-red-700 mb-4">Painel de Diagnóstico</h3>
             
             <div class="diagnostico-grid">
                 <div class="diagnostico-card">
@@ -2052,31 +2042,7 @@ async function carregarRelatorioTurma(turmaSelecionada) {
             return;
         }
         
-        let turmaInfoHTML = '';
-        if (alunosTurma.length > 0) {
-            turmaInfoHTML = `
-                <div class="turma-info">
-                    <div class="turma-title">Turma ${escapeHTML(turmaSelecionada)}</div>
-                    <div class="turma-stats">
-                        <div class="stat-item">
-                            <span class="stat-value">${alunosTurma.length}</span>
-                            <span class="stat-label">Alunos</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${tarefasTurma.length}</span>
-                            <span class="stat-label">Tarefas</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${new Date().toLocaleDateString()}</span>
-                            <span class="stat-label">Atualizado em</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-        
         let relatorioTurmaHTML = `
-            ${turmaInfoHTML}
             <div class="relatorio-header">
                 <h4 class="text-lg font-semibold text-red-700">Relatório da Turma ${escapeHTML(turmaSelecionada)}</h4>
                 <div class="flex space-x-2">
@@ -2096,7 +2062,7 @@ async function carregarRelatorioTurma(turmaSelecionada) {
                 Carregando notas dos alunos...
             </div>
             <div class="relatorio-info">
-                Total de alunos: ${alunosTurma.length} | Total de tarefas: ${tarefasTurma.length} | Última atualização: ${new Date().toLocaleTimeString()}
+                Total de alunos: ${alunosTurma.length} | Total de tarefas: ${tarefasTurma.length} | Última atualização em ${new Date().toLocaleDateString()} às ${new Date().toLocaleTimeString()}
             </div>
             <div class="overflow-x-auto border rounded-lg mt-4">
                 <table class="min-w-full compact-table table-header-white" id="tabela-relatorio">
@@ -2299,9 +2265,6 @@ async function mostrarRelatorioAluno() {
         let relatorioHTML = `
             <div class="card p-6">
                 <h3 class="text-2xl font-bold text-red-700 mb-4">Meu Relatório</h3>
-                <div class="mb-4 p-3 bg-blue-50 rounded border">
-                    <p class="text-sm text-blue-700">Número do aluno: <strong>${escapeHTML(usuarioLogado.Numero || 'N/A')}</strong></p>
-                </div>
         `;
         
         if (entregas.length === 0) {
@@ -2813,10 +2776,7 @@ async function mostrarPainelAluno() {
     contentArea.innerHTML = `
         <div id="painelAluno" class="space-y-6">
             <div class="card p-6">
-                <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas - Turma ${escapeHTML(usuarioLogado.Turma)}</h3>
-                <div class="mb-4 p-3 bg-blue-50 rounded border">
-                    <p class="text-sm text-blue-700">Número do aluno: <strong>${escapeHTML(usuarioLogado.Numero || 'N/A')}</strong></p>
-                </div>
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas</h3>
                 
                 <div class="instrucoes-box">
                     <div class="instrucoes-title">Instruções para entrega:</div>
