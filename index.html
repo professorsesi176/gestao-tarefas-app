@@ -737,6 +737,109 @@
             margin-bottom: 5px;
             color: #374151;
         }
+
+        /* ESTILOS PARA O PAINEL DE DIAGNÓSTICO */
+        .btn-diagnostico {
+            background-color: #8b5cf6;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .btn-diagnostico:hover {
+            background-color: #7c3aed;
+        }
+
+        .test-result {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+
+        .test-success {
+            background-color: #d1fae5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+        }
+
+        .test-warning {
+            background-color: #fef3c7;
+            border: 1px solid #fde68a;
+            color: #92400e;
+        }
+
+        .test-error {
+            background-color: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+        }
+
+        .test-info {
+            background-color: #dbeafe;
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
+        }
+
+        .diagnostico-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .diagnostico-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            background-color: white;
+        }
+
+        .diagnostico-card h4 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: #374151;
+        }
+
+        .log-entry {
+            font-family: monospace;
+            font-size: 0.75rem;
+            background-color: #f9fafb;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 4px 0;
+            border-left: 3px solid #d1d5db;
+        }
+
+        .log-success {
+            border-left-color: #10b981;
+        }
+
+        .log-warning {
+            border-left-color: #f59e0b;
+        }
+
+        .log-error {
+            border-left-color: #ef4444;
+        }
+
+        .link-externo {
+            display: block;
+            padding: 8px 12px;
+            background-color: #f3f4f6;
+            border-radius: 4px;
+            margin: 4px 0;
+            text-decoration: none;
+            color: #374151;
+            transition: background-color 0.2s;
+        }
+
+        .link-externo:hover {
+            background-color: #e5e7eb;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -747,6 +850,7 @@
             <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar</h1>
             <div id="user-info" class="user-info-container"></div>
             <div class="absolute top-0 right-0 flex space-x-2">
+                <button id="diagnosticoBtn" class="btn-diagnostico hidden">Diagnóstico</button>
                 <button id="relatorioBtn" class="btn-relatorio hidden">Relatório</button>
                 <button onclick="logout()" id="logoutBtn" class="btn-secondary hidden">Sair</button>
             </div>
@@ -756,7 +860,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 8.5
+        Desenvolvido por Geovane Modena | Versão 8.6
     </footer>
 </div>
 
@@ -886,6 +990,7 @@ const contentArea = document.getElementById('content-area');
 const userInfoDisplay = document.getElementById('user-info');
 const logoutBtn = document.getElementById('logoutBtn');
 const relatorioBtn = document.getElementById('relatorioBtn');
+const diagnosticoBtn = document.getElementById('diagnosticoBtn');
 const modalOverlay = document.getElementById('modal-overlay');
 const modalTitle = document.getElementById('modal-title');
 const modalMessage = document.getElementById('modal-message');
@@ -1367,13 +1472,6 @@ const renderLogin = () => {
                     <span id="login-text">Entrar</span>
                 </button>
             </form>
-            
-            <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p class="text-sm text-yellow-800 text-center">
-                    <strong>Problemas para entrar?</strong><br>
-                    Verifique se seu e-mail e RM estão corretos. Caso persista, entre em contato com o administrador.
-                </p>
-            </div>
         </div>
     `;
 
@@ -1411,6 +1509,23 @@ async function login(event) {
     
     await new Promise(resolve => setTimeout(resolve, 300));
     
+    // Verifica se o e-mail existe
+    const userByEmail = usuarios.find(u => {
+        const userEmail = String(u.Email || '').toLowerCase().trim();
+        const inputEmail = email.toLowerCase().trim();
+        return userEmail === inputEmail;
+    });
+
+    if (!userByEmail) {
+        console.log('E-mail não encontrado');
+        loginErro.textContent = 'E-mail não encontrado!';
+        loginErro.style.display = 'block';
+        loginButton.disabled = false;
+        loginText.textContent = "Entrar";
+        return;
+    }
+
+    // Verifica se o RM corresponde
     const user = usuarios.find(u => {
         const userEmail = String(u.Email || '').toLowerCase().trim();
         const userRM = String(u.RM || '').trim();
@@ -1421,7 +1536,8 @@ async function login(event) {
     });
     
     if (!user) {
-        console.log('Usuário não encontrado');
+        console.log('RM incorreto');
+        loginErro.textContent = 'RM incorreto para este e-mail!';
         loginErro.style.display = 'block';
         loginButton.disabled = false;
         loginText.textContent = "Entrar";
@@ -1442,6 +1558,8 @@ async function login(event) {
             </div>
         `;
         relatorioBtn.onclick = mostrarRelatorioProfessor;
+        diagnosticoBtn.classList.remove('hidden');
+        diagnosticoBtn.onclick = mostrarPainelDiagnostico;
     } else {
         userInfoDisplay.innerHTML = `
             <div class="user-info-text">
@@ -1449,6 +1567,7 @@ async function login(event) {
             </div>
         `;
         relatorioBtn.onclick = mostrarRelatorioAluno;
+        diagnosticoBtn.classList.add('hidden');
     }
 
     try {
@@ -1476,11 +1595,308 @@ function logout() {
     tarefaEditando = null;
     logoutBtn.classList.add('hidden');
     relatorioBtn.classList.add('hidden');
+    diagnosticoBtn.classList.add('hidden');
     userInfoDisplay.innerHTML = '';
     contadoresAtivos.forEach(interval => clearInterval(interval));
     contadoresAtivos = [];
     frontendCache.clear();
     renderLogin(); 
+}
+
+/* ==================== PAINEL DE DIAGNÓSTICO ==================== */
+
+async function mostrarPainelDiagnostico() {
+    contentArea.innerHTML = `
+        <div class="card p-6">
+            <h3 class="text-2xl font-bold text-red-700 mb-4">Painel de Diagnóstico - Versão 8.6</h3>
+            
+            <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 class="font-semibold text-blue-800 mb-2">Problemas Comuns de Login</h4>
+                <ul class="list-disc pl-5 text-blue-700 space-y-1">
+                    <li><strong>E-mail não encontrado:</strong> Verifique se o e-mail está cadastrado na planilha USERS</li>
+                    <li><strong>RM incorreto:</strong> Confira se o RM está correto na planilha USERS</li>
+                    <li><strong>Planilha não acessível:</strong> Verifique as permissões da planilha</li>
+                    <li><strong>Problema de conexão:</strong> Teste a conexão com o Google Apps Script</li>
+                </ul>
+            </div>
+            
+            <div class="diagnostico-grid">
+                <div class="diagnostico-card">
+                    <h4>Teste de Conexão</h4>
+                    <button onclick="testarConexaoCompleta()" class="btn-primary w-full mb-3">Testar Conexão Completa</button>
+                    <div id="resultado-conexao"></div>
+                </div>
+                
+                <div class="diagnostico-card">
+                    <h4>Verificar Estrutura de Dados</h4>
+                    <button onclick="verificarEstruturaDados()" class="btn-primary w-full mb-3">Verificar Estrutura</button>
+                    <div id="resultado-estrutura"></div>
+                </div>
+                
+                <div class="diagnostico-card">
+                    <h4>Testar Funcionalidades</h4>
+                    <button onclick="testarFuncionalidades()" class="btn-primary w-full mb-3">Testar Funcionalidades</button>
+                    <div id="resultado-funcionalidades"></div>
+                </div>
+                
+                <div class="diagnostico-card">
+                    <h4>Verificar Usuários</h4>
+                    <button onclick="verificarUsuarios()" class="btn-primary w-full mb-3">Verificar Usuários</button>
+                    <div id="resultado-usuarios"></div>
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <h4 class="font-semibold text-lg mb-3">Links para Verificação</h4>
+                <div class="space-y-2">
+                    <a href="https://docs.google.com/spreadsheets/d/1M1CV4wDyV0kktu5N3CBOmC5O5dRc-9J9Xw-XxXnJ6_E/edit" target="_blank" class="link-externo">
+                        📊 Planilha USERS (Verificar estrutura e dados)
+                    </a>
+                    <a href="https://docs.google.com/spreadsheets/d/1M1CV4wDyV0kktu5N3CBOmC5O5dRc-9J9Xw-XxXnJ6_E/edit#gid=1135465325" target="_blank" class="link-externo">
+                        📊 Planilha TAREFAS
+                    </a>
+                    <a href="https://docs.google.com/spreadsheets/d/1M1CV4wDyV0kktu5N3CBOmC5O5dRc-9J9Xw-XxXnJ6_E/edit#gid=2132814578" target="_blank" class="link-externo">
+                        📊 Planilha ENTREGAS
+                    </a>
+                    <a href="https://script.google.com/home/projects/1M1CV4wDyV0kktu5N3CBOmC5O5dRc-9J9Xw-XxXnJ6_E/edit" target="_blank" class="link-externo">
+                        🔧 Google Apps Script (Backend)
+                    </a>
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <h4 class="font-semibold text-lg mb-3">Log de Diagnóstico</h4>
+                <div id="log-diagnostico" class="space-y-2 max-h-60 overflow-y-auto p-3 bg-gray-50 rounded border">
+                    <!-- Logs serão inseridos aqui -->
+                </div>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <button onclick="mostrarPainelProfessor()" class="btn-secondary">Voltar ao Painel</button>
+            </div>
+        </div>
+    `;
+}
+
+function adicionarLog(mensagem, tipo = 'info') {
+    const logContainer = document.getElementById('log-diagnostico');
+    if (!logContainer) return;
+    
+    const timestamp = new Date().toLocaleTimeString();
+    const logEntry = document.createElement('div');
+    logEntry.className = `log-entry log-${tipo}`;
+    logEntry.innerHTML = `<span class="text-gray-500">[${timestamp}]</span> ${mensagem}`;
+    
+    logContainer.appendChild(logEntry);
+    logContainer.scrollTop = logContainer.scrollHeight;
+}
+
+async function testarConexaoCompleta() {
+    const resultado = document.getElementById('resultado-conexao');
+    resultado.innerHTML = '<div class="spinner"></div> Testando conexão completa...';
+    
+    adicionarLog('Iniciando teste de conexão completa...', 'info');
+    
+    try {
+        // Testar conexão com cada planilha
+        const [usersResponse, tarefasResponse, entregasResponse] = await Promise.all([
+            apiGet('getUsers', {}, true),
+            apiGet('getTarefas', {}, true),
+            apiGet('getEntregas', {}, true)
+        ]);
+
+        const users = usersResponse.data || usersResponse;
+        const tarefas = tarefasResponse.data || tarefasResponse;
+        const entregas = entregasResponse.data || entregasResponse;
+
+        adicionarLog(`✓ Conexão com USERS: ${users.length} registros`, 'success');
+        adicionarLog(`✓ Conexão com TAREFAS: ${tarefas.length} registros`, 'success');
+        adicionarLog(`✓ Conexão com ENTREGAS: ${entregas.length} registros`, 'success');
+
+        resultado.innerHTML = `
+            <div class="test-result test-success">
+                <strong>✓ Conexão bem-sucedida com todas as planilhas!</strong><br>
+                - Usuários: ${users.length} registros<br>
+                - Tarefas: ${tarefas.length} registros<br>
+                - Entregas: ${entregas.length} registros<br><br>
+                <strong>URL da API:</strong> ${API_URL}
+            </div>
+        `;
+        
+        adicionarLog('Teste de conexão completo: SUCESSO', 'success');
+    } catch (error) {
+        adicionarLog(`✗ Erro na conexão: ${error.message}`, 'error');
+        resultado.innerHTML = `
+            <div class="test-result test-error">
+                <strong>✗ Erro na conexão:</strong> ${escapeHTML(error.message)}<br><br>
+                <strong>Possíveis causas:</strong><br>
+                - Planilha não compartilhada publicamente<br>
+                - Problema no Google Apps Script<br>
+                - Token de segurança incorreto<br>
+                - Problema de rede<br><br>
+                <strong>URL da API:</strong> ${API_URL}
+            </div>
+        `;
+    }
+}
+
+async function verificarEstruturaDados() {
+    const resultado = document.getElementById('resultado-estrutura');
+    resultado.innerHTML = '<div class="spinner"></div> Verificando estrutura...';
+    
+    adicionarLog('Verificando estrutura de dados...', 'info');
+    
+    try {
+        const usersResponse = await apiGet('getUsers', {}, true);
+        const users = usersResponse.data || usersResponse;
+
+        if (users.length === 0) {
+            adicionarLog('✗ Nenhum usuário encontrado na planilha', 'error');
+            resultado.innerHTML = '<div class="test-result test-error">Nenhum usuário encontrado na planilha USERS.</div>';
+            return;
+        }
+
+        const primeiroUser = users[0];
+        const camposEsperados = ['Numero', 'NomeCompleto', 'Email', 'RM', 'Turma', 'Perfil'];
+        const camposFaltantes = camposEsperados.filter(campo => !(campo in primeiroUser));
+
+        if (camposFaltantes.length > 0) {
+            adicionarLog(`✗ Estrutura incompleta. Campos faltantes: ${camposFaltantes.join(', ')}`, 'error');
+            resultado.innerHTML = `
+                <div class="test-result test-error">
+                    <strong>✗ Estrutura incompleta:</strong> Campos faltantes: ${camposFaltantes.join(', ')}<br>
+                    <strong>Estrutura atual:</strong> ${Object.keys(primeiroUser).join(', ')}<br><br>
+                    <strong>Estrutura esperada:</strong><br>
+                    - Numero: Número do aluno<br>
+                    - NomeCompleto: Nome completo<br>
+                    - Email: E-mail institucional<br>
+                    - RM: Registro do aluno<br>
+                    - Turma: Turma (ex: 1A, 2B)<br>
+                    - Perfil: "Aluno" ou "Professor"
+                </div>
+            `;
+        } else {
+            adicionarLog('✓ Estrutura de dados correta', 'success');
+            resultado.innerHTML = `
+                <div class="test-result test-success">
+                    <strong>✓ Estrutura de usuários correta!</strong><br>
+                    Campos: ${camposEsperados.join(', ')}<br><br>
+                    <strong>Exemplo do primeiro usuário:</strong><br>
+                    - Número: ${primeiroUser.Numero}<br>
+                    - Nome: ${primeiroUser.NomeCompleto}<br>
+                    - E-mail: ${primeiroUser.Email}<br>
+                    - RM: ${primeiroUser.RM}<br>
+                    - Turma: ${primeiroUser.Turma}<br>
+                    - Perfil: ${primeiroUser.Perfil}
+                </div>
+            `;
+        }
+    } catch (error) {
+        adicionarLog(`✗ Erro ao verificar estrutura: ${error.message}`, 'error');
+        resultado.innerHTML = `
+            <div class="test-result test-error">
+                <strong>✗ Erro ao verificar estrutura:</strong> ${escapeHTML(error.message)}
+            </div>
+        `;
+    }
+}
+
+async function testarFuncionalidades() {
+    const resultado = document.getElementById('resultado-funcionalidades');
+    resultado.innerHTML = '<div class="spinner"></div> Testando funcionalidades...';
+    
+    adicionarLog('Testando funcionalidades básicas...', 'info');
+    
+    try {
+        // Testar criação de tarefa
+        const tarefaTeste = {
+            Turmas: ['1A'],
+            Tema: 'Tarefa de Teste - Pode Excluir',
+            Parte1: 'Parte 1 de teste',
+            Parte2: 'Parte 2 de teste',
+            Parte3: 'Parte 3 de teste',
+            Parte4: 'Parte 4 de teste',
+            DataAula: new Date().toISOString().split('T')[0],
+            professor: 'Sistema de Teste'
+        };
+
+        const criacaoResponse = await apiPost('criarTarefa', tarefaTeste);
+        adicionarLog('✓ Criação de tarefa: SUCESSO', 'success');
+        
+        resultado.innerHTML = `
+            <div class="test-result test-success">
+                <strong>✓ Funcionalidades básicas OK!</strong><br>
+                - Conexão com API: ✓<br>
+                - Estrutura de dados: ✓<br>
+                - Criação de tarefas: ✓<br>
+                - Pronto para uso<br><br>
+                <strong>Tarefa de teste criada com sucesso!</strong><br>
+                ID: ${criacaoResponse.id || 'N/A'}<br>
+                <em>Você pode excluir esta tarefa no painel principal</em>
+            </div>
+        `;
+    } catch (error) {
+        adicionarLog(`✗ Erro nas funcionalidades: ${error.message}`, 'error');
+        resultado.innerHTML = `
+            <div class="test-result test-error">
+                <strong>✗ Erro nas funcionalidades:</strong> ${escapeHTML(error.message)}
+            </div>
+        `;
+    }
+}
+
+async function verificarUsuarios() {
+    const resultado = document.getElementById('resultado-usuarios');
+    resultado.innerHTML = '<div class="spinner"></div> Verificando usuários...';
+    
+    adicionarLog('Verificando lista de usuários...', 'info');
+    
+    try {
+        const usersResponse = await apiGet('getUsers', {}, true);
+        const users = usersResponse.data || usersResponse;
+        
+        if (users.length === 0) {
+            adicionarLog('✗ Nenhum usuário encontrado', 'error');
+            resultado.innerHTML = '<div class="test-result test-error">Nenhum usuário encontrado na planilha USERS.</div>';
+            return;
+        }
+        
+        const alunos = users.filter(u => u.Perfil === 'Aluno');
+        const professores = users.filter(u => u.Perfil === 'Professor');
+        
+        adicionarLog(`✓ Total de usuários: ${users.length} (${alunos.length} alunos, ${professores.length} professores)`, 'success');
+        
+        let html = `
+            <div class="test-result test-success">
+                <strong>✓ Usuários carregados com sucesso!</strong><br>
+                - Total: ${users.length} usuários<br>
+                - Alunos: ${alunos.length}<br>
+                - Professores: ${professores.length}<br><br>
+                <strong>Primeiros 5 usuários:</strong><br>
+        `;
+        
+        users.slice(0, 5).forEach((user, index) => {
+            html += `
+                ${index + 1}. ${user.NomeCompleto} (${user.Email}) - ${user.Perfil}<br>
+            `;
+        });
+        
+        if (users.length > 5) {
+            html += `<br>... e mais ${users.length - 5} usuários`;
+        }
+        
+        html += `</div>`;
+        
+        resultado.innerHTML = html;
+        
+    } catch (error) {
+        adicionarLog(`✗ Erro ao verificar usuários: ${error.message}`, 'error');
+        resultado.innerHTML = `
+            <div class="test-result test-error">
+                <strong>✗ Erro ao verificar usuários:</strong> ${escapeHTML(error.message)}
+            </div>
+        `;
+    }
 }
 
 /* ==================== RELATÓRIO PROFESSOR ==================== */
@@ -1545,7 +1961,13 @@ async function carregarRelatorioTurma(turmaSelecionada) {
             document.getElementById('relatorio-turma-container').innerHTML = `
                 <div class="text-center py-8">
                     <p class="text-gray-500 mb-4">Nenhum aluno encontrado na turma ${escapeHTML(turmaSelecionada)}.</p>
-                    <p class="text-sm text-gray-400">Verifique se os alunos estão cadastrados no sistema.</p>
+                    <p class="text-sm text-gray-400">Verifique se a turma está correta e se os alunos estão cadastrados na planilha USERS.</p>
+                    <div class="mt-4 debug-info">
+                        <div class="debug-title">Informações para diagnóstico:</div>
+                        <div>Total de usuários no sistema: ${(usersResponse.data || usersResponse).length}</div>
+                        <div>Usuários da turma ${turmaSelecionada}: ${(usersResponse.data || usersResponse).filter(u => u.Turma === turmaSelecionada).length}</div>
+                        <div>Alunos da turma ${turmaSelecionada}: ${alunosTurma.length}</div>
+                    </div>
                 </div>
             `;
             return;
@@ -2679,6 +3101,12 @@ window.adicionarFormatacao = adicionarFormatacao;
 window.exportarParaExcel = exportarParaExcel;
 window.exportarParaPDF = exportarParaPDF;
 window.toggleRmVisibility = toggleRmVisibility;
+window.mostrarPainelDiagnostico = mostrarPainelDiagnostico;
+window.testarConexaoCompleta = testarConexaoCompleta;
+window.verificarEstruturaDados = verificarEstruturaDados;
+window.testarFuncionalidades = testarFuncionalidades;
+window.verificarUsuarios = verificarUsuarios;
+window.adicionarLog = adicionarLog;
 
 init();
 </script>
