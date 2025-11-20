@@ -909,6 +909,68 @@
         .tarefa-group:last-child {
             border-right: none;
         }
+
+        /* CORREÇÃO DO ÍCONE DO OLHO */
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6b7280;
+            z-index: 10;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        /* NOVO LAYOUT PARA OS BOTÕES DE TURMA */
+        .turmas-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .turmas-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .btn-turma-compact {
+            background-color: #CC0000;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            border: none;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .btn-turma-compact:hover {
+            background-color: #A00000;
+        }
+
+        .btn-turma-compact.active {
+            background-color: #A00000;
+            box-shadow: 0 0 0 2px white, 0 0 0 4px #CC0000;
+        }
+
+        .export-buttons-container {
+            display: flex;
+            gap: 10px;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -929,7 +991,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 9.2
+        Desenvolvido por Geovane Modena | Versão 9.4
     </footer>
 </div>
 
@@ -1713,6 +1775,12 @@ async function mostrarPainelDiagnostico() {
                     <button onclick="verificarUsuarios()" class="btn-primary w-full mb-3">Verificar Usuários</button>
                     <div id="resultado-usuarios"></div>
                 </div>
+                
+                <div class="diagnostico-card">
+                    <h4>Criar Tarefas de Teste</h4>
+                    <button onclick="criarTarefasTeste()" class="btn-primary w-full mb-3">Criar Tarefas de Teste</button>
+                    <div id="resultado-tarefas-teste"></div>
+                </div>
             </div>
             
             <div class="mt-6">
@@ -1968,6 +2036,100 @@ async function verificarUsuarios() {
     }
 }
 
+async function criarTarefasTeste() {
+    const resultado = document.getElementById('resultado-tarefas-teste');
+    resultado.innerHTML = '<div class="spinner"></div> Criando tarefas de teste...';
+    
+    adicionarLog('Criando tarefas de teste para alunos...', 'info');
+    
+    try {
+        // Calcular data de aula para que todas as partes estejam disponíveis
+        const hoje = new Date();
+        const dataAula = new Date(hoje);
+        dataAula.setDate(hoje.getDate() - 1); // Aula foi ontem para que a parte 1 esteja disponível
+        
+        const tarefasTeste = [
+            {
+                Turmas: ['1A', '1B', '2A', '2B', '3A', '3B'],
+                Tema: 'Tarefa de Teste - Matemática Básica',
+                Parte1: 'Resolva as operações: 5 + 7, 12 - 4, 3 × 6, 15 ÷ 3',
+                Parte2: 'Calcule a área de um retângulo com 8cm de comprimento e 5cm de largura',
+                Parte3: 'Resolva a equação: 2x + 5 = 15',
+                Parte4: 'Crie um problema de matemática envolvendo frações e resolva-o',
+                DataAula: dataAula.toISOString().split('T')[0],
+                professor: 'Sistema de Teste'
+            },
+            {
+                Turmas: ['1A', '1B', '2A', '2B'],
+                Tema: 'Tarefa de Teste - Português',
+                Parte1: 'Escreva um parágrafo sobre seu animal favorito',
+                Parte2: 'Identifique substantivos e verbos na frase: "O gato persegue o rato rapidamente"',
+                Parte3: 'Escreva uma pequena história com início, meio e fim',
+                Parte4: 'Reescreva a frase na voz passiva: "O menino quebrou o vaso"',
+                DataAula: dataAula.toISOString().split('T')[0],
+                professor: 'Sistema de Teste'
+            }
+        ];
+        
+        let tarefasCriadas = 0;
+        let erros = [];
+        
+        for (const tarefa of tarefasTeste) {
+            try {
+                await apiPost('criarTarefa', tarefa);
+                tarefasCriadas++;
+                adicionarLog(`✓ Tarefa criada: "${tarefa.Tema}" para turmas: ${tarefa.Turmas.join(', ')}`, 'success');
+            } catch (error) {
+                erros.push(`Erro ao criar "${tarefa.Tema}": ${error.message}`);
+                adicionarLog(`✗ Erro ao criar tarefa: ${error.message}`, 'error');
+            }
+            
+            // Pequena pausa entre as criações
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
+        if (erros.length > 0) {
+            resultado.innerHTML = `
+                <div class="test-result test-warning">
+                    <strong>Tarefas de teste criadas parcialmente!</strong><br>
+                    - Tarefas criadas com sucesso: ${tarefasCriadas}<br>
+                    - Erros: ${erros.length}<br><br>
+                    <strong>Detalhes dos erros:</strong><br>
+                    ${erros.map(erro => `• ${erro}`).join('<br>')}<br><br>
+                    <em>As tarefas criadas podem ser usadas para testes pelos alunos.</em>
+                </div>
+            `;
+        } else {
+            resultado.innerHTML = `
+                <div class="test-result test-success">
+                    <strong>✓ Tarefas de teste criadas com sucesso!</strong><br>
+                    - Total de tarefas criadas: ${tarefasCriadas}<br>
+                    - Turmas contempladas: 1A, 1B, 2A, 2B, 3A, 3B<br><br>
+                    <strong>Instruções para teste:</strong><br>
+                    1. Faça login como aluno de qualquer turma<br>
+                    2. As tarefas de teste estarão disponíveis<br>
+                    3. Teste o envio de links para todas as 4 partes<br>
+                    4. Verifique se as notas são calculadas corretamente<br><br>
+                    <em>As tarefas podem ser excluídas no painel principal quando não forem mais necessárias.</em>
+                </div>
+            `;
+        }
+        
+    } catch (error) {
+        adicionarLog(`✗ Erro ao criar tarefas de teste: ${error.message}`, 'error');
+        resultado.innerHTML = `
+            <div class="test-result test-error">
+                <strong>✗ Erro ao criar tarefas de teste:</strong> ${escapeHTML(error.message)}<br><br>
+                <strong>Possíveis causas:</strong><br>
+                - Problema de conexão com a API<br>
+                - Token de segurança incorreto<br>
+                - Limite de taxa excedido<br>
+                - Erro no Google Apps Script
+            </div>
+        `;
+    }
+}
+
 /* ==================== RELATÓRIO PROFESSOR ==================== */
 
 async function mostrarRelatorioProfessor() {
@@ -1976,20 +2138,27 @@ async function mostrarRelatorioProfessor() {
     let relatorioHTML = `
         <div class="card p-6">
             <h3 class="text-2xl font-bold text-red-700 mb-4">Relatório por Turma</h3>
-            <div class="mb-4">
-                <p class="block text-sm font-medium text-gray-700 mb-2">Selecione a Turma:</p>
-                <div class="flex flex-wrap gap-2 mb-6" id="botoes-turma">
+            <div class="turmas-container">
+                <div class="turmas-buttons">
     `;
     
     turmas.forEach(turma => {
         relatorioHTML += `
-            <button onclick="carregarRelatorioTurma('${turma}')" class="btn-turma">
-                Turma ${turma}
+            <button onclick="carregarRelatorioTurma('${turma}')" class="btn-turma-compact" id="btn-turma-${turma}">
+                ${turma}
             </button>
         `;
     });
     
     relatorioHTML += `
+                </div>
+                <div class="export-buttons-container">
+                    <button onclick="exportarParaExcel(turmaSelecionada)" class="btn-exportar" id="btn-excel">
+                        Exportar Excel
+                    </button>
+                    <button onclick="exportarParaPDF(turmaSelecionada)" class="btn-exportar" id="btn-pdf">
+                        Exportar PDF
+                    </button>
                 </div>
             </div>
             <div id="relatorio-turma-container" class="mt-4">
@@ -2002,26 +2171,37 @@ async function mostrarRelatorioProfessor() {
     `;
     
     contentArea.innerHTML = relatorioHTML;
+    
+    // Variável global para armazenar a turma selecionada
+    window.turmaSelecionada = null;
 }
 
-async function carregarRelatorioTurma(turmaSelecionada) {
-    frontendCache.remove(`relatorio_${turmaSelecionada}`);
+async function carregarRelatorioTurma(turma) {
+    // Atualizar botões ativos
+    document.querySelectorAll('.btn-turma-compact').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.getElementById(`btn-turma-${turma}`).classList.add('active');
+    
+    window.turmaSelecionada = turma;
+    
+    frontendCache.remove(`relatorio_${turma}`);
     
     document.getElementById('relatorio-turma-container').innerHTML = `
         <div class="text-center py-8">
             <div class="spinner"></div>
-            <p class="mt-4 text-gray-600">Carregando relatório da turma ${escapeHTML(turmaSelecionada)}...</p>
+            <p class="mt-4 text-gray-600">Carregando relatório da turma ${escapeHTML(turma)}...</p>
         </div>
     `;
     
     try {
         const [usersResponse, tarefasResponse] = await Promise.all([
             apiGet('getUsers', {}, true),
-            apiGet('getTarefasPorTurma', { turma: turmaSelecionada }, true)
+            apiGet('getTarefasPorTurma', { turma: turma }, true)
         ]);
         
         const alunosTurma = (usersResponse.data || usersResponse).filter(user => 
-            user.Turma === turmaSelecionada && user.Perfil === 'Aluno'
+            user.Turma === turma && user.Perfil === 'Aluno'
         ).sort((a, b) => {
             const numA = parseInt(a.Numero) || 999;
             const numB = parseInt(b.Numero) || 999;
@@ -2032,23 +2212,12 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         
         const todasEntregas = await apiGet('getEntregas', {}, true);
         const entregasTurma = (todasEntregas.data || todasEntregas).filter(entrega => 
-            entrega.Turma === turmaSelecionada
+            entrega.Turma === turma
         );
         
         let relatorioTurmaHTML = `
             <div class="relatorio-header">
-                <h4 class="text-lg font-semibold text-red-700">Relatório da Turma ${escapeHTML(turmaSelecionada)}</h4>
-                <div class="flex space-x-2">
-                    <button onclick="exportarParaExcel('${turmaSelecionada}')" class="btn-exportar" id="btn-excel">
-                        Exportar Excel
-                    </button>
-                    <button onclick="exportarParaPDF('${turmaSelecionada}')" class="btn-exportar" id="btn-pdf">
-                        Exportar PDF
-                    </button>
-                    <button onclick="carregarRelatorioTurma('${turmaSelecionada}')" class="btn-atualizar-dados">
-                        Atualizar Dados
-                    </button>
-                </div>
+                <h4 class="text-lg font-semibold text-red-700">Relatório da Turma ${escapeHTML(turma)}</h4>
             </div>
             <div class="relatorio-status" id="carregamento-status">
                 <div class="spinner"></div>
@@ -2062,14 +2231,14 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         if (alunosTurma.length === 0) {
             relatorioTurmaHTML += `
                 <div class="text-center py-8">
-                    <p class="text-gray-500 mb-4">Nenhum aluno encontrado na turma ${escapeHTML(turmaSelecionada)}.</p>
+                    <p class="text-gray-500 mb-4">Nenhum aluno encontrado na turma ${escapeHTML(turma)}.</p>
                     <p class="text-sm text-gray-400">Verifique se a turma está correta e se os alunos estão cadastrados na planilha USERS.</p>
                 </div>
             `;
         } else if (tarefasTurma.length === 0) {
             relatorioTurmaHTML += `
                 <div class="text-center py-8">
-                    <p class="text-gray-500 mb-4">Nenhuma tarefa encontrada para a turma ${escapeHTML(turmaSelecionada)}.</p>
+                    <p class="text-gray-500 mb-4">Nenhuma tarefa encontrada para a turma ${escapeHTML(turma)}.</p>
                     <p class="text-sm text-gray-400">Crie tarefas para esta turma no painel principal.</p>
                 </div>
             `;
@@ -2236,14 +2405,14 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         carregamentoStatus.className = 'relatorio-status bg-green-50 text-green-700 border-l-green-500';
         
         const relatorioCompletoHTML = document.getElementById('relatorio-turma-container').innerHTML;
-        frontendCache.set(`relatorio_${turmaSelecionada}`, relatorioCompletoHTML, 10 * 60 * 1000);
+        frontendCache.set(`relatorio_${turma}`, relatorioCompletoHTML, 10 * 60 * 1000);
         
     } catch (error) {
         console.error('Erro ao carregar relatório:', error);
         document.getElementById('relatorio-turma-container').innerHTML = `
             <div class="text-center py-8">
                 <p class="text-red-500">Erro ao carregar relatório: ${escapeHTML(error.message || String(error))}</p>
-                <button onclick="carregarRelatorioTurma('${turmaSelecionada}')" class="btn-secondary mt-4">
+                <button onclick="carregarRelatorioTurma('${turma}')" class="btn-secondary mt-4">
                     Tentar Novamente
                 </button>
             </div>
@@ -2252,6 +2421,11 @@ async function carregarRelatorioTurma(turmaSelecionada) {
 }
 
 function exportarParaExcel(turma) {
+    if (!turma) {
+        showModal('Atenção', 'Selecione uma turma primeiro.');
+        return;
+    }
+    
     try {
         const table = document.getElementById('tabela-relatorio');
         if (!table) {
@@ -2269,6 +2443,11 @@ function exportarParaExcel(turma) {
 }
 
 function exportarParaPDF(turma) {
+    if (!turma) {
+        showModal('Atenção', 'Selecione uma turma primeiro.');
+        return;
+    }
+    
     try {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -3181,6 +3360,7 @@ window.testarConexaoCompleta = testarConexaoCompleta;
 window.verificarEstruturaDados = verificarEstruturaDados;
 window.testarFuncionalidades = testarFuncionalidades;
 window.verificarUsuarios = verificarUsuarios;
+window.criarTarefasTeste = criarTarefasTeste;
 window.adicionarLog = adicionarLog;
 
 init();
