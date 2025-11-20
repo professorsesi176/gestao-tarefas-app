@@ -991,7 +991,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 9.4
+        Desenvolvido por Geovane Modena | Versão 9.3
     </footer>
 </div>
 
@@ -2040,7 +2040,7 @@ async function criarTarefasTeste() {
     const resultado = document.getElementById('resultado-tarefas-teste');
     resultado.innerHTML = '<div class="spinner"></div> Criando tarefas de teste...';
     
-    adicionarLog('Criando tarefas de teste para alunos...', 'info');
+    adicionarLog('Criando tarefa de teste de Física para todas as turmas...', 'info');
     
     try {
         // Calcular data de aula para que todas as partes estejam disponíveis
@@ -2048,24 +2048,15 @@ async function criarTarefasTeste() {
         const dataAula = new Date(hoje);
         dataAula.setDate(hoje.getDate() - 1); // Aula foi ontem para que a parte 1 esteja disponível
         
+        // APENAS UMA TAREFA DE FÍSICA PARA TODAS AS TURMAS
         const tarefasTeste = [
             {
                 Turmas: ['1A', '1B', '2A', '2B', '3A', '3B'],
-                Tema: 'Tarefa de Teste - Matemática Básica',
-                Parte1: 'Resolva as operações: 5 + 7, 12 - 4, 3 × 6, 15 ÷ 3',
-                Parte2: 'Calcule a área de um retângulo com 8cm de comprimento e 5cm de largura',
-                Parte3: 'Resolva a equação: 2x + 5 = 15',
-                Parte4: 'Crie um problema de matemática envolvendo frações e resolva-o',
-                DataAula: dataAula.toISOString().split('T')[0],
-                professor: 'Sistema de Teste'
-            },
-            {
-                Turmas: ['1A', '1B', '2A', '2B'],
-                Tema: 'Tarefa de Teste - Português',
-                Parte1: 'Escreva um parágrafo sobre seu animal favorito',
-                Parte2: 'Identifique substantivos e verbos na frase: "O gato persegue o rato rapidamente"',
-                Parte3: 'Escreva uma pequena história com início, meio e fim',
-                Parte4: 'Reescreva a frase na voz passiva: "O menino quebrou o vaso"',
+                Tema: 'Tarefa de Teste - Física',
+                Parte1: 'Parte 1 de Física: Introdução à Cinemática\n- Calcule a velocidade média de um carro que percorre 240 km em 3 horas.\n- Escreva a equação da posição em função do tempo para um movimento uniforme.',
+                Parte2: 'Parte 2 de Física: Leis de Newton\n- Explique a Primeira Lei de Newton (Lei da Inércia).\n- Calcule a força resultante sobre um objeto de 5 kg que acelera a 2 m/s².',
+                Parte3: 'Parte 3 de Física: Energia e Trabalho\n- Defina energia cinética e energia potencial gravitacional.\n- Calcule o trabalho realizado por uma força de 10 N que desloca um objeto por 5 m.',
+                Parte4: 'Parte 4 de Física: Termodinâmica\n- Explique a diferença entre calor e temperatura.\n- Descreva a Primeira Lei da Termodinâmica.',
                 DataAula: dataAula.toISOString().split('T')[0],
                 professor: 'Sistema de Teste'
             }
@@ -2253,7 +2244,7 @@ async function carregarRelatorioTurma(turma) {
                                 <th class="px-4 py-3 text-center font-semibold border-b media-coluna" rowspan="2">Média</th>
             `;
             
-            // Cabeçalho das tarefas: cada tarefa ocupa 5 colunas (Parte1, Parte2, Parte3, Parte4, Média)
+            // Cabeçalho das tarefas: cada tarefa ocupa 5 colunas (Parte1, Parte2, Parte3, Parte4, Total)
             tarefasTurma.forEach(tarefa => {
                 relatorioTurmaHTML += `
                     <th class="px-2 py-3 text-center font-semibold border-b header-tarefa tarefa-group" colspan="5">
@@ -2271,7 +2262,7 @@ async function carregarRelatorioTurma(turma) {
                     <th class="px-1 py-2 text-center border-b subheader-tarefa parte-column">P2</th>
                     <th class="px-1 py-2 text-center border-b subheader-tarefa parte-column">P3</th>
                     <th class="px-1 py-2 text-center border-b subheader-tarefa parte-column">P4</th>
-                    <th class="px-1 py-2 text-center border-b subheader-tarefa media-tarefa-column">Média</th>
+                    <th class="px-1 py-2 text-center border-b subheader-tarefa media-tarefa-column">Total</th>
                 `;
             });
             
@@ -2290,7 +2281,7 @@ async function carregarRelatorioTurma(turma) {
                 `;
                 
                 tarefasTurma.forEach(() => {
-                    // 5 colunas por tarefa (4 partes + média)
+                    // 5 colunas por tarefa (4 partes + total)
                     for (let i = 0; i < 5; i++) {
                         relatorioTurmaHTML += `<td class="px-1 py-3 text-center border-b"><div class="nota-loading"></div></td>`;
                     }
@@ -2360,21 +2351,21 @@ async function carregarRelatorioTurma(turma) {
                         }
                     }
                     
-                    // Coluna da média da tarefa
-                    const mediaTarefa = countNotasTarefa > 0 ? (totalNotasTarefa / countNotasTarefa).toFixed(1) : '-';
-                    const colunaMediaTarefa = 3 + (j * 5) + 4; // 3 colunas fixas + (5 colunas por tarefa) + offset da média (última coluna)
+                    // Coluna do total da tarefa
+                    const totalTarefa = countNotasTarefa > 0 ? totalNotasTarefa.toFixed(1) : '-';
+                    const colunaTotalTarefa = 3 + (j * 5) + 4; // 3 colunas fixas + (5 colunas por tarefa) + offset do total (última coluna)
                     
-                    let classeMediaTarefa = 'text-gray-600';
-                    if (mediaTarefa !== '-') {
-                        const mediaNum = parseFloat(mediaTarefa);
-                        if (mediaNum >= 7.5) {
-                            classeMediaTarefa = 'text-green-600 font-bold';
-                        } else if (mediaNum > 0) {
-                            classeMediaTarefa = 'text-red-600 font-semibold';
+                    let classeTotalTarefa = 'text-gray-600';
+                    if (totalTarefa !== '-') {
+                        const totalNum = parseFloat(totalTarefa);
+                        if (totalNum >= 7.5) {
+                            classeTotalTarefa = 'text-green-600 font-bold';
+                        } else if (totalNum > 0) {
+                            classeTotalTarefa = 'text-red-600 font-semibold';
                         }
                     }
                     
-                    linha.cells[colunaMediaTarefa].innerHTML = `<span class="${classeMediaTarefa}">${mediaTarefa}</span>`;
+                    linha.cells[colunaTotalTarefa].innerHTML = `<span class="${classeTotalTarefa}">${totalTarefa}</span>`;
                 }
                 
                 // Média geral do aluno (coluna 2)
