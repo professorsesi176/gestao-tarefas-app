@@ -873,6 +873,42 @@
         .email-prefix input {
             border-radius: 8px 0 0 8px !important;
         }
+
+        /* NOVOS ESTILOS PARA O RELATÓRIO COM PARTES */
+        .parte-column {
+            width: 60px;
+            text-align: center;
+            font-size: 0.75rem;
+        }
+
+        .media-tarefa-column {
+            width: 70px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .header-tarefa {
+            background-color: #CC0000;
+            color: white;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .subheader-tarefa {
+            background-color: #e53e3e;
+            color: white;
+            text-align: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .tarefa-group {
+            border-right: 2px solid #c53030;
+        }
+
+        .tarefa-group:last-child {
+            border-right: none;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -893,7 +929,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 9.1
+        Desenvolvido por Geovane Modena | Versão 9.2
     </footer>
 </div>
 
@@ -1984,11 +2020,9 @@ async function carregarRelatorioTurma(turmaSelecionada) {
             apiGet('getTarefasPorTurma', { turma: turmaSelecionada }, true)
         ]);
         
-        // Incluir TODOS os alunos da turma, independente de terem email ou RM
         const alunosTurma = (usersResponse.data || usersResponse).filter(user => 
             user.Turma === turmaSelecionada && user.Perfil === 'Aluno'
         ).sort((a, b) => {
-            // Ordenar por número (se disponível)
             const numA = parseInt(a.Numero) || 999;
             const numB = parseInt(b.Numero) || 999;
             return numA - numB;
@@ -1996,13 +2030,11 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         
         const tarefasTurma = tarefasResponse.data || [];
         
-        // Buscar TODAS as entregas para esta turma
         const todasEntregas = await apiGet('getEntregas', {}, true);
         const entregasTurma = (todasEntregas.data || todasEntregas).filter(entrega => 
             entrega.Turma === turmaSelecionada
         );
         
-        // Mostrar relatório mesmo sem alunos
         let relatorioTurmaHTML = `
             <div class="relatorio-header">
                 <h4 class="text-lg font-semibold text-red-700">Relatório da Turma ${escapeHTML(turmaSelecionada)}</h4>
@@ -2047,13 +2079,31 @@ async function carregarRelatorioTurma(turmaSelecionada) {
                     <table class="min-w-full compact-table table-header-white" id="tabela-relatorio">
                         <thead>
                             <tr>
-                                <th class="px-4 py-3 text-center font-semibold border-b numero-coluna">Nº</th>
-                                <th class="px-4 py-3 text-left font-semibold border-b">Aluno</th>
-                                <th class="px-4 py-3 text-center font-semibold border-b media-coluna">Média</th>
+                                <th class="px-4 py-3 text-center font-semibold border-b numero-coluna" rowspan="2">Nº</th>
+                                <th class="px-4 py-3 text-left font-semibold border-b" rowspan="2">Aluno</th>
+                                <th class="px-4 py-3 text-center font-semibold border-b media-coluna" rowspan="2">Média</th>
             `;
             
+            // Cabeçalho das tarefas: cada tarefa ocupa 5 colunas (Parte1, Parte2, Parte3, Parte4, Média)
             tarefasTurma.forEach(tarefa => {
-                relatorioTurmaHTML += `<th class="px-4 py-3 text-center font-semibold border-b">${escapeHTML(tarefa.Tema)}</th>`;
+                relatorioTurmaHTML += `
+                    <th class="px-2 py-3 text-center font-semibold border-b header-tarefa tarefa-group" colspan="5">
+                        ${escapeHTML(tarefa.Tema)}
+                    </th>
+                `;
+            });
+            
+            relatorioTurmaHTML += `</tr><tr>`;
+            
+            // Subcabeçalho das partes para cada tarefa
+            tarefasTurma.forEach(() => {
+                relatorioTurmaHTML += `
+                    <th class="px-1 py-2 text-center border-b subheader-tarefa parte-column">P1</th>
+                    <th class="px-1 py-2 text-center border-b subheader-tarefa parte-column">P2</th>
+                    <th class="px-1 py-2 text-center border-b subheader-tarefa parte-column">P3</th>
+                    <th class="px-1 py-2 text-center border-b subheader-tarefa parte-column">P4</th>
+                    <th class="px-1 py-2 text-center border-b subheader-tarefa media-tarefa-column">Média</th>
+                `;
             });
             
             relatorioTurmaHTML += `
@@ -2071,7 +2121,10 @@ async function carregarRelatorioTurma(turmaSelecionada) {
                 `;
                 
                 tarefasTurma.forEach(() => {
-                    relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b"><div class="nota-loading"></div></td>`;
+                    // 5 colunas por tarefa (4 partes + média)
+                    for (let i = 0; i < 5; i++) {
+                        relatorioTurmaHTML += `<td class="px-1 py-3 text-center border-b"><div class="nota-loading"></div></td>`;
+                    }
                 });
                 
                 relatorioTurmaHTML += `</tr>`;
@@ -2086,7 +2139,6 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         
         document.getElementById('relatorio-turma-container').innerHTML = relatorioTurmaHTML;
         
-        // Se não há alunos ou tarefas, não precisa processar entregas
         if (alunosTurma.length === 0 || tarefasTurma.length === 0) {
             document.getElementById('carregamento-status').innerHTML = 'Relatório completo!';
             document.getElementById('carregamento-status').className = 'relatorio-status bg-green-50 text-green-700 border-l-green-500';
@@ -2098,67 +2150,82 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         
         let alunosProcessados = 0;
         
-        // Processar cada aluno para preencher as notas
         for (let i = 0; i < alunosTurma.length; i++) {
             const aluno = alunosTurma[i];
             const linha = tbody.rows[i];
             
             if (linha) {
-                let totalNotas = 0;
-                let countNotas = 0;
+                let totalNotasTodasTarefas = 0;
+                let countNotasTodasTarefas = 0;
                 
                 for (let j = 0; j < tarefasTurma.length; j++) {
                     const tarefa = tarefasTurma[j];
-                    
-                    // Buscar entrega específica deste aluno para esta tarefa
                     const entrega = entregasTurma.find(e => 
                         e.RM_Aluno === aluno.RM && e.ID_Tarefa === tarefa.ID
                     );
                     
-                    // CORREÇÃO: Mostrar nota mesmo que seja 0.0 se houve entrega
-                    let nota = '-';
-                    let classeNota = 'text-gray-600';
+                    let totalNotasTarefa = 0;
+                    let countNotasTarefa = 0;
                     
-                    if (entrega) {
-                        nota = parseFloat(entrega.Nota || 0).toFixed(1);
+                    // Para cada parte (1 a 4)
+                    for (let parte = 1; parte <= 4; parte++) {
+                        const notaParte = entrega ? parseFloat(entrega[`NotaParte${parte}`] || 0) : 0;
+                        const colunaParte = 3 + (j * 5) + (parte - 1); // 3 colunas fixas + (5 colunas por tarefa) + offset da parte
                         
-                        // Se houve entrega (mesmo com nota 0), contar para a média
-                        if (entrega.Nota !== undefined && entrega.Nota !== null) {
-                            const notaNum = parseFloat(entrega.Nota);
-                            totalNotas += notaNum;
-                            countNotas++;
-                            
-                            // Aplicar cores baseadas na nota
-                            if (notaNum >= 7.5) {
+                        let classeNota = 'text-gray-600';
+                        if (notaParte > 0) {
+                            if (notaParte >= 2.5) {
                                 classeNota = 'text-green-600 font-semibold';
-                            } else if (notaNum > 0) {
+                            } else {
                                 classeNota = 'text-red-600';
                             }
                         }
+                        
+                        linha.cells[colunaParte].innerHTML = `<span class="${classeNota}">${notaParte > 0 ? notaParte.toFixed(1) : '-'}</span>`;
+                        
+                        if (notaParte > 0) {
+                            totalNotasTarefa += notaParte;
+                            countNotasTarefa++;
+                            totalNotasTodasTarefas += notaParte;
+                            countNotasTodasTarefas++;
+                        }
                     }
                     
-                    linha.cells[j + 3].innerHTML = `<span class="${classeNota}">${nota}</span>`;
+                    // Coluna da média da tarefa
+                    const mediaTarefa = countNotasTarefa > 0 ? (totalNotasTarefa / countNotasTarefa).toFixed(1) : '-';
+                    const colunaMediaTarefa = 3 + (j * 5) + 4; // 3 colunas fixas + (5 colunas por tarefa) + offset da média (última coluna)
+                    
+                    let classeMediaTarefa = 'text-gray-600';
+                    if (mediaTarefa !== '-') {
+                        const mediaNum = parseFloat(mediaTarefa);
+                        if (mediaNum >= 7.5) {
+                            classeMediaTarefa = 'text-green-600 font-bold';
+                        } else if (mediaNum > 0) {
+                            classeMediaTarefa = 'text-red-600 font-semibold';
+                        }
+                    }
+                    
+                    linha.cells[colunaMediaTarefa].innerHTML = `<span class="${classeMediaTarefa}">${mediaTarefa}</span>`;
                 }
                 
-                // Calcular média
-                const media = countNotas > 0 ? (totalNotas / countNotas).toFixed(1) : '-';
-                let classeMedia = 'text-gray-600';
-                if (media !== '-') {
-                    const mediaNum = parseFloat(media);
+                // Média geral do aluno (coluna 2)
+                const mediaGeral = countNotasTodasTarefas > 0 ? (totalNotasTodasTarefas / countNotasTodasTarefas).toFixed(1) : '-';
+                let classeMediaGeral = 'text-gray-600';
+                if (mediaGeral !== '-') {
+                    const mediaNum = parseFloat(mediaGeral);
                     if (mediaNum >= 7.5) {
-                        classeMedia = 'text-green-600 font-bold';
+                        classeMediaGeral = 'text-green-600 font-bold';
                     } else {
-                        classeMedia = 'text-red-600 font-semibold';
+                        classeMediaGeral = 'text-red-600 font-semibold';
                     }
                 }
                 
-                linha.cells[2].innerHTML = `<span class="${classeMedia}">${media}</span>`;
+                linha.cells[2].innerHTML = `<span class="${classeMediaGeral}">${mediaGeral}</span>`;
                 linha.classList.remove('aluno-loading');
                 
                 alunosProcessados++;
                 carregamentoStatus.innerHTML = `<div class="spinner"></div> Processando aluno ${alunosProcessados} de ${alunosTurma.length}...`;
                 
-                // Pequena pausa para não sobrecarregar
                 if (i % 3 === 0) {
                     await new Promise(resolve => setTimeout(resolve, 50));
                 }
