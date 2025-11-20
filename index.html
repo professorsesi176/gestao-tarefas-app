@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Tarefas Escolar</title>
+    <title>Gestão de Tarefas Escolar - 9.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Bibliotecas para exportação -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -681,10 +681,19 @@
             cursor: pointer;
             color: #6b7280;
             z-index: 10;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .password-toggle:hover {
             color: #374151;
+        }
+
+        .password-container input {
+            padding-right: 40px;
         }
 
         .turma-info {
@@ -883,7 +892,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 8.9
+        Desenvolvido por Geovane Modena | Versão 9.0
     </footer>
 </div>
 
@@ -1445,7 +1454,7 @@ async function init() {
     try {
         console.log('Carregando usuários (forceRefresh)...');
         const response = await apiGet('getUsers', {}, true);
-        usuarios = response.data || response; // dependendo da estrutura do backend
+        usuarios = response.data || response;
         console.log('Usuários carregados:', usuarios.length);
     } catch (error) {
         console.error('Erro ao carregar usuários:', error);
@@ -1492,7 +1501,7 @@ const renderLogin = () => {
                 <div>
                     <label for="senha" class="block text-sm font-medium text-gray-700 mb-2">Senha</label>
                     <div class="password-container">
-                        <input type="password" id="senha" name="senha" required placeholder="" class="w-full p-3 border rounded-lg pr-12">
+                        <input type="password" id="senha" name="senha" required placeholder="" class="w-full p-3 border rounded-lg">
                         <button type="button" class="password-toggle" id="toggleSenha">
                             ${window.eyeIcons.eye}
                         </button>
@@ -1823,76 +1832,7 @@ async function verificarEstruturaDados() {
         `;
     }
 }
-async function testarEstruturaPlanilhas() {
-    const resultado = document.getElementById('resultado-estrutura');
-    resultado.innerHTML = '<div class="spinner"></div> Verificando estrutura das planilhas...';
-    
-    adicionarLog('Verificando estrutura das planilhas...', 'info');
-    
-    try {
-        const [users, tarefas, entregas] = await Promise.all([
-            apiGet('getUsers', {}, true),
-            apiGet('getTarefas', {}, true),
-            apiGet('getEntregas', {}, true)
-        ]);
 
-        let html = '<div class="test-result test-success">';
-        html += '<strong>✓ Estrutura das planilhas verificada!</strong><br><br>';
-        
-        // Verificar USERS
-        if (users.data && users.data.length > 0) {
-            const primeiroUser = users.data[0];
-            const camposEsperados = ['Numero', 'NomeCompleto', 'Email', 'RM', 'Turma', 'Perfil'];
-            const camposFaltantes = camposEsperados.filter(campo => !(campo in primeiroUser));
-            
-            if (camposFaltantes.length === 0) {
-                html += `<strong>USERS:</strong> ✓ Estrutura correta (${users.data.length} registros)<br>`;
-                
-                // Contar por turma
-                const turmas = {};
-                users.data.forEach(user => {
-                    if (user.Turma) {
-                        turmas[user.Turma] = (turmas[user.Turma] || 0) + 1;
-                    }
-                });
-                
-                html += '<strong>Alunos por turma:</strong> ';
-                html += Object.entries(turmas).map(([turma, count]) => `${turma}: ${count}`).join(', ');
-                html += '<br>';
-            } else {
-                html += `<strong>USERS:</strong> ✗ Campos faltantes: ${camposFaltantes.join(', ')}<br>`;
-            }
-        } else {
-            html += '<strong>USERS:</strong> ✗ Nenhum usuário encontrado<br>';
-        }
-        
-        // Verificar TAREFAS
-        if (tarefas.data && tarefas.data.length > 0) {
-            html += `<strong>TAREFAS:</strong> ✓ ${tarefas.data.length} registros<br>`;
-        } else {
-            html += '<strong>TAREFAS:</strong> ✗ Nenhuma tarefa encontrada<br>';
-        }
-        
-        // Verificar ENTREGAS
-        if (entregas.data && entregas.data.length > 0) {
-            html += `<strong>ENTREGAS:</strong> ✓ ${entregas.data.length} registros<br>`;
-        } else {
-            html += '<strong>ENTREGAS:</strong> ✗ Nenhuma entrega encontrada<br>';
-        }
-        
-        html += '</div>';
-        resultado.innerHTML = html;
-        
-        adicionarLog('Verificação de estrutura completa', 'success');
-    } catch (error) {
-        adicionarLog(`✗ Erro ao verificar estrutura: ${error.message}`, 'error');
-        resultado.innerHTML = `
-            <div class="test-result test-error">
-                <strong>✗ Erro ao verificar estrutura:</strong> ${escapeHTML(error.message)}
-            </div>
-        `;
-    }
-}
 async function testarFuncionalidades() {
     const resultado = document.getElementById('resultado-funcionalidades');
     resultado.innerHTML = '<div class="spinner"></div> Testando funcionalidades...';
@@ -2043,9 +1983,15 @@ async function carregarRelatorioTurma(turmaSelecionada) {
             apiGet('getTarefasPorTurma', { turma: turmaSelecionada }, true)
         ]);
         
+        // Incluir TODOS os alunos da turma, independente de terem email ou RM
         const alunosTurma = (usersResponse.data || usersResponse).filter(user => 
             user.Turma === turmaSelecionada && user.Perfil === 'Aluno'
-        );
+        ).sort((a, b) => {
+            // Ordenar por número (se disponível)
+            const numA = parseInt(a.Numero) || 999;
+            const numB = parseInt(b.Numero) || 999;
+            return numA - numB;
+        });
         
         const tarefasTurma = tarefasResponse.data || [];
         
@@ -2173,11 +2119,15 @@ async function carregarRelatorioTurma(turmaSelecionada) {
                         for (let j = 0; j < tarefasTurma.length; j++) {
                             const tarefa = tarefasTurma[j];
                             const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
-                            const nota = entrega && entrega.Nota ? parseFloat(entrega.Nota).toFixed(1) : '-';
                             
-                            if (entrega && entrega.Nota) {
-                                totalNotas += parseFloat(entrega.Nota);
-                                countNotas++;
+                            // CORREÇÃO: Mostrar nota mesmo que seja 0.0 se houve entrega
+                            let nota = '-';
+                            if (entrega) {
+                                nota = parseFloat(entrega.Nota || 0).toFixed(1);
+                                if (entrega.Nota && entrega.Nota > 0) {
+                                    totalNotas += parseFloat(entrega.Nota);
+                                    countNotas++;
+                                }
                             }
                             
                             let classeNota = 'text-gray-600';
