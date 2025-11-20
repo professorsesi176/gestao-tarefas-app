@@ -840,6 +840,29 @@
         .link-externo:hover {
             background-color: #e5e7eb;
         }
+
+        /* NOVOS ESTILOS PARA LOGIN */
+        .email-container {
+            display: flex;
+            width: 100%;
+        }
+        .email-prefix {
+            flex: 1;
+        }
+        .email-suffix {
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .email-prefix input {
+            border-radius: 8px 0 0 8px !important;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -860,7 +883,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 8.8
+        Desenvolvido por Geovane Modena | Versão 8.9
     </footer>
 </div>
 
@@ -1434,16 +1457,16 @@ async function init() {
 }
 
 function toggleRmVisibility() {
-    const rmInput = document.getElementById('senha');
+    const senhaInput = document.getElementById('senha');
     const toggleButton = document.getElementById('toggleSenha');
     
     rmVisible = !rmVisible;
     
     if (rmVisible) {
-        rmInput.type = 'text';
+        senhaInput.type = 'text';
         toggleButton.innerHTML = window.eyeIcons.eyeOff;
     } else {
-        rmInput.type = 'password';
+        senhaInput.type = 'password';
         toggleButton.innerHTML = window.eyeIcons.eye;
     }
 }
@@ -1457,12 +1480,19 @@ const renderLogin = () => {
             <form id="login-form" class="space-y-4">
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
-                    <input type="email" id="email" name="email" required placeholder="nome.sobrenome@portalsesisp.org.br" class="w-full p-3 border rounded-lg">
+                    <div class="email-container">
+                        <div class="email-prefix">
+                            <input type="text" id="email" name="email" required placeholder="nome.sobrenome" class="w-full p-3 border rounded-lg rounded-r-none">
+                        </div>
+                        <div class="email-suffix">
+                            @portalsesisp.org.br
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label for="senha" class="block text-sm font-medium text-gray-700 mb-2">Senha</label>
                     <div class="password-container">
-                        <input type="password" id="senha" name="senha" required placeholder="Digite seu RM" class="w-full p-3 border rounded-lg pr-12">
+                        <input type="password" id="senha" name="senha" required placeholder="" class="w-full p-3 border rounded-lg pr-12">
                         <button type="button" class="password-toggle" id="toggleSenha">
                             ${window.eyeIcons.eye}
                         </button>
@@ -1485,8 +1515,11 @@ const renderLogin = () => {
 
 async function login(event) {
     event.preventDefault(); 
-    const email = document.getElementById('email').value.trim();
+    const emailPrefix = document.getElementById('email').value.trim();
     const senha = document.getElementById('senha').value.trim();
+    
+    // Concatenar o prefixo com o domínio fixo
+    const email = `${emailPrefix}@portalsesisp.org.br`;
     
     const loginErro = document.getElementById('loginErro'); 
     const loginButton = document.getElementById('login-button');
@@ -2016,32 +2049,7 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         
         const tarefasTurma = tarefasResponse.data || [];
         
-        if (alunosTurma.length === 0) {
-            document.getElementById('relatorio-turma-container').innerHTML = `
-                <div class="text-center py-8">
-                    <p class="text-gray-500 mb-4">Nenhum aluno encontrado na turma ${escapeHTML(turmaSelecionada)}.</p>
-                    <p class="text-sm text-gray-400">Verifique se a turma está correta e se os alunos estão cadastrados na planilha USERS.</p>
-                    <div class="mt-4 debug-info">
-                        <div class="debug-title">Informações para diagnóstico:</div>
-                        <div>Total de usuários no sistema: ${(usersResponse.data || usersResponse).length}</div>
-                        <div>Usuários da turma ${turmaSelecionada}: ${(usersResponse.data || usersResponse).filter(u => u.Turma === turmaSelecionada).length}</div>
-                        <div>Alunos da turma ${turmaSelecionada}: ${alunosTurma.length}</div>
-                    </div>
-                </div>
-            `;
-            return;
-        }
-        
-        if (tarefasTurma.length === 0) {
-            document.getElementById('relatorio-turma-container').innerHTML = `
-                <div class="text-center py-8">
-                    <p class="text-gray-500 mb-4">Nenhuma tarefa encontrada para a turma ${escapeHTML(turmaSelecionada)}.</p>
-                    <p class="text-sm text-gray-400">Crie tarefas para esta turma no painel principal.</p>
-                </div>
-            `;
-            return;
-        }
-        
+        // Mostrar relatório mesmo sem alunos
         let relatorioTurmaHTML = `
             <div class="relatorio-header">
                 <h4 class="text-lg font-semibold text-red-700">Relatório da Turma ${escapeHTML(turmaSelecionada)}</h4>
@@ -2059,52 +2067,78 @@ async function carregarRelatorioTurma(turmaSelecionada) {
             </div>
             <div class="relatorio-status" id="carregamento-status">
                 <div class="spinner"></div>
-                Carregando notas dos alunos...
+                Carregando dados da turma...
             </div>
             <div class="relatorio-info">
                 Total de alunos: ${alunosTurma.length} | Total de tarefas: ${tarefasTurma.length} | Última atualização em ${new Date().toLocaleDateString()} às ${new Date().toLocaleTimeString()}
             </div>
-            <div class="overflow-x-auto border rounded-lg mt-4">
-                <table class="min-w-full compact-table table-header-white" id="tabela-relatorio">
-                    <thead>
-                        <tr>
-                            <th class="px-4 py-3 text-center font-semibold border-b numero-coluna">Nº</th>
-                            <th class="px-4 py-3 text-left font-semibold border-b">Aluno</th>
-                            <th class="px-4 py-3 text-center font-semibold border-b media-coluna">Média</th>
         `;
         
-        tarefasTurma.forEach(tarefa => {
-            relatorioTurmaHTML += `<th class="px-4 py-3 text-center font-semibold border-b">${escapeHTML(tarefa.Tema)}</th>`;
-        });
-        
-        relatorioTurmaHTML += `
-                        </tr>
-                    </thead>
-                    <tbody id="relatorio-tbody">
-        `;
-        
-        alunosTurma.forEach((aluno, index) => {
+        if (alunosTurma.length === 0) {
             relatorioTurmaHTML += `
-                <tr class="aluno-loading">
-                    <td class="px-4 py-3 text-center border-b numero-coluna">${aluno.Numero || (index + 1)}</td>
-                    <td class="px-4 py-3 font-medium text-gray-900 border-b">${escapeHTML(aluno.NomeCompleto)}</td>
-                    <td class="px-4 py-3 text-center border-b media-coluna"><div class="nota-loading"></div></td>
+                <div class="text-center py-8">
+                    <p class="text-gray-500 mb-4">Nenhum aluno encontrado na turma ${escapeHTML(turmaSelecionada)}.</p>
+                    <p class="text-sm text-gray-400">Verifique se a turma está correta e se os alunos estão cadastrados na planilha USERS.</p>
+                </div>
+            `;
+        } else if (tarefasTurma.length === 0) {
+            relatorioTurmaHTML += `
+                <div class="text-center py-8">
+                    <p class="text-gray-500 mb-4">Nenhuma tarefa encontrada para a turma ${escapeHTML(turmaSelecionada)}.</p>
+                    <p class="text-sm text-gray-400">Crie tarefas para esta turma no painel principal.</p>
+                </div>
+            `;
+        } else {
+            relatorioTurmaHTML += `
+                <div class="overflow-x-auto border rounded-lg mt-4">
+                    <table class="min-w-full compact-table table-header-white" id="tabela-relatorio">
+                        <thead>
+                            <tr>
+                                <th class="px-4 py-3 text-center font-semibold border-b numero-coluna">Nº</th>
+                                <th class="px-4 py-3 text-left font-semibold border-b">Aluno</th>
+                                <th class="px-4 py-3 text-center font-semibold border-b media-coluna">Média</th>
             `;
             
-            tarefasTurma.forEach(() => {
-                relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b"><div class="nota-loading"></div></td>`;
+            tarefasTurma.forEach(tarefa => {
+                relatorioTurmaHTML += `<th class="px-4 py-3 text-center font-semibold border-b">${escapeHTML(tarefa.Tema)}</th>`;
             });
             
-            relatorioTurmaHTML += `</tr>`;
-        });
-        
-        relatorioTurmaHTML += `
-                    </tbody>
-                </table>
-            </div>
-        `;
+            relatorioTurmaHTML += `
+                            </tr>
+                        </thead>
+                        <tbody id="relatorio-tbody">
+            `;
+            
+            alunosTurma.forEach((aluno, index) => {
+                relatorioTurmaHTML += `
+                    <tr class="aluno-loading">
+                        <td class="px-4 py-3 text-center border-b numero-coluna">${aluno.Numero || (index + 1)}</td>
+                        <td class="px-4 py-3 font-medium text-gray-900 border-b">${escapeHTML(aluno.NomeCompleto)}</td>
+                        <td class="px-4 py-3 text-center border-b media-coluna"><div class="nota-loading"></div></td>
+                `;
+                
+                tarefasTurma.forEach(() => {
+                    relatorioTurmaHTML += `<td class="px-4 py-3 text-center border-b"><div class="nota-loading"></div></td>`;
+                });
+                
+                relatorioTurmaHTML += `</tr>`;
+            });
+            
+            relatorioTurmaHTML += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
         
         document.getElementById('relatorio-turma-container').innerHTML = relatorioTurmaHTML;
+        
+        // Se não há alunos ou tarefas, não precisa processar entregas
+        if (alunosTurma.length === 0 || tarefasTurma.length === 0) {
+            document.getElementById('carregamento-status').innerHTML = 'Relatório completo!';
+            document.getElementById('carregamento-status').className = 'relatorio-status bg-green-50 text-green-700 border-l-green-500';
+            return;
+        }
         
         const carregamentoStatus = document.getElementById('carregamento-status');
         const tbody = document.getElementById('relatorio-tbody');
