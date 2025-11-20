@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Tarefas Escolar</title>
+    <title>Gestão de Tarefas Escolar - 9.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Bibliotecas para exportação -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -681,11 +681,12 @@
             cursor: pointer;
             color: #6b7280;
             z-index: 10;
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 0;
         }
 
         .password-toggle:hover {
@@ -879,7 +880,7 @@
 <div id="app-container" class="w-full max-w-6xl bg-white shadow-xl rounded-2xl p-6 sm:p-8 transition-all duration-300">
     <header class="mb-8 border-b pb-4">
         <div class="header-content">
-            <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar - 9.0</h1>
+            <h1 class="text-3xl font-extrabold text-red-700 text-center">Gestão de Tarefas Escolar</h1>
             <div id="user-info" class="user-info-container"></div>
             <div class="absolute top-0 right-0 flex space-x-2">
                 <button id="diagnosticoBtn" class="btn-diagnostico hidden">Diagnóstico</button>
@@ -892,7 +893,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 9.0
+        Desenvolvido por Geovane Modena | Versão 9.1
     </footer>
 </div>
 
@@ -1501,7 +1502,7 @@ const renderLogin = () => {
                 <div>
                     <label for="senha" class="block text-sm font-medium text-gray-700 mb-2">Senha</label>
                     <div class="password-container">
-                        <input type="password" id="senha" name="senha" required placeholder="" class="w-full p-3 border rounded-lg">
+                        <input type="password" id="senha" name="senha" required placeholder="" class="w-full p-3 border rounded-lg pr-10">
                         <button type="button" class="password-toggle" id="toggleSenha">
                             ${window.eyeIcons.eye}
                         </button>
@@ -1995,6 +1996,12 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         
         const tarefasTurma = tarefasResponse.data || [];
         
+        // Buscar TODAS as entregas para esta turma
+        const todasEntregas = await apiGet('getEntregas', {}, true);
+        const entregasTurma = (todasEntregas.data || todasEntregas).filter(entrega => 
+            entrega.Turma === turmaSelecionada
+        );
+        
         // Mostrar relatório mesmo sem alunos
         let relatorioTurmaHTML = `
             <div class="relatorio-header">
@@ -2016,7 +2023,7 @@ async function carregarRelatorioTurma(turmaSelecionada) {
                 Carregando dados da turma...
             </div>
             <div class="relatorio-info">
-                Total de alunos: ${alunosTurma.length} | Total de tarefas: ${tarefasTurma.length} | Última atualização em ${new Date().toLocaleDateString()} às ${new Date().toLocaleTimeString()}
+                Total de alunos: ${alunosTurma.length} | Total de tarefas: ${tarefasTurma.length} | Total de entregas: ${entregasTurma.length} | Última atualização em ${new Date().toLocaleDateString()} às ${new Date().toLocaleTimeString()}
             </div>
         `;
         
@@ -2091,83 +2098,71 @@ async function carregarRelatorioTurma(turmaSelecionada) {
         
         let alunosProcessados = 0;
         
-        const processarLoteAlunos = async (inicio, fim) => {
-            const lotes = [];
+        // Processar cada aluno para preencher as notas
+        for (let i = 0; i < alunosTurma.length; i++) {
+            const aluno = alunosTurma[i];
+            const linha = tbody.rows[i];
             
-            for (let i = inicio; i < fim && i < alunosTurma.length; i++) {
-                const aluno = alunosTurma[i];
-                lotes.push(
-                    apiGet('getEntregasAluno', { rm: aluno.RM }, true)
-                        .then(entregasResponse => {
-                            const entregasAluno = entregasResponse.data || [];
-                            return { aluno, entregas: entregasAluno, index: i };
-                        })
-                );
-            }
-            
-            const resultados = await Promise.allSettled(lotes);
-            
-            for (const resultado of resultados) {
-                if (resultado.status === 'fulfilled') {
-                    const { aluno, entregas, index } = resultado.value;
-                    const linha = tbody.rows[index];
+            if (linha) {
+                let totalNotas = 0;
+                let countNotas = 0;
+                
+                for (let j = 0; j < tarefasTurma.length; j++) {
+                    const tarefa = tarefasTurma[j];
                     
-                    if (linha) {
-                        let totalNotas = 0;
-                        let countNotas = 0;
+                    // Buscar entrega específica deste aluno para esta tarefa
+                    const entrega = entregasTurma.find(e => 
+                        e.RM_Aluno === aluno.RM && e.ID_Tarefa === tarefa.ID
+                    );
+                    
+                    // CORREÇÃO: Mostrar nota mesmo que seja 0.0 se houve entrega
+                    let nota = '-';
+                    let classeNota = 'text-gray-600';
+                    
+                    if (entrega) {
+                        nota = parseFloat(entrega.Nota || 0).toFixed(1);
                         
-                        for (let j = 0; j < tarefasTurma.length; j++) {
-                            const tarefa = tarefasTurma[j];
-                            const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
+                        // Se houve entrega (mesmo com nota 0), contar para a média
+                        if (entrega.Nota !== undefined && entrega.Nota !== null) {
+                            const notaNum = parseFloat(entrega.Nota);
+                            totalNotas += notaNum;
+                            countNotas++;
                             
-                            // CORREÇÃO: Mostrar nota mesmo que seja 0.0 se houve entrega
-                            let nota = '-';
-                            if (entrega) {
-                                nota = parseFloat(entrega.Nota || 0).toFixed(1);
-                                if (entrega.Nota && entrega.Nota > 0) {
-                                    totalNotas += parseFloat(entrega.Nota);
-                                    countNotas++;
-                                }
-                            }
-                            
-                            let classeNota = 'text-gray-600';
-                            if (entrega && entrega.Nota) {
-                                const notaNum = parseFloat(entrega.Nota);
-                                if (notaNum >= 7.5) {
-                                    classeNota = 'text-green-600 font-semibold';
-                                } else {
-                                    classeNota = 'text-red-600';
-                                }
-                            }
-                            
-                            linha.cells[j + 3].innerHTML = `<span class="${classeNota}">${nota}</span>`;
-                        }
-                        
-                        const media = countNotas > 0 ? (totalNotas / countNotas).toFixed(1) : '-';
-                        let classeMedia = 'text-gray-600';
-                        if (media !== '-') {
-                            const mediaNum = parseFloat(media);
-                            if (mediaNum >= 7.5) {
-                                classeMedia = 'text-green-600 font-bold';
-                            } else {
-                                classeMedia = 'text-red-600 font-semibold';
+                            // Aplicar cores baseadas na nota
+                            if (notaNum >= 7.5) {
+                                classeNota = 'text-green-600 font-semibold';
+                            } else if (notaNum > 0) {
+                                classeNota = 'text-red-600';
                             }
                         }
-                        
-                        linha.cells[2].innerHTML = `<span class="${classeMedia}">${media}</span>`;
-                        linha.classList.remove('aluno-loading');
                     }
                     
-                    alunosProcessados++;
-                    carregamentoStatus.innerHTML = `<div class="spinner"></div> Carregando aluno ${alunosProcessados} de ${alunosTurma.length}...`;
+                    linha.cells[j + 3].innerHTML = `<span class="${classeNota}">${nota}</span>`;
+                }
+                
+                // Calcular média
+                const media = countNotas > 0 ? (totalNotas / countNotas).toFixed(1) : '-';
+                let classeMedia = 'text-gray-600';
+                if (media !== '-') {
+                    const mediaNum = parseFloat(media);
+                    if (mediaNum >= 7.5) {
+                        classeMedia = 'text-green-600 font-bold';
+                    } else {
+                        classeMedia = 'text-red-600 font-semibold';
+                    }
+                }
+                
+                linha.cells[2].innerHTML = `<span class="${classeMedia}">${media}</span>`;
+                linha.classList.remove('aluno-loading');
+                
+                alunosProcessados++;
+                carregamentoStatus.innerHTML = `<div class="spinner"></div> Processando aluno ${alunosProcessados} de ${alunosTurma.length}...`;
+                
+                // Pequena pausa para não sobrecarregar
+                if (i % 3 === 0) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
                 }
             }
-        };
-        
-        const tamanhoLote = 3;
-        for (let i = 0; i < alunosTurma.length; i += tamanhoLote) {
-            await processarLoteAlunos(i, i + tamanhoLote);
-            await new Promise(resolve => setTimeout(resolve, 100));
         }
         
         carregamentoStatus.innerHTML = 'Relatório completo!';
