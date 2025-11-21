@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestão de Tarefas Escolar</title>
+    <title>Sistema de Gestão de Tarefas Escolar - v9.7</title>
     
     <!-- Otimizações de Performance -->
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
@@ -692,6 +692,40 @@
             0% { background-color: #d1fae5; }
             100% { background-color: transparent; }
         }
+
+        /* Novos estilos para segurança */
+        .security-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .security-good {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .security-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .security-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .rate-limit-info {
+            background-color: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -699,6 +733,11 @@
         <header class="mb-8 border-b pb-4">
             <div class="header-content">
                 <h1 class="text-3xl font-extrabold text-red-700 text-center">Sistema de Gestão de Tarefas Escolar</h1>
+                <div class="text-center mt-2">
+                    <span class="text-gray-600">Versão 9.7 - Segurança Aprimorada</span>
+                    <span class="security-badge security-good">Token Removido</span>
+                    <span class="security-badge security-info">Rate Limiting Ativo</span>
+                </div>
                 <div id="user-info" class="user-info-container text-center mt-2 text-gray-600"></div>
                 <div class="absolute top-0 right-0 flex space-x-2">
                     <button id="diagnosticoBtn" class="btn-primario hidden">Diagnóstico</button>
@@ -711,7 +750,7 @@
         <div id="content-area"></div>
 
         <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-            Desenvolvido por Geovane Modena | Versão 9.6.3
+            Desenvolvido por Geovane Modena | Versão 9.7 - Segurança Aprimorada
         </footer>
     </div>
 
@@ -740,11 +779,18 @@
     // ==================== CONFIGURAÇÃO E CONSTANTES ====================
     const CONFIG = {
         API_URL: "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec",
-        TOKEN: 'SESI_EDUCATION_2024',
+        // TOKEN REMOVIDO - Segurança por rate limiting no backend
         CACHE_TTL: 5 * 60 * 1000, // 5 minutos
         MAX_TEMA_LEN: 200,
         MAX_PARTE_LEN: 4000,
-        TURMAS: ["1A", "1B", "2A", "2B", "3A", "3B"]
+        TURMAS: ["1A", "1B", "2A", "2B", "3A", "3B"],
+        RATE_LIMIT_INFO: {
+            login: "5 tentativas por minuto",
+            criar_tarefa: "3 tarefas por minuto", 
+            entregas: "10 entregas por minuto",
+            relatorios: "5 relatórios por minuto",
+            geral: "30 requisições por minuto"
+        }
     };
 
     // ==================== ESTADO GLOBAL ====================
@@ -1007,10 +1053,10 @@
             
             return new Promise((resolve, reject) => {
                 const startTime = performance.now();
-                let url = `${CONFIG.API_URL}?token=${CONFIG.TOKEN}`;
+                let url = `${CONFIG.API_URL}?`; // TOKEN REMOVIDO
                 
                 if (func) {
-                    url += `&func=${func}`;
+                    url += `func=${func}`;
                 }
                 
                 for (const key in params) {
@@ -1022,6 +1068,8 @@
                 if (forceRefresh) {
                     url += `&_=${Date.now()}`;
                 }
+                
+                console.log('Fazendo requisição para:', url.replace(/(rm|senha)=[^&]*/g, '$1=***'));
                 
                 ApiManager.requestJSONP(url, (error, data) => {
                     const duration = performance.now() - startTime;
@@ -1042,7 +1090,7 @@
         post: async (action, dados) => {
             return new Promise((resolve, reject) => {
                 const startTime = performance.now();
-                let url = `${CONFIG.API_URL}?token=${CONFIG.TOKEN}&action=${action}`;
+                let url = `${CONFIG.API_URL}?action=${action}`; // TOKEN REMOVIDO
                 
                 for (const key in dados) {
                     if (dados[key] !== undefined && dados[key] !== null) {
@@ -1053,6 +1101,8 @@
                         }
                     }
                 }
+                
+                console.log('Fazendo POST para:', url.replace(/(rm|senha)=[^&]*/g, '$1=***'));
                 
                 ApiManager.requestJSONP(url, (error, data) => {
                     const duration = performance.now() - startTime;
@@ -1331,7 +1381,13 @@
         loginForm: () => {
             return `
                 <div id="login" class="max-w-md mx-auto p-6">
-                    <h2 class="text-2xl font-bold text-center text-red-700 mb-6">Login</h2>
+                    <h2 class="text-2xl font-bold text-center text-red-700 mb-6">Login - v9.7</h2>
+                    <div class="rate-limit-info mb-4">
+                        <strong>Proteção de Segurança:</strong><br>
+                        • Rate limiting ativo no backend<br>
+                        • Token removido do frontend<br>
+                        • Bloqueio após tentativas excessivas
+                    </div>
                     <div id="loginErro" class="text-red-500 mb-4 hidden text-center font-semibold"></div>
 
                     <form id="login-form" class="space-y-4">
@@ -1348,7 +1404,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="senha" class="form-label">Senha</label>
+                            <label for="senha" class="form-label">Senha (RM)</label>
                             <div class="password-container">
                                 <input type="password" id="senha" name="senha" required placeholder="" 
                                        class="w-full p-3 border rounded-lg pr-10">
@@ -1385,6 +1441,42 @@
                     <button type="button" class="btn-formatacao" onclick="adicionarFormatacao('${parteId}', 'numerada')">Lista Numerada</button>
                 </div>
             `;
+        },
+
+        metricasSeguranca: () => {
+            return `
+                <div class="diagnostico-card">
+                    <h4 class="font-semibold mb-3">Status da Segurança</h4>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-green-50 border border-green-200 rounded">
+                            <div class="flex items-center">
+                                <span class="text-green-600 font-bold mr-2">✓</span>
+                                <span>Token removido do frontend</span>
+                            </div>
+                        </div>
+                        <div class="p-3 bg-green-50 border border-green-200 rounded">
+                            <div class="flex items-center">
+                                <span class="text-green-600 font-bold mr-2">✓</span>
+                                <span>Rate limiting ativo no backend</span>
+                            </div>
+                        </div>
+                        <div class="p-3 bg-blue-50 border border-blue-200 rounded">
+                            <div class="flex items-center">
+                                <span class="text-blue-600 font-bold mr-2">ℹ</span>
+                                <span>Autenticação por usuário/SENHA</span>
+                            </div>
+                        </div>
+                        <div class="rate-limit-info">
+                            <strong>Limites de Requisição:</strong><br>
+                            • ${CONFIG.RATE_LIMIT_INFO.login}<br>
+                            • ${CONFIG.RATE_LIMIT_INFO.criar_tarefa}<br>
+                            • ${CONFIG.RATE_LIMIT_INFO.entregas}<br>
+                            • ${CONFIG.RATE_LIMIT_INFO.relatorios}<br>
+                            • ${CONFIG.RATE_LIMIT_INFO.geral}
+                        </div>
+                    </div>
+                </div>
+            `;
         }
     };
 
@@ -1393,7 +1485,7 @@
     // Função de inicialização
     async function init() {
         try {
-            console.log('Inicializando sistema...');
+            console.log('Inicializando sistema v9.7...');
             const response = await apiGet('getUsers', {}, true);
             STATE.usuarios = response.data || response;
             console.log('Usuários carregados:', STATE.usuarios.length);
@@ -1496,6 +1588,9 @@
             <div id="painelProfessor" class="space-y-6">
                 <div class="card p-6 border-t-4 border-red-600">
                     <h3 class="text-2xl font-bold mb-4 text-red-700" id="titulo-formulario">${STATE.tarefaEditando ? 'Editar Tarefa' : 'Criar Nova Tarefa'}</h3>
+                    <div class="rate-limit-info mb-4">
+                        <strong>Limite:</strong> ${CONFIG.RATE_LIMIT_INFO.criar_tarefa}
+                    </div>
                     
                     <div class="form-row">
                         <label class="block text-sm font-medium text-gray-700">Turmas:</label>
@@ -1899,6 +1994,9 @@
             <div id="painelAluno" class="space-y-6">
                 <div class="card p-6">
                     <h3 class="text-2xl font-bold text-red-700 mb-4">Minhas Tarefas</h3>
+                    <div class="rate-limit-info mb-4">
+                        <strong>Limite de Entregas:</strong> ${CONFIG.RATE_LIMIT_INFO.entregas}
+                    </div>
                     
                     <div class="instrucoes-box">
                         <div class="instrucoes-title">Instruções para entrega:</div>
@@ -2208,6 +2306,11 @@
                     'Fora do horário de entrega',
                     'Essa parte só pode ser entregue no dia específico dela, entre 13h e 22h. Verifique o cronograma na descrição da tarefa.'
                 );
+            } else if (msg.includes('Muitas')) {
+                UIManager.showModal(
+                    'Limite de requisições excedido',
+                    'Você fez muitas entregas em pouco tempo. Aguarde alguns minutos e tente novamente.'
+                );
             } else {
                 UIManager.showModal('Erro', `Erro ao salvar link: ${msg}`);
             }
@@ -2266,6 +2369,9 @@
         UIManager.elements.contentArea.innerHTML = `
             <div class="card p-6">
                 <h3 class="text-2xl font-bold text-red-700 mb-4">Relatório por Turma</h3>
+                <div class="rate-limit-info mb-4">
+                    <strong>Limite:</strong> ${CONFIG.RATE_LIMIT_INFO.relatorios}
+                </div>
                 <div class="turmas-container">
                     <div class="turmas-buttons">
                         ${CONFIG.TURMAS.map(turma => `
@@ -2739,9 +2845,11 @@
         
         UIManager.elements.contentArea.innerHTML = `
             <div class="card p-6">
-                <h3 class="text-2xl font-bold text-red-700 mb-4">Painel de Diagnóstico e Performance</h3>
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Painel de Diagnóstico e Segurança - v9.7</h3>
                 
                 <div class="diagnostico-grid">
+                    ${Components.metricasSeguranca()}
+                    
                     ${Components.metricasPerformance()}
                     
                     <div class="diagnostico-card">
@@ -2865,7 +2973,7 @@
                     <strong>✓ Conexão bem-sucedida!</strong><br>
                     - Usuários: ${users.length} registros<br>
                     - Tarefas: ${tarefas.length} registros<br>
-                    - Status: Operacional
+                    - Status: Operacional com segurança v9.7
                 </div>
             `;
         } catch (error) {
@@ -2889,12 +2997,10 @@
     document.addEventListener('DOMContentLoaded', init);
 
     // ==================== EXPORTAÇÃO DE FUNÇÕES GLOBAIS ====================
-    // CORREÇÃO: Adicionar a função logout ao escopo global
     window.logout = function() {
         AuthManager.logout();
     };
 
-    // CORREÇÃO: Garantir que o modal feche corretamente
     window.closeModal = function() {
         UIManager.closeModal();
     };
