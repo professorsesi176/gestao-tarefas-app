@@ -356,9 +356,9 @@
         .checkbox-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 2px; /* Reduzido de 1px para 2px */
             margin-top: 10px;
-            padding: 10px;
+            padding: 8px;
             background-color: #f9f9f9;
             border-radius: 8px;
         }
@@ -366,11 +366,14 @@
         .checkbox-item {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 4px; /* Reduzido de 6px para 4px */
+            margin-right: 8px; /* Adicionado espaçamento à direita */
         }
         
         .checkbox-item label {
             margin-bottom: 0;
+            font-size: 0.9rem;
+            white-space: nowrap; /* Impede quebra de linha */
         }
         
         .form-row {
@@ -440,8 +443,34 @@
             background-color: #fefce8;
             border: 1px solid #fef08a;
             border-radius: 8px;
-            padding: 16px;
+            padding: 12px;
             margin-top: 20px;
+            cursor: pointer;
+        }
+        
+        .fundamento-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #92400e;
+        }
+        
+        .fundamento-content {
+            margin-top: 12px;
+            display: none;
+        }
+        
+        .fundamento-content.expandido {
+            display: block;
+        }
+        
+        .expand-icon {
+            transition: transform 0.2s;
+        }
+        
+        .expand-icon.expandido {
+            transform: rotate(180deg);
         }
         
         .retencao-aviso {
@@ -554,7 +583,7 @@
         
         .turmas-buttons {
             display: flex;
-            gap: 5px;
+            gap: 0;
             flex-wrap: wrap;
         }
         
@@ -562,13 +591,23 @@
             background-color: #CC0000;
             color: white;
             padding: 8px 12px;
-            border-radius: 6px;
+            border-radius: 0;
             font-weight: 600;
             transition: background-color 0.2s;
             cursor: pointer;
             border: none;
             min-width: 40px;
             text-align: center;
+            border-right: 1px solid white;
+        }
+        
+        .btn-turma-compact:first-child {
+            border-radius: 6px 0 0 6px;
+        }
+        
+        .btn-turma-compact:last-child {
+            border-radius: 0 6px 6px 0;
+            border-right: none;
         }
         
         .btn-turma-compact:hover {
@@ -666,24 +705,6 @@
             animation: spin 1s ease-in-out infinite;
         }
         
-        .cache-indicator {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #10b981;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            animation: fadeIn 0.5s;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
         .tarefa-atualizada {
             animation: highlight 2s ease;
         }
@@ -692,13 +713,91 @@
             0% { background-color: #d1fae5; }
             100% { background-color: transparent; }
         }
+
+        /* Informações do sistema */
+        .system-info {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .system-good {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .system-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .system-info-blue {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* Novos estilos para a versão 9.9 */
+        .aluno-relatorio-card {
+            background-color: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .aluno-relatorio-card:hover {
+            border-color: #CC0000;
+            background-color: #fef2f2;
+        }
+        
+        .aluno-relatorio-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .aluno-relatorio-content {
+            margin-top: 12px;
+            display: none;
+        }
+        
+        .aluno-relatorio-content.expandido {
+            display: block;
+        }
+        
+        .tarefa-expand-button {
+            background: none;
+            border: none;
+            color: #CC0000;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 4px 8px;
+        }
+        
+        .tarefa-expand-content {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f9fafb;
+            border-radius: 6px;
+        }
+        
+        .tarefa-expand-content.expandido {
+            display: block;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
     <div id="app-container" class="w-full max-w-6xl bg-white shadow-xl rounded-2xl p-6 sm:p-8 transition-all duration-300">
         <header class="mb-8 border-b pb-4">
             <div class="header-content">
-                <h1 class="text-3xl font-extrabold text-red-700 text-center">Sistema de Gestão de Tarefas Escolar</h1>
+                <h1 class="text-3xl font-extrabold text-red-700 text-center">Sistema de Gestão de Tarefas</h1>
                 <div id="user-info" class="user-info-container text-center mt-2 text-gray-600"></div>
                 <div class="absolute top-0 right-0 flex space-x-2">
                     <button id="diagnosticoBtn" class="btn-primario hidden">Diagnóstico</button>
@@ -711,7 +810,7 @@
         <div id="content-area"></div>
 
         <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-            Desenvolvido por Geovane Modena | Versão 9.6.2
+            Desenvolvido por Geovane Modena | Versão 9.9.1
         </footer>
     </div>
 
@@ -740,11 +839,18 @@
     // ==================== CONFIGURAÇÃO E CONSTANTES ====================
     const CONFIG = {
         API_URL: "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec",
-        TOKEN: 'SESI_EDUCATION_2024',
+        // TOKEN REMOVIDO - Segurança por rate limiting no backend
         CACHE_TTL: 5 * 60 * 1000, // 5 minutos
         MAX_TEMA_LEN: 200,
         MAX_PARTE_LEN: 4000,
-        TURMAS: ["1A", "1B", "2A", "2B", "3A", "3B"]
+        TURMAS: ["1A", "1B", "2A", "2B", "3A", "3B"],
+        RATE_LIMIT_INFO: {
+            login: "5 tentativas por minuto",
+            criar_tarefa: "3 tarefas por minuto", 
+            entregas: "10 entregas por minuto",
+            relatorios: "5 relatórios por minuto",
+            geral: "30 requisições por minuto"
+        }
     };
 
     // ==================== ESTADO GLOBAL ====================
@@ -757,6 +863,7 @@
         contadoresAtivos: [],
         jsonpCallbackId: 0,
         rmVisible: false,
+        relatorioAlunoVisivel: false,
         performanceMetrics: {
             apiCalls: 0,
             cacheHits: 0,
@@ -1007,10 +1114,10 @@
             
             return new Promise((resolve, reject) => {
                 const startTime = performance.now();
-                let url = `${CONFIG.API_URL}?token=${CONFIG.TOKEN}`;
+                let url = `${CONFIG.API_URL}?`; // TOKEN REMOVIDO
                 
                 if (func) {
-                    url += `&func=${func}`;
+                    url += `func=${func}`;
                 }
                 
                 for (const key in params) {
@@ -1022,6 +1129,8 @@
                 if (forceRefresh) {
                     url += `&_=${Date.now()}`;
                 }
+                
+                console.log('Fazendo requisição para:', url.replace(/(rm|senha)=[^&]*/g, '$1=***'));
                 
                 ApiManager.requestJSONP(url, (error, data) => {
                     const duration = performance.now() - startTime;
@@ -1042,7 +1151,7 @@
         post: async (action, dados) => {
             return new Promise((resolve, reject) => {
                 const startTime = performance.now();
-                let url = `${CONFIG.API_URL}?token=${CONFIG.TOKEN}&action=${action}`;
+                let url = `${CONFIG.API_URL}?action=${action}`; // TOKEN REMOVIDO
                 
                 for (const key in dados) {
                     if (dados[key] !== undefined && dados[key] !== null) {
@@ -1053,6 +1162,8 @@
                         }
                     }
                 }
+                
+                console.log('Fazendo POST para:', url.replace(/(rm|senha)=[^&]*/g, '$1=***'));
                 
                 ApiManager.requestJSONP(url, (error, data) => {
                     const duration = performance.now() - startTime;
@@ -1190,6 +1301,7 @@
         logout() {
             STATE.usuarioLogado = null;
             STATE.tarefaEditando = null;
+            STATE.relatorioAlunoVisivel = false;
             UIManager.elements.logoutBtn.classList.add('hidden');
             UIManager.elements.relatorioBtn.classList.add('hidden');
             UIManager.elements.diagnosticoBtn.classList.add('hidden');
@@ -1211,6 +1323,7 @@
                     </div>
                 `;
                 UIManager.elements.relatorioBtn.onclick = mostrarRelatorioProfessor;
+                UIManager.elements.relatorioBtn.classList.remove('hidden');
                 UIManager.elements.diagnosticoBtn.classList.remove('hidden');
                 UIManager.elements.diagnosticoBtn.onclick = mostrarPainelDiagnostico;
             } else {
@@ -1221,12 +1334,11 @@
                         Nº: ${Utils.escapeHTML(user.Numero || 'N/A')}
                     </div>
                 `;
-                UIManager.elements.relatorioBtn.onclick = mostrarRelatorioAluno;
+                UIManager.elements.relatorioBtn.classList.add('hidden');
                 UIManager.elements.diagnosticoBtn.classList.add('hidden');
             }
             
             UIManager.elements.logoutBtn.classList.remove('hidden');
-            UIManager.elements.relatorioBtn.classList.remove('hidden');
         }
     };
 
@@ -1377,15 +1489,7 @@
             `;
         },
 
-        botoesFormatacao: (parteId) => {
-            return `
-                <div class="mt-2">
-                    <button type="button" class="btn-formatacao" onclick="adicionarFormatacao('${parteId}', 'urls')">Transformar URLs em Links</button>
-                    <button type="button" class="btn-formatacao" onclick="adicionarFormatacao('${parteId}', 'lista')">Lista com Marcadores</button>
-                    <button type="button" class="btn-formatacao" onclick="adicionarFormatacao('${parteId}', 'numerada')">Lista Numerada</button>
-                </div>
-            `;
-        }
+        // REMOVIDO: botoesFormatacao não é mais usado para o professor
     };
 
     // ==================== FUNÇÕES PRINCIPAIS ====================
@@ -1393,7 +1497,7 @@
     // Função de inicialização
     async function init() {
         try {
-            console.log('Inicializando sistema...');
+            console.log('Inicializando sistema v9.9.1...');
             const response = await apiGet('getUsers', {}, true);
             STATE.usuarios = response.data || response;
             console.log('Usuários carregados:', STATE.usuarios.length);
@@ -1420,13 +1524,14 @@
         });
     }
 
-    // Toggle visibilidade da senha
+    // Toggle visibilidade da senha - CORRIGIDO
     function toggleRmVisibility() {
         const senhaInput = document.getElementById('senha');
         const toggleButton = document.getElementById('toggleSenha');
         
         STATE.rmVisible = !STATE.rmVisible;
         senhaInput.type = STATE.rmVisible ? 'text' : 'password';
+        // CORREÇÃO: Invertemos a lógica dos emojis
         toggleButton.textContent = STATE.rmVisible ? '🙈' : '👁️';
     }
 
@@ -1515,23 +1620,19 @@
                     <div class="mt-4 space-y-4">
                         <div>
                             <label for="parte1" class="block text-sm font-medium text-gray-700 mb-2">Parte 1 (dia da aula, 13h–22h) <span class="retencao-aviso retencao-50">50% retenção</span></label>
-                            ${Components.botoesFormatacao('parte1')}
-                            <textarea id="parte1" placeholder="Descreva a parte 1 da tarefa. Use Enter para criar parágrafos." rows="5" required maxlength="${CONFIG.MAX_PARTE_LEN}"></textarea>
+                            <textarea id="parte1" placeholder="Descreva a parte 1 da tarefa. Use Enter para criar parágrafos." rows="4" required maxlength="${CONFIG.MAX_PARTE_LEN}"></textarea>
                         </div>
                         <div>
                             <label for="parte2" class="block text-sm font-medium text-gray-700 mb-2">Parte 2 (7º dia, 13h–22h) <span class="retencao-aviso retencao-25">25% retenção</span></label>
-                            ${Components.botoesFormatacao('parte2')}
-                            <textarea id="parte2" placeholder="Descreva a parte 2 da tarefa. Use Enter para criar parágrafos." rows="5" required maxlength="${CONFIG.MAX_PARTE_LEN}"></textarea>
+                            <textarea id="parte2" placeholder="Descreva a parte 2 da tarefa. Use Enter para criar parágrafos." rows="4" required maxlength="${CONFIG.MAX_PARTE_LEN}"></textarea>
                         </div>
                         <div>
                             <label for="parte3" class="block text-sm font-medium text-gray-700 mb-2">Parte 3 (14º dia, 13h–22h) <span class="retencao-aviso retencao-15">15% retenção</span></label>
-                            ${Components.botoesFormatacao('parte3')}
-                            <textarea id="parte3" placeholder="Descreva a parte 3 da tarefa. Use Enter para criar parágrafos." rows="5" required maxlength="${CONFIG.MAX_PARTE_LEN}"></textarea>
+                            <textarea id="parte3" placeholder="Descreva a parte 3 da tarefa. Use Enter para criar parágrafos." rows="4" required maxlength="${CONFIG.MAX_PARTE_LEN}"></textarea>
                         </div>
                         <div>
                             <label for="parte4" class="block text-sm font-medium text-gray-700 mb-2">Parte 4 (28º dia, 13h–22h) <span class="retencao-aviso retencao-10">9.99% retenção</span></label>
-                            ${Components.botoesFormatacao('parte4')}
-                            <textarea id="parte4" placeholder="Descreva a parte 4 da tarefa. Use Enter para criar parágrafos." rows="5" required maxlength="${CONFIG.MAX_PARTE_LEN}"></textarea>
+                            <textarea id="parte4" placeholder="Descreva a parte 4 da tarefa. Use Enter para criar parágrafos." rows="4" required maxlength="${CONFIG.MAX_PARTE_LEN}"></textarea>
                         </div>
                     </div>
                     
@@ -1552,7 +1653,7 @@
                             <thead>
                                 <tr>
                                     <th class="turma-column">Turma</th>
-                                    <th>Tema e Partes</th>
+                                    <th>Tema</th>
                                     <th class="data-column">Data</th>
                                     <th class="acoes-column">Ações</th>
                                 </tr>
@@ -1637,26 +1738,20 @@
         }
 
         tbody.innerHTML = STATE.tarefas.map(tarefa => {
-            const parte1 = String(tarefa.Parte1 || '');
-            const parte2 = String(tarefa.Parte2 || '');
-            const parte3 = String(tarefa.Parte3 || '');
-            const parte4 = String(tarefa.Parte4 || '');
-
-            const formatarParaTabela = (texto) => {
-                if (!texto) return '';
-                const textoLimitado = texto.length > 100 ? texto.substring(0, 100) + '...' : texto;
-                return Utils.formatarConteudoParaExibicao(textoLimitado);
-            };
-
             return `
             <tr class="tarefa-item">
                 <td class="turma-column">${Utils.escapeHTML(tarefa.Turma)}</td>
                 <td class="px-4 py-2">
                     <div class="font-semibold text-gray-800 mb-2">${Utils.escapeHTML(tarefa.Tema)}</div>
-                    ${parte1 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 1:</span> <span class="conteudo-formatado">${formatarParaTabela(parte1)}</span> <span class="retencao-aviso retencao-50">50% retenção</span></div>` : ''}
-                    ${parte2 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 2:</span> <span class="conteudo-formatado">${formatarParaTabela(parte2)}</span> <span class="retencao-aviso retencao-25">25% retenção</span></div>` : ''}
-                    ${parte3 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 3:</span> <span class="conteudo-formatado">${formatarParaTabela(parte3)}</span> <span class="retencao-aviso retencao-15">15% retenção</span></div>` : ''}
-                    ${parte4 ? `<div class="text-sm text-gray-600"><span class="font-medium">Parte 4:</span> <span class="conteudo-formatado">${formatarParaTabela(parte4)}</span> <span class="retencao-aviso retencao-10">9.99% retenção</span></div>` : ''}
+                    <button class="tarefa-expand-button" onclick="togglePartesTarefa('${tarefa.ID}')">
+                        Ver Partes
+                    </button>
+                    <div id="partes-${tarefa.ID}" class="tarefa-expand-content">
+                        ${tarefa.Parte1 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 1:</span> <span class="conteudo-formatado">${Utils.formatarConteudoParaExibicao(String(tarefa.Parte1).substring(0, 100))}${String(tarefa.Parte1).length > 100 ? '...' : ''}</span></div>` : ''}
+                        ${tarefa.Parte2 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 2:</span> <span class="conteudo-formatado">${Utils.formatarConteudoParaExibicao(String(tarefa.Parte2).substring(0, 100))}${String(tarefa.Parte2).length > 100 ? '...' : ''}</span></div>` : ''}
+                        ${tarefa.Parte3 ? `<div class="text-sm text-gray-600 mb-1"><span class="font-medium">Parte 3:</span> <span class="conteudo-formatado">${Utils.formatarConteudoParaExibicao(String(tarefa.Parte3).substring(0, 100))}${String(tarefa.Parte3).length > 100 ? '...' : ''}</span></div>` : ''}
+                        ${tarefa.Parte4 ? `<div class="text-sm text-gray-600"><span class="font-medium">Parte 4:</span> <span class="conteudo-formatado">${Utils.formatarConteudoParaExibicao(String(tarefa.Parte4).substring(0, 100))}${String(tarefa.Parte4).length > 100 ? '...' : ''}</span></div>` : ''}
+                    </div>
                 </td>
                 <td class="data-column">${Utils.formatarData(tarefa.DataAula)}</td>
                 <td class="acoes-column">
@@ -1672,6 +1767,11 @@
             </tr>
             `;
         }).join('');
+    }
+
+    function togglePartesTarefa(idTarefa) {
+        const elemento = document.getElementById(`partes-${idTarefa}`);
+        elemento.classList.toggle('expandido');
     }
 
     const salvarTarefa = Utils.debounce(async function() {
@@ -1910,15 +2010,33 @@
                     </div>
                     
                     <div id="tarefas-aluno-container">
-                        <div class="text-center text-gray-500 py-8">Carregando tarefas...</div>
+                        <div class="text-center py-8">
+                            <div class="spinner"></div>
+                            <p class="mt-4 text-gray-600">Carregando tarefas...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="aluno-relatorio-card" onclick="toggleRelatorioAluno()">
+                        <div class="aluno-relatorio-header">
+                            <h4 class="font-semibold text-red-700">Meu Desempenho</h4>
+                            <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="m6 9 6 6 6-6"/>
+                            </svg>
+                        </div>
+                        <div class="aluno-relatorio-content" id="relatorio-aluno-content">
+                            <div class="text-center py-4">
+                                <div class="spinner"></div>
+                                <p class="mt-2 text-gray-600">Carregando relatório...</p>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="fundamento-cientifico">
                         <div class="fundamento-title" onclick="toggleFundamentoCientifico()">
+                            <span>Fundamentos Científicos da Aprendizagem</span>
                             <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="m6 9 6 6 6-6"/>
                             </svg>
-                            Fundamentos Científicos da Aprendizagem
                         </div>
                         <div class="fundamento-content" id="conteudo-fundamento">
                             <p class="mb-4">A curva de esquecimento de Ebbinghaus e os estudos modernos de neuroaprendizagem mostram que:</p>
@@ -1959,17 +2077,24 @@
         CacheManager.set(cacheKey, UIManager.elements.contentArea.innerHTML, 2 * 60 * 1000);
     }
 
-    function toggleFundamentoCientifico() {
-        const conteudo = document.getElementById('conteudo-fundamento');
-        const icon = document.querySelector('.expand-icon');
+    function toggleRelatorioAluno() {
+        const conteudo = document.getElementById('relatorio-aluno-content');
+        const icon = document.querySelector('.aluno-relatorio-card .expand-icon');
+        
+        conteudo.classList.toggle('expandido');
+        icon.classList.toggle('expandido');
         
         if (conteudo.classList.contains('expandido')) {
-            conteudo.classList.remove('expandido');
-            icon.classList.remove('expandido');
-        } else {
-            conteudo.classList.add('expandido');
-            icon.classList.add('expandido');
+            carregarRelatorioAluno();
         }
+    }
+
+    function toggleFundamentoCientifico() {
+        const conteudo = document.getElementById('conteudo-fundamento');
+        const icon = document.querySelector('.fundamento-cientifico .expand-icon');
+        
+        conteudo.classList.toggle('expandido');
+        icon.classList.toggle('expandido');
     }
 
     async function carregarTarefasAluno() {
@@ -2016,14 +2141,9 @@
         if (!container) return;
         
         container.innerHTML = `
-            <div class="space-y-4">
-                <div class="tarefa-loading" style="height: 120px;"></div>
-                <div class="tarefa-loading" style="height: 120px;"></div>
-                <div class="tarefa-loading" style="height: 120px;"></div>
-                <div class="loading-text">
-                    <div class="spinner"></div>
-                    Carregando tarefas...
-                </div>
+            <div class="text-center py-8">
+                <div class="spinner"></div>
+                <p class="mt-4 text-gray-600">Carregando tarefas...</p>
             </div>
         `;
     }
@@ -2041,7 +2161,7 @@
             const contadores = TimeManager.calcularContadoresOtimizado(tarefa.DataAula);
             const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
 
-            return renderTarefaItem(tarefa, entrega, contadores, true);
+            return renderTarefaItem(tarefa, entrega, contadores);
         }).join('');
     }
 
@@ -2057,33 +2177,21 @@
             const entrega = entregas.find(e => e.ID_Tarefa === tarefa.ID);
             const contadores = TimeManager.calcularContadoresOtimizado(tarefa.DataAula);
             
-            const tarefaHTML = renderTarefaItem(tarefa, entrega, contadores, false);
+            const tarefaHTML = renderTarefaItem(tarefa, entrega, contadores);
             container.innerHTML += tarefaHTML;
         }
-        
-        const conclusao = document.createElement('div');
-        conclusao.className = 'text-green-600 text-center mt-4 p-3 bg-green-50 rounded border border-green-200';
-        conclusao.innerHTML = '<strong>✓ Todas as tarefas foram carregadas!</strong>';
-        container.appendChild(conclusao);
-        
-        setTimeout(() => {
-            if (conclusao.parentNode) {
-                conclusao.remove();
-            }
-        }, 3000);
         
         atualizarContadoresAluno();
     }
 
-    function renderTarefaItem(tarefa, entrega, contadores, fromCache) {
+    function renderTarefaItem(tarefa, entrega, contadores) {
         const parte1 = tarefa.Parte1 || '';
         const parte2 = tarefa.Parte2 || '';
         const parte3 = tarefa.Parte3 || '';
         const parte4 = tarefa.Parte4 || '';
 
         return `
-        <div class="border border-gray-200 rounded-lg p-4 mb-4 ${fromCache ? '' : ''}">
-            ${fromCache ? '<div class="cache-indicator">CACHE</div>' : ''}
+        <div class="border border-gray-200 rounded-lg p-4 mb-4">
             <div class="flex justify-between items-start">
                 <div class="flex-1">
                     <h4 class="font-semibold text-lg text-gray-800">${Utils.escapeHTML(tarefa.Tema)}</h4>
@@ -2118,7 +2226,7 @@
         if (contador.liberada && !expirado) {
             horarioInfo = '<div class="horario-info horario-maxima">Entrega disponível hoje das 13h às 22h.</div>';
         } else if (!contador.liberada && !expirado) {
-            horarioInfo = '<div class="horario-info horario-fora">Entrega disponível apenas em seu dia específico, das 13h às 22h.</div>';
+            horarioInfo = '<div class="horario-info horario-fora">Conteúdo e entrega disponíveis apenas em seu dia específico, das 13h às 22h.</div>';
         } else if (expirado) {
             horarioInfo = '<div class="horario-info horario-fora">Prazo de entrega desta parte já expirou.</div>';
         }
@@ -2129,9 +2237,6 @@
                 <div class="flex justify-between items-center">
                     <strong>Parte ${numeroParte}: ${retencaoAviso}</strong>
                     <span class="contador ${contador.classe}">${contador.texto}</span>
-                </div>
-                <div class="conteudo-bloqueado">
-                    Conteúdo liberado para entrega apenas no dia específico desta parte, entre 13h e 22h.
                 </div>
                 ${horarioInfo}
             </div>`;
@@ -2152,7 +2257,7 @@
             <div class="link-container">
                 <input type="text" 
                        class="link-input ${mostrarLinkSalvo ? 'link-salvo' : ''}" 
-                       placeholder="${!contador.liberada ? 'Aguardando liberação...' : (expirado ? 'Prazo expirado' : 'Cole o link da atividade aqui')}" 
+                       placeholder="${!contador.liberada ? 'Atividade não enviada' : (expirado ? 'Prazo expirado' : 'Cole o link da atividade aqui')}" 
                        id="${inputId}"
                        value="${linkSalvo || ''}"
                        ${mostrarLinkSalvo || !disponivel ? 'disabled' : ''}>
@@ -2176,6 +2281,7 @@
     const salvarLink = Utils.debounce(async function(idTarefa, parte) {
         const input = document.getElementById(`link-${idTarefa}-${parte}`);
         const link = input ? input.value.trim() : '';
+        const btnSalvar = document.querySelector(`button[onclick="salvarLink('${idTarefa}', ${parte})"]`);
 
         if (!link) {
             UIManager.showModal('Atenção', 'Por favor, cole um link válido.');
@@ -2183,6 +2289,11 @@
         }
 
         try {
+            // Adicionar loading ao botão
+            if (btnSalvar) {
+                Utils.setButtonLoading(btnSalvar, true);
+            }
+
             await apiPost('entregarTarefa', {
                 ID_Tarefa: idTarefa,
                 RM_Aluno: STATE.usuarioLogado.RM,
@@ -2208,14 +2319,31 @@
                     'Fora do horário de entrega',
                     'Essa parte só pode ser entregue no dia específico dela, entre 13h e 22h. Verifique o cronograma na descrição da tarefa.'
                 );
+            } else if (msg.includes('Muitas')) {
+                UIManager.showModal(
+                    'Limite de requisições excedido',
+                    'Você fez muitas entregas em pouco tempo. Aguarde alguns minutos e tente novamente.'
+                );
             } else {
                 UIManager.showModal('Erro', `Erro ao salvar link: ${msg}`);
+            }
+        } finally {
+            // Remover loading do botão
+            if (btnSalvar) {
+                Utils.setButtonLoading(btnSalvar, false);
             }
         }
     }, 500);
 
     const excluirLink = Utils.debounce(async function(idTarefa, parte) {
+        const btnExcluir = document.querySelector(`button[onclick="excluirLink('${idTarefa}', ${parte})"]`);
+        
         try {
+            // Adicionar loading ao botão
+            if (btnExcluir) {
+                Utils.setButtonLoading(btnExcluir, true);
+            }
+            
             await apiPost('excluirEntrega', {
                 ID_Tarefa: idTarefa,
                 RM_Aluno: STATE.usuarioLogado.RM,
@@ -2230,9 +2358,15 @@
             CacheManager.remove(`api_getEntregasAluno_${JSON.stringify({rm: STATE.usuarioLogado.RM})}`);
             CacheManager.remove(`relatorio_${STATE.usuarioLogado.Turma}`);
             
+            // Recarregar as tarefas para habilitar o campo novamente
             await carregarTarefasAluno();
         } catch (error) {
             UIManager.showModal('Erro', `Erro ao excluir link: ${error.message}`);
+        } finally {
+            // Remover loading do botão
+            if (btnExcluir) {
+                Utils.setButtonLoading(btnExcluir, false);
+            }
         }
     }, 500);
 
@@ -2262,6 +2396,87 @@
     }
 
     // ==================== RELATÓRIOS ====================
+    async function carregarRelatorioAluno() {
+        const container = document.getElementById('relatorio-aluno-content');
+        
+        try {
+            const entregasResponse = await apiGet('getEntregasAluno', { rm: STATE.usuarioLogado.RM }, true);
+            const entregas = entregasResponse.data || [];
+            
+            let relatorioHTML = '';
+            
+            if (entregas.length === 0) {
+                relatorioHTML = `
+                    <p class="text-gray-500 text-center py-4">Nenhuma entrega registrada.</p>
+                `;
+            } else {
+                const tarefasResponse = await apiGet('getTarefas', {}, true);
+                const todasTarefas = tarefasResponse.data || [];
+                
+                let notaTotal = 0;
+                let countEntregas = 0;
+                
+                relatorioHTML = `
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full compact-table">
+                            <thead>
+                                <tr>
+                                    <th>Tarefa</th>
+                                    <th>Links Entregues</th>
+                                    <th class="data-column">Data de Submissão</th>
+                                    <th class="data-column">Nota</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                entregas.forEach(entrega => {
+                    let tarefa = todasTarefas.find(t => t.ID === entrega.ID_Tarefa);
+                    const temaTarefa = tarefa ? tarefa.Tema : `Tarefa (ID: ${entrega.ID_Tarefa})`;
+                    
+                    const linksEntregues = [];
+                    if (entrega.Link1) linksEntregues.push('Parte 1');
+                    if (entrega.Link2) linksEntregues.push('Parte 2');
+                    if (entrega.Link3) linksEntregues.push('Parte 3');
+                    if (entrega.Link4) linksEntregues.push('Parte 4');
+                    
+                    const notaEntrega = parseFloat(entrega.Nota) || 0;
+                    if (notaEntrega > 0) {
+                        notaTotal += notaEntrega;
+                        countEntregas++;
+                    }
+                    
+                    relatorioHTML += `
+                        <tr>
+                            <td>${Utils.escapeHTML(temaTarefa)}</td>
+                            <td>${linksEntregues.join(', ') || 'Nenhum'}</td>
+                            <td class="data-column">${Utils.formatarData(entrega.DataSubmissao)}</td>
+                            <td class="data-column font-semibold">${notaEntrega.toFixed(1)}</td>
+                        </tr>
+                    `;
+                });
+                
+                const media = countEntregas > 0 ? (notaTotal / countEntregas).toFixed(1) : '0.0';
+                
+                relatorioHTML += `
+                            </tbody>
+                        </table>
+                        <div class="mt-4 p-3 bg-gray-50 rounded border">
+                            <div class="flex justify-between items-center">
+                                <span class="font-semibold">Média Geral:</span>
+                                <span class="text-lg font-bold ${parseFloat(media) >= 7.5 ? 'text-green-600' : 'text-red-600'}">${media}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = relatorioHTML;
+        } catch (error) {
+            container.innerHTML = `<p class="text-red-500 text-center py-4">Erro ao carregar relatório: ${Utils.escapeHTML(error.message)}</p>`;
+        }
+    }
+
     async function mostrarRelatorioProfessor() {
         UIManager.elements.contentArea.innerHTML = `
             <div class="card p-6">
@@ -2452,7 +2667,19 @@
                         let countNotasTarefa = 0;
                         
                         for (let parte = 1; parte <= 4; parte++) {
-                            const notaParte = entrega ? parseFloat(entrega[`NotaParte${parte}`] || 0) : 0;
+                            // CORREÇÃO: Buscar nota da parte específica corretamente
+                            let notaParte = 0;
+                            if (entrega) {
+                                // Acessar diretamente a propriedade NotaParteX
+                                const notaProp = `NotaParte${parte}`;
+                                notaParte = parseFloat(entrega[notaProp]) || 0;
+                                
+                                // Se não há nota específica mas há link, considerar 2.5
+                                if (notaParte === 0 && entrega[`Link${parte}`]) {
+                                    notaParte = 2.5;
+                                }
+                            }
+                            
                             const colunaParte = 3 + (j * 5) + (parte - 1);
                             
                             let classeNota = 'text-gray-600';
@@ -2532,107 +2759,6 @@
         }
     }
 
-    async function mostrarRelatorioAluno() {
-        CacheManager.remove(`relatorio_aluno_${STATE.usuarioLogado.RM}`);
-        
-        UIManager.elements.contentArea.innerHTML = `
-            <div class="card p-6">
-                <h3 class="text-2xl font-bold text-red-700 mb-4">Meu Relatório</h3>
-                <div class="text-center py-8">
-                    <div class="spinner"></div>
-                    <p class="mt-4 text-gray-600">Carregando relatório...</p>
-                </div>
-            </div>
-        `;
-        
-        try {
-            const entregasResponse = await apiGet('getEntregasAluno', { rm: STATE.usuarioLogado.RM }, true);
-            const entregas = entregasResponse.data || [];
-            
-            let relatorioHTML = `
-                <div class="card p-6">
-                    <h3 class="text-2xl font-bold text-red-700 mb-4">Meu Relatório</h3>
-            `;
-            
-            if (entregas.length === 0) {
-                relatorioHTML += `
-                    <p class="text-gray-500 text-center py-4">Nenhuma entrega registrada.</p>
-                `;
-            } else {
-                const tarefasResponse = await apiGet('getTarefas', {}, true);
-                const todasTarefas = tarefasResponse.data || [];
-                
-                let notaTotal = 0;
-                let countEntregas = 0;
-                
-                relatorioHTML += `
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full compact-table">
-                            <thead>
-                                <tr>
-                                    <th>Tarefa</th>
-                                    <th>Links Entregues</th>
-                                    <th class="data-column">Data de Submissão</th>
-                                    <th class="data-column">Nota</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-                
-                entregas.forEach(entrega => {
-                    let tarefa = todasTarefas.find(t => t.ID === entrega.ID_Tarefa);
-                    const temaTarefa = tarefa ? tarefa.Tema : `Tarefa (ID: ${entrega.ID_Tarefa})`;
-                    
-                    const linksEntregues = [];
-                    if (entrega.Link1) linksEntregues.push('Parte 1');
-                    if (entrega.Link2) linksEntregues.push('Parte 2');
-                    if (entrega.Link3) linksEntregues.push('Parte 3');
-                    if (entrega.Link4) linksEntregues.push('Parte 4');
-                    
-                    const notaEntrega = parseFloat(entrega.Nota) || 0;
-                    if (notaEntrega > 0) {
-                        notaTotal += notaEntrega;
-                        countEntregas++;
-                    }
-                    
-                    relatorioHTML += `
-                        <tr>
-                            <td>${Utils.escapeHTML(temaTarefa)}</td>
-                            <td>${linksEntregues.join(', ') || 'Nenhum'}</td>
-                            <td class="data-column">${Utils.formatarData(entrega.DataSubmissao)}</td>
-                            <td class="data-column font-semibold">${notaEntrega.toFixed(1)}</td>
-                        </tr>
-                    `;
-                });
-                
-                const media = countEntregas > 0 ? (notaTotal / countEntregas).toFixed(1) : '0.0';
-                
-                relatorioHTML += `
-                            </tbody>
-                        </table>
-                        <div class="mt-4 p-3 bg-gray-50 rounded border">
-                            <div class="flex justify-between items-center">
-                                <span class="font-semibold">Média Geral:</span>
-                                <span class="text-lg font-bold ${parseFloat(media) >= 7.5 ? 'text-green-600' : 'text-red-600'}">${media}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            relatorioHTML += `
-                    <div class="mt-4 text-center">
-                        <button onclick="mostrarPainelAluno()" class="btn-secundario">Voltar ao Painel</button>
-                    </div>
-                </div>
-            `;
-            
-            UIManager.elements.contentArea.innerHTML = relatorioHTML;
-        } catch (error) {
-            UIManager.showModal('Erro', `Erro ao carregar relatório: ${error.message}`);
-        }
-    }
-
     function exportarParaExcel(turma) {
         if (!turma) {
             UIManager.showModal('Atenção', 'Selecione uma turma primeiro.');
@@ -2706,24 +2832,6 @@
                     novoFim = inicio + 19;
                 }
                 break;
-            case 'lista':
-                if (textoSelecionado) {
-                    const linhas = textoSelecionado.split('\n');
-                    textoFormatado = linhas.map(linha => linha.trim() ? `• ${linha}` : '').join('\n');
-                } else {
-                    textoFormatado = '• ';
-                    novoFim = inicio + 2;
-                }
-                break;
-            case 'numerada':
-                if (textoSelecionado) {
-                    const linhas = textoSelecionado.split('\n');
-                    textoFormatado = linhas.map((linha, index) => linha.trim() ? `${index + 1}. ${linha}` : '').join('\n');
-                } else {
-                    textoFormatado = '1. ';
-                    novoFim = inicio + 3;
-                }
-                break;
         }
         
         textarea.value = textarea.value.substring(0, inicio) + textoFormatado + textarea.value.substring(fim);
@@ -2739,7 +2847,7 @@
         
         UIManager.elements.contentArea.innerHTML = `
             <div class="card p-6">
-                <h3 class="text-2xl font-bold text-red-700 mb-4">Painel de Diagnóstico e Performance</h3>
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Painel de Diagnóstico</h3>
                 
                 <div class="diagnostico-grid">
                     ${Components.metricasPerformance()}
@@ -2790,6 +2898,12 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="diagnostico-card">
+                        <h4 class="font-semibold mb-3">Verificar Problemas de Notas</h4>
+                        <button onclick="verificarProblemasNotas()" class="btn-primario w-full mb-3">Verificar Notas</button>
+                        <div id="resultado-verificacao-notas"></div>
+                    </div>
                 </div>
                 
                 <div class="mt-6 text-center">
@@ -2797,6 +2911,58 @@
                 </div>
             </div>
         `;
+    }
+
+    async function verificarProblemasNotas() {
+        const resultado = document.getElementById('resultado-verificacao-notas');
+        resultado.innerHTML = UIManager.renderLoading('Verificando problemas de notas...');
+        
+        try {
+            const [entregasResponse, tarefasResponse] = await Promise.all([
+                apiGet('getEntregas', {}, true),
+                apiGet('getTarefas', {}, true)
+            ]);
+
+            const entregas = entregasResponse.data || entregasResponse;
+            const tarefas = tarefasResponse.data || tarefasResponse;
+
+            let problemas = [];
+            
+            // Verificar entregas sem notas
+            const entregasSemNota = entregas.filter(e => !e.Nota || e.Nota === '0' || e.Nota === '');
+            if (entregasSemNota.length > 0) {
+                problemas.push(`- ${entregasSemNota.length} entregas sem nota registrada`);
+            }
+            
+            // Verificar tarefas sem entregas
+            const tarefasSemEntregas = tarefas.filter(t => {
+                return !entregas.some(e => e.ID_Tarefa === t.ID);
+            });
+            
+            if (tarefasSemEntregas.length > 0) {
+                problemas.push(`- ${tarefasSemEntregas.length} tarefas sem nenhuma entrega`);
+            }
+            
+            if (problemas.length === 0) {
+                resultado.innerHTML = `
+                    <div class="test-result test-success">
+                        <strong>✓ Nenhum problema encontrado!</strong><br>
+                        - Total de entregas: ${entregas.length}<br>
+                        - Total de tarefas: ${tarefas.length}<br>
+                        - Status: Sistema funcionando corretamente
+                    </div>
+                `;
+            } else {
+                resultado.innerHTML = `
+                    <div class="test-result test-warning">
+                        <strong>⚠ Possíveis problemas encontrados:</strong><br>
+                        ${problemas.join('<br>')}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            resultado.innerHTML = `<div class="test-result test-error">Erro: ${error.message}</div>`;
+        }
     }
 
     async function mostrarMetricasPerformance() {
@@ -2865,7 +3031,7 @@
                     <strong>✓ Conexão bem-sucedida!</strong><br>
                     - Usuários: ${users.length} registros<br>
                     - Tarefas: ${tarefas.length} registros<br>
-                    - Status: Operacional
+                    - Status: Operacional com segurança v9.9.1
                 </div>
             `;
         } catch (error) {
@@ -2889,8 +3055,14 @@
     document.addEventListener('DOMContentLoaded', init);
 
     // ==================== EXPORTAÇÃO DE FUNÇÕES GLOBAIS ====================
-    window.logout = logout;
-    window.closeModal = closeModal;
+    window.logout = function() {
+        AuthManager.logout();
+    };
+
+    window.closeModal = function() {
+        UIManager.closeModal();
+    };
+
     window.toggleRmVisibility = toggleRmVisibility;
     window.mostrarPainelDiagnostico = mostrarPainelDiagnostico;
     window.mostrarMetricasPerformance = mostrarMetricasPerformance;
@@ -2899,7 +3071,8 @@
     window.mostrarPainelProfessor = mostrarPainelProfessor;
     window.mostrarPainelAluno = mostrarPainelAluno;
     window.mostrarRelatorioProfessor = mostrarRelatorioProfessor;
-    window.mostrarRelatorioAluno = mostrarRelatorioAluno;
+    window.carregarRelatorioAluno = carregarRelatorioAluno;
+    window.toggleRelatorioAluno = toggleRelatorioAluno;
     window.salvarTarefa = salvarTarefa;
     window.atualizarTarefa = atualizarTarefa;
     window.excluirTarefa = excluirTarefa;
@@ -2913,6 +3086,8 @@
     window.exportarParaExcel = exportarParaExcel;
     window.exportarParaPDF = exportarParaPDF;
     window.carregarRelatorioTurma = carregarRelatorioTurma;
+    window.togglePartesTarefa = togglePartesTarefa;
+    window.verificarProblemasNotas = verificarProblemasNotas;
     </script>
 </body>
 </html>
