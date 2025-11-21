@@ -289,6 +289,68 @@
                 width: 150px;
             }
         }
+
+        /* Estilos específicos para login */
+        .email-container {
+            display: flex;
+            width: 100%;
+        }
+        
+        .email-prefix {
+            flex: 1;
+        }
+        
+        .email-suffix {
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        .email-prefix input {
+            border-radius: 8px 0 0 8px !important;
+            border-right: none;
+        }
+        
+        .password-container {
+            position: relative;
+            width: 100%;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6b7280;
+            z-index: 10;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        
+        .password-toggle:hover {
+            color: #374151;
+        }
+        
+        .password-toggle:focus {
+            outline: none;
+        }
+        
+        .password-container input {
+            padding-right: 40px;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -308,7 +370,7 @@
         <div id="content-area"></div>
 
         <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-            Desenvolvido por Geovane Modena | Versão 9.6
+            Desenvolvido por Geovane Modena | Versão 9.6.1
         </footer>
     </div>
 
@@ -727,6 +789,21 @@
         async login(credenciais) {
             const { email, senha } = credenciais;
             
+            console.log('Tentando login com:', { email, senha: '***' });
+
+            // Se não temos usuários, tentar recarregar
+            if (STATE.usuarios.length === 0) {
+                try {
+                    console.log('Recarregando lista de usuários...');
+                    const response = await apiGet('getUsers', {}, true);
+                    STATE.usuarios = response.data || response;
+                    console.log('Usuários recarregados:', STATE.usuarios.length);
+                } catch (error) {
+                    console.error('Erro ao recarregar usuários:', error);
+                    throw new Error('Erro ao carregar lista de usuários. Tente novamente.');
+                }
+            }
+
             // Verificar se o e-mail existe
             const userByEmail = STATE.usuarios.find(u => {
                 const userEmail = String(u.Email || '').toLowerCase().trim();
@@ -735,6 +812,7 @@
             });
 
             if (!userByEmail) {
+                console.log('E-mail não encontrado:', email);
                 throw new Error('E-mail não encontrado!');
             }
 
@@ -749,9 +827,11 @@
             });
             
             if (!user) {
+                console.log('Senha incorreta para:', email);
                 throw new Error('Senha incorreta para este e-mail!');
             }
             
+            console.log('Usuário logado com sucesso:', user.NomeCompleto);
             return user;
         },
 
@@ -798,102 +878,6 @@
         }
     };
 
-    // ==================== SISTEMA DE TEMPO E PRAZOS ====================
-    const TimeManager = {
-        calcularStatusParteDiaUnico(dataAula, diasOffset) {
-            const agora = new Date();
-            const base = new Date(dataAula);
-
-            if (isNaN(base.getTime())) {
-                return {
-                    texto: 'Data inválida',
-                    classe: 'aguardando',
-                    liberada: false,
-                    expirado: false,
-                    dentroHorarioEntrega: false
-                };
-            }
-
-            base.setHours(0, 0, 0, 0);
-            const diaEntrega = new Date(base);
-            diaEntrega.setDate(diaEntrega.getDate() + diasOffset);
-
-            const inicio = new Date(diaEntrega);
-            inicio.setHours(13, 0, 0, 0);
-
-            const fim = new Date(diaEntrega);
-            fim.setHours(22, 0, 0, 0);
-
-            if (agora < inicio) {
-                const diff = inicio - agora;
-                const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
-                const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-                let texto = '';
-                if (dias > 0) texto = `Libera em ${dias}d ${horas}h`;
-                else if (horas > 0) texto = `Libera em ${horas}h ${minutos}m`;
-                else texto = `Libera em ${minutos}m`;
-
-                return {
-                    texto,
-                    classe: 'aguardando',
-                    liberada: false,
-                    expirado: false,
-                    dentroHorarioEntrega: false
-                };
-            }
-
-            if (agora > fim) {
-                return {
-                    texto: 'Expirado',
-                    classe: 'expirado',
-                    liberada: false,
-                    expirado: true,
-                    dentroHorarioEntrega: false
-                };
-            }
-
-            // Dentro do único dia de entrega (13h–22h)
-            const diffFim = fim - agora;
-            const horasFim = Math.floor(diffFim / (1000 * 60 * 60));
-            const minutosFim = Math.floor((diffFim % (1000 * 60 * 60)) / (1000 * 60));
-            let texto = '';
-            if (horasFim > 0) texto = `Termina em ${horasFim}h ${minutosFim}m`;
-            else texto = `Termina em ${minutosFim}m`;
-
-            return {
-                texto,
-                classe: 'disponivel',
-                liberada: true,
-                expirado: false,
-                dentroHorarioEntrega: true
-            };
-        },
-
-        calcularContadoresOtimizado(dataAula) {
-            return {
-                parte1: TimeManager.calcularStatusParteDiaUnico(dataAula, 0),
-                parte2: TimeManager.calcularStatusParteDiaUnico(dataAula, 7),
-                parte3: TimeManager.calcularStatusParteDiaUnico(dataAula, 14),
-                parte4: TimeManager.calcularStatusParteDiaUnico(dataAula, 28)
-            };
-        },
-
-        iniciarAtualizacaoContadores() {
-            STATE.contadoresAtivos.forEach(interval => clearInterval(interval));
-            STATE.contadoresAtivos = [];
-            
-            const interval = setInterval(() => {
-                if (STATE.usuarioLogado && STATE.usuarioLogado.Perfil === 'Aluno') {
-                    atualizarContadoresAluno();
-                }
-            }, 1000);
-            
-            STATE.contadoresAtivos.push(interval);
-        }
-    };
-
     // ==================== COMPONENTES DE INTERFACE ====================
     const Components = {
         loginForm: () => {
@@ -905,22 +889,23 @@
                     <form id="login-form" class="space-y-4">
                         <div class="form-group">
                             <label for="email" class="form-label">E-mail</label>
-                            <div class="flex">
-                                <input type="text" id="email" name="email" required placeholder="nome.sobrenome" 
-                                       class="rounded-r-none border-r-0">
-                                <span class="flex items-center px-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r-lg text-gray-600">
+                            <div class="email-container">
+                                <div class="email-prefix">
+                                    <input type="text" id="email" name="email" required placeholder="nome.sobrenome" 
+                                           class="w-full p-3 border rounded-lg rounded-r-none">
+                                </div>
+                                <div class="email-suffix">
                                     @portalsesisp.org.br
-                                </span>
+                                </div>
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="senha" class="form-label">Senha</label>
-                            <div class="relative">
+                            <div class="password-container">
                                 <input type="password" id="senha" name="senha" required placeholder="" 
-                                       class="pr-10">
-                                <button type="button" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500" 
-                                        id="toggleSenha" onclick="toggleRmVisibility()">
-                                    👁️
+                                       class="w-full p-3 border rounded-lg pr-10">
+                                <button type="button" class="password-toggle" id="toggleSenha">
+                                    ${STATE.rmVisible ? '🙈' : '👁️'}
                                 </button>
                             </div>
                         </div>
@@ -967,10 +952,24 @@
     function renderLogin() {
         UIManager.elements.contentArea.innerHTML = Components.loginForm();
 
+        // Configurar evento de toggle de senha
+        document.getElementById('toggleSenha').addEventListener('click', toggleRmVisibility);
+
+        // Configurar evento de submit do formulário
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             await handleLogin(e);
         });
+    }
+
+    // Toggle visibilidade da senha
+    function toggleRmVisibility() {
+        const senhaInput = document.getElementById('senha');
+        const toggleButton = document.getElementById('toggleSenha');
+        
+        STATE.rmVisible = !STATE.rmVisible;
+        senhaInput.type = STATE.rmVisible ? 'text' : 'password';
+        toggleButton.textContent = STATE.rmVisible ? '🙈' : '👁️';
     }
 
     // Manipular login
@@ -997,7 +996,7 @@
             // Carregar tarefas
             try {
                 const response = await apiGet('getTarefas', {}, true);
-                STATE.tarefas = response.data || [];
+                STATE.tarefas = response.data || response;
                 console.log('Tarefas carregadas:', STATE.tarefas.length);
             } catch (error) {
                 console.error('Erro ao carregar tarefas:', error);
@@ -1017,17 +1016,11 @@
         } catch (error) {
             loginErro.textContent = error.message;
             loginErro.style.display = 'block';
+            console.error('Erro no login:', error);
         } finally {
             Utils.setButtonLoading(loginButton, false);
             loginText.textContent = "Entrar";
         }
-    }
-
-    // Toggle visibilidade da senha
-    function toggleRmVisibility() {
-        const senhaInput = document.getElementById('senha');
-        STATE.rmVisible = !STATE.rmVisible;
-        senhaInput.type = STATE.rmVisible ? 'text' : 'password';
     }
 
     // Painel de diagnóstico
@@ -1186,47 +1179,152 @@
         }, 1000);
     }
 
-    // Funções de logout (para compatibilidade)
-    function logout() {
-        AuthManager.logout();
+    // ==================== PAINÉIS PRINCIPAIS (SIMPLIFICADOS) ====================
+
+    async function mostrarPainelProfessor() {
+        UIManager.elements.contentArea.innerHTML = `
+            <div class="card p-6">
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Painel do Professor</h3>
+                <p class="text-gray-600 mb-4">Bem-vindo, ${Utils.escapeHTML(STATE.usuarioLogado.NomeCompleto)}!</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 class="font-semibold text-blue-800 mb-2">Tarefas Criadas</h4>
+                        <p class="text-2xl font-bold text-blue-600">${STATE.tarefas.length}</p>
+                    </div>
+                    <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+                        <h4 class="font-semibold text-green-800 mb-2">Turmas Ativas</h4>
+                        <p class="text-2xl font-bold text-green-600">${CONFIG.TURMAS.length}</p>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-4">
+                    <button onclick="criarNovaTarefa()" class="btn-primario flex-1">Criar Nova Tarefa</button>
+                    <button onclick="mostrarRelatorioProfessor()" class="btn-primario flex-1" style="background-color: #10b981;">Ver Relatórios</button>
+                </div>
+                
+                <div class="mt-6">
+                    <h4 class="font-semibold text-lg mb-3">Últimas Tarefas</h4>
+                    ${STATE.tarefas.length > 0 ? `
+                        <div class="space-y-3">
+                            ${STATE.tarefas.slice(0, 5).map(tarefa => `
+                                <div class="p-3 border rounded-lg">
+                                    <h5 class="font-semibold">${Utils.escapeHTML(tarefa.Tema)}</h5>
+                                    <p class="text-sm text-gray-600">Turma: ${Utils.escapeHTML(tarefa.Turma)} | Data: ${Utils.formatarData(tarefa.DataAula)}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : '<p class="text-gray-500 text-center py-4">Nenhuma tarefa criada ainda.</p>'}
+                </div>
+            </div>
+        `;
     }
 
-    function closeModal() {
-        UIManager.closeModal();
+    async function mostrarPainelAluno() {
+        // Filtrar tarefas da turma do aluno
+        const tarefasAluno = STATE.tarefas.filter(t => t.Turma === STATE.usuarioLogado.Turma);
+        
+        UIManager.elements.contentArea.innerHTML = `
+            <div class="card p-6">
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Meu Painel</h3>
+                <p class="text-gray-600 mb-4">Olá, ${Utils.escapeHTML(STATE.usuarioLogado.NomeCompleto)}!</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 class="font-semibold text-blue-800 mb-2">Tarefas Disponíveis</h4>
+                        <p class="text-2xl font-bold text-blue-600">${tarefasAluno.length}</p>
+                    </div>
+                    <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+                        <h4 class="font-semibold text-green-800 mb-2">Turma</h4>
+                        <p class="text-2xl font-bold text-green-600">${Utils.escapeHTML(STATE.usuarioLogado.Turma)}</p>
+                    </div>
+                    <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                        <h4 class="font-semibold text-purple-800 mb-2">Número</h4>
+                        <p class="text-2xl font-bold text-purple-600">${Utils.escapeHTML(STATE.usuarioLogado.Numero)}</p>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-4">
+                    <button onclick="mostrarTarefasAluno()" class="btn-primario flex-1">Ver Minhas Tarefas</button>
+                    <button onclick="mostrarRelatorioAluno()" class="btn-primario flex-1" style="background-color: #10b981;">Meu Desempenho</button>
+                </div>
+                
+                <div class="mt-6">
+                    <h4 class="font-semibold text-lg mb-3">Próximas Tarefas</h4>
+                    ${tarefasAluno.length > 0 ? `
+                        <div class="space-y-3">
+                            ${tarefasAluno.slice(0, 3).map(tarefa => `
+                                <div class="p-3 border rounded-lg">
+                                    <h5 class="font-semibold">${Utils.escapeHTML(tarefa.Tema)}</h5>
+                                    <p class="text-sm text-gray-600">Data da Aula: ${Utils.formatarData(tarefa.DataAula)}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : '<p class="text-gray-500 text-center py-4">Nenhuma tarefa disponível no momento.</p>'}
+                </div>
+            </div>
+        `;
+    }
+
+    async function mostrarRelatorioProfessor() {
+        UIManager.elements.contentArea.innerHTML = `
+            <div class="card p-6">
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Relatórios do Professor</h3>
+                <p class="text-gray-600 mb-4">Relatórios de desempenho por turma</p>
+                
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                    ${CONFIG.TURMAS.map(turma => `
+                        <button onclick="carregarRelatorioTurma('${turma}')" class="p-4 bg-red-50 rounded-lg border border-red-200 hover:bg-red-100 transition-colors">
+                            <h4 class="font-semibold text-red-800 mb-2">Turma ${turma}</h4>
+                            <p class="text-lg font-bold text-red-600">Relatório</p>
+                        </button>
+                    `).join('')}
+                </div>
+                
+                <div class="text-center">
+                    <button onclick="mostrarPainelProfessor()" class="btn-secundario">Voltar ao Painel</button>
+                </div>
+            </div>
+        `;
+    }
+
+    async function mostrarRelatorioAluno() {
+        UIManager.elements.contentArea.innerHTML = `
+            <div class="card p-6">
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Meu Desempenho</h3>
+                <p class="text-gray-600 mb-4">Acompanhe seu progresso nas tarefas</p>
+                
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                    <p class="text-yellow-800 text-center">
+                        <span class="font-semibold">Funcionalidade em desenvolvimento</span><br>
+                        Em breve você poderá ver seu desempenho detalhado aqui.
+                    </p>
+                </div>
+                
+                <div class="text-center">
+                    <button onclick="mostrarPainelAluno()" class="btn-secundario">Voltar ao Painel</button>
+                </div>
+            </div>
+        `;
+    }
+
+    // Funções auxiliares
+    function criarNovaTarefa() {
+        UIManager.showModal('Em Desenvolvimento', 'A funcionalidade de criar nova tarefa está em desenvolvimento e será implementada em breve.');
+    }
+
+    function mostrarTarefasAluno() {
+        UIManager.showModal('Em Desenvolvimento', 'A visualização detalhada de tarefas está em desenvolvimento e será implementada em breve.');
+    }
+
+    function carregarRelatorioTurma(turma) {
+        UIManager.showModal('Relatório da Turma ' + turma, 'O relatório detalhado da turma ' + turma + ' está em desenvolvimento e será implementado em breve.');
     }
 
     // ==================== INICIALIZAÇÃO ====================
     document.addEventListener('DOMContentLoaded', init);
 
-    // ==================== FUNÇÕES DE COMPATIBILIDADE ====================
-    // Estas funções são mantidas para compatibilidade com o código existente
-    // Elas serão implementadas conforme necessário
-
-    async function mostrarPainelProfessor() {
-        UIManager.elements.contentArea.innerHTML = UIManager.renderLoading('Carregando painel do professor...');
-        // Implementação simplificada - expandir conforme necessário
-    }
-
-    async function mostrarPainelAluno() {
-        UIManager.elements.contentArea.innerHTML = UIManager.renderLoading('Carregando painel do aluno...');
-        // Implementação simplificada - expandir conforme necessário
-    }
-
-    async function mostrarRelatorioProfessor() {
-        UIManager.elements.contentArea.innerHTML = UIManager.renderLoading('Carregando relatório...');
-        // Implementação simplificada - expandir conforme necessário
-    }
-
-    async function mostrarRelatorioAluno() {
-        UIManager.elements.contentArea.innerHTML = UIManager.renderLoading('Carregando relatório...');
-        // Implementação simplificada - expandir conforme necessário
-    }
-
-    function atualizarContadoresAluno() {
-        // Implementação simplificada - expandir conforme necessário
-    }
-
-    // Exportar funções para o escopo global
+    // ==================== EXPORTAÇÃO DE FUNÇÕES GLOBAIS ====================
     window.logout = logout;
     window.closeModal = closeModal;
     window.toggleRmVisibility = toggleRmVisibility;
@@ -1238,6 +1336,9 @@
     window.mostrarPainelAluno = mostrarPainelAluno;
     window.mostrarRelatorioProfessor = mostrarRelatorioProfessor;
     window.mostrarRelatorioAluno = mostrarRelatorioAluno;
+    window.criarNovaTarefa = criarNovaTarefa;
+    window.mostrarTarefasAluno = mostrarTarefasAluno;
+    window.carregarRelatorioTurma = carregarRelatorioTurma;
     </script>
 </body>
 </html>
