@@ -711,7 +711,7 @@
         <div id="content-area"></div>
 
         <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-            Desenvolvido por Geovane Modena | Versão 9.6.2
+            Desenvolvido por Geovane Modena | Versão 9.6.3
         </footer>
     </div>
 
@@ -2889,8 +2889,16 @@
     document.addEventListener('DOMContentLoaded', init);
 
     // ==================== EXPORTAÇÃO DE FUNÇÕES GLOBAIS ====================
-    window.logout = logout;
-    window.closeModal = closeModal;
+    // CORREÇÃO: Adicionar a função logout ao escopo global
+    window.logout = function() {
+        AuthManager.logout();
+    };
+
+    // CORREÇÃO: Garantir que o modal feche corretamente
+    window.closeModal = function() {
+        UIManager.closeModal();
+    };
+
     window.toggleRmVisibility = toggleRmVisibility;
     window.mostrarPainelDiagnostico = mostrarPainelDiagnostico;
     window.mostrarMetricasPerformance = mostrarMetricasPerformance;
