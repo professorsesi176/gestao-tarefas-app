@@ -910,7 +910,7 @@
             border-right: none;
         }
 
-        /* CORREÇÃO DO ÍCONE DO OLHO */
+        /* CORREÇÃO DO ÍCONE DO OLHO - SOLUÇÃO ALTERNATIVA */
         .password-toggle {
             position: absolute;
             right: 12px;
@@ -927,6 +927,10 @@
             align-items: center;
             justify-content: center;
             padding: 0;
+        }
+
+        .password-toggle:focus {
+            outline: none;
         }
 
         /* NOVO LAYOUT PARA OS BOTÕES DE TURMA */
@@ -991,7 +995,7 @@
     <div id="content-area"></div>
 
     <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-        Desenvolvido por Geovane Modena | Versão 9.3
+        Desenvolvido por Geovane Modena | Versão 9.4
     </footer>
 </div>
 
@@ -2466,13 +2470,8 @@ function exportarParaPDF(turma) {
 /* ==================== RELATÓRIO ALUNO ==================== */
 
 async function mostrarRelatorioAluno() {
-    const cacheKey = `relatorio_aluno_${usuarioLogado.RM}`;
-    const cached = frontendCache.get(cacheKey);
-    
-    if (cached) {
-        contentArea.innerHTML = cached;
-        return;
-    }
+    // REMOVER CACHE PARA FORÇAR ATUALIZAÇÃO
+    frontendCache.remove(`relatorio_aluno_${usuarioLogado.RM}`);
     
     try {
         const entregasResponse = await apiGet('getEntregasAluno', { rm: usuarioLogado.RM }, true);
@@ -2557,7 +2556,7 @@ async function mostrarRelatorioAluno() {
         `;
         
         contentArea.innerHTML = relatorioHTML;
-        frontendCache.set(cacheKey, relatorioHTML, 5 * 60 * 1000);
+        // NÃO SALVAR NO CACHE - SEMPRE ATUALIZAR
     } catch (error) {
         showModal('Erro', `Erro ao carregar relatório: ${error.message}`);
     }
@@ -3265,11 +3264,12 @@ const salvarLink = debounce(async function(idTarefa, parte) {
     }
 
     try {
+        // CORREÇÃO: ENVIAR A TURMA CORRETA DO ALUNO, NÃO A NOTA
         await apiPost('entregarTarefa', {
             ID_Tarefa: idTarefa,
             RM_Aluno: usuarioLogado.RM,
             NomeAluno: sanitizeForSheet(usuarioLogado.NomeCompleto),
-            Turma: sanitizeForSheet(usuarioLogado.Turma),
+            Turma: usuarioLogado.Turma, // CORREÇÃO: ENVIAR A TURMA DO ALUNO
             Parte: parte,
             [`Link${parte}`]: sanitizeForSheet(link)
         });
@@ -3303,13 +3303,14 @@ const excluirLink = debounce(async function(idTarefa, parte) {
     }
 
     try {
+        // CORREÇÃO: EXCLUIR O LINK E ZERAR A NOTA
         await apiPost('excluirEntrega', {
             ID_Tarefa: idTarefa,
             RM_Aluno: usuarioLogado.RM,
             Parte: parte
         });
         
-        showModal('Sucesso', `Link da parte ${parte} excluído com sucesso!`);
+        showModal('Sucesso', `Link da parte ${parte} excluído com sucesso! A nota desta parte foi zerada.`);
         
         frontendCache.remove(`painel_aluno_${usuarioLogado.RM}`);
         frontendCache.remove(`tarefas_aluno_${usuarioLogado.RM}_dados`);
