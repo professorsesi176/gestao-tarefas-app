@@ -356,9 +356,9 @@
         .checkbox-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 15px;
             margin-top: 10px;
-            padding: 8px;
+            padding: 10px;
             background-color: #f9f9f9;
             border-radius: 8px;
         }
@@ -366,12 +366,11 @@
         .checkbox-item {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
         
         .checkbox-item label {
             margin-bottom: 0;
-            font-size: 0.9rem;
         }
         
         .form-row {
@@ -441,34 +440,8 @@
             background-color: #fefce8;
             border: 1px solid #fef08a;
             border-radius: 8px;
-            padding: 12px;
+            padding: 16px;
             margin-top: 20px;
-            cursor: pointer;
-        }
-        
-        .fundamento-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-            color: #92400e;
-        }
-        
-        .fundamento-content {
-            margin-top: 12px;
-            display: none;
-        }
-        
-        .fundamento-content.expandido {
-            display: block;
-        }
-        
-        .expand-icon {
-            transition: transform 0.2s;
-        }
-        
-        .expand-icon.expandido {
-            transform: rotate(180deg);
         }
         
         .retencao-aviso {
@@ -719,31 +692,6 @@
             0% { background-color: #d1fae5; }
             100% { background-color: transparent; }
         }
-
-        /* Informações do sistema */
-        .system-info {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-        
-        .system-good {
-            background-color: #d1fae5;
-            color: #065f46;
-        }
-        
-        .system-warning {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
-        
-        .system-info-blue {
-            background-color: #dbeafe;
-            color: #1e40af;
-        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -763,7 +711,7 @@
         <div id="content-area"></div>
 
         <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-            Desenvolvido por Geovane Modena | Versão 9.7
+            Desenvolvido por Geovane Modena | Versão 9.6.3
         </footer>
     </div>
 
@@ -792,18 +740,11 @@
     // ==================== CONFIGURAÇÃO E CONSTANTES ====================
     const CONFIG = {
         API_URL: "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec",
-        // TOKEN REMOVIDO - Segurança por rate limiting no backend
+        TOKEN: 'SESI_EDUCATION_2024',
         CACHE_TTL: 5 * 60 * 1000, // 5 minutos
         MAX_TEMA_LEN: 200,
         MAX_PARTE_LEN: 4000,
-        TURMAS: ["1A", "1B", "2A", "2B", "3A", "3B"],
-        RATE_LIMIT_INFO: {
-            login: "5 tentativas por minuto",
-            criar_tarefa: "3 tarefas por minuto", 
-            entregas: "10 entregas por minuto",
-            relatorios: "5 relatórios por minuto",
-            geral: "30 requisições por minuto"
-        }
+        TURMAS: ["1A", "1B", "2A", "2B", "3A", "3B"]
     };
 
     // ==================== ESTADO GLOBAL ====================
@@ -1066,10 +1007,10 @@
             
             return new Promise((resolve, reject) => {
                 const startTime = performance.now();
-                let url = `${CONFIG.API_URL}?`; // TOKEN REMOVIDO
+                let url = `${CONFIG.API_URL}?token=${CONFIG.TOKEN}`;
                 
                 if (func) {
-                    url += `func=${func}`;
+                    url += `&func=${func}`;
                 }
                 
                 for (const key in params) {
@@ -1081,8 +1022,6 @@
                 if (forceRefresh) {
                     url += `&_=${Date.now()}`;
                 }
-                
-                console.log('Fazendo requisição para:', url.replace(/(rm|senha)=[^&]*/g, '$1=***'));
                 
                 ApiManager.requestJSONP(url, (error, data) => {
                     const duration = performance.now() - startTime;
@@ -1103,7 +1042,7 @@
         post: async (action, dados) => {
             return new Promise((resolve, reject) => {
                 const startTime = performance.now();
-                let url = `${CONFIG.API_URL}?action=${action}`; // TOKEN REMOVIDO
+                let url = `${CONFIG.API_URL}?token=${CONFIG.TOKEN}&action=${action}`;
                 
                 for (const key in dados) {
                     if (dados[key] !== undefined && dados[key] !== null) {
@@ -1114,8 +1053,6 @@
                         }
                     }
                 }
-                
-                console.log('Fazendo POST para:', url.replace(/(rm|senha)=[^&]*/g, '$1=***'));
                 
                 ApiManager.requestJSONP(url, (error, data) => {
                     const duration = performance.now() - startTime;
@@ -1411,7 +1348,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="senha" class="form-label">Senha (RM)</label>
+                            <label for="senha" class="form-label">Senha</label>
                             <div class="password-container">
                                 <input type="password" id="senha" name="senha" required placeholder="" 
                                        class="w-full p-3 border rounded-lg pr-10">
@@ -1456,7 +1393,7 @@
     // Função de inicialização
     async function init() {
         try {
-            console.log('Inicializando sistema v9.7...');
+            console.log('Inicializando sistema...');
             const response = await apiGet('getUsers', {}, true);
             STATE.usuarios = response.data || response;
             console.log('Usuários carregados:', STATE.usuarios.length);
@@ -1483,14 +1420,13 @@
         });
     }
 
-    // Toggle visibilidade da senha - CORRIGIDO
+    // Toggle visibilidade da senha
     function toggleRmVisibility() {
         const senhaInput = document.getElementById('senha');
         const toggleButton = document.getElementById('toggleSenha');
         
         STATE.rmVisible = !STATE.rmVisible;
         senhaInput.type = STATE.rmVisible ? 'text' : 'password';
-        // CORREÇÃO: Invertemos a lógica dos emojis
         toggleButton.textContent = STATE.rmVisible ? '🙈' : '👁️';
     }
 
@@ -2027,8 +1963,13 @@
         const conteudo = document.getElementById('conteudo-fundamento');
         const icon = document.querySelector('.expand-icon');
         
-        conteudo.classList.toggle('expandido');
-        icon.classList.toggle('expandido');
+        if (conteudo.classList.contains('expandido')) {
+            conteudo.classList.remove('expandido');
+            icon.classList.remove('expandido');
+        } else {
+            conteudo.classList.add('expandido');
+            icon.classList.add('expandido');
+        }
     }
 
     async function carregarTarefasAluno() {
@@ -2266,11 +2207,6 @@
                 UIManager.showModal(
                     'Fora do horário de entrega',
                     'Essa parte só pode ser entregue no dia específico dela, entre 13h e 22h. Verifique o cronograma na descrição da tarefa.'
-                );
-            } else if (msg.includes('Muitas')) {
-                UIManager.showModal(
-                    'Limite de requisições excedido',
-                    'Você fez muitas entregas em pouco tempo. Aguarde alguns minutos e tente novamente.'
                 );
             } else {
                 UIManager.showModal('Erro', `Erro ao salvar link: ${msg}`);
@@ -2803,7 +2739,7 @@
         
         UIManager.elements.contentArea.innerHTML = `
             <div class="card p-6">
-                <h3 class="text-2xl font-bold text-red-700 mb-4">Painel de Diagnóstico</h3>
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Painel de Diagnóstico e Performance</h3>
                 
                 <div class="diagnostico-grid">
                     ${Components.metricasPerformance()}
@@ -2929,7 +2865,7 @@
                     <strong>✓ Conexão bem-sucedida!</strong><br>
                     - Usuários: ${users.length} registros<br>
                     - Tarefas: ${tarefas.length} registros<br>
-                    - Status: Operacional com segurança v9.7
+                    - Status: Operacional
                 </div>
             `;
         } catch (error) {
@@ -2953,10 +2889,12 @@
     document.addEventListener('DOMContentLoaded', init);
 
     // ==================== EXPORTAÇÃO DE FUNÇÕES GLOBAIS ====================
+    // CORREÇÃO: Adicionar a função logout ao escopo global
     window.logout = function() {
         AuthManager.logout();
     };
 
+    // CORREÇÃO: Garantir que o modal feche corretamente
     window.closeModal = function() {
         UIManager.closeModal();
     };
