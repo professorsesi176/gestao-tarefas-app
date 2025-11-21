@@ -356,7 +356,7 @@
         .checkbox-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 4px;
+            gap: 1px;
             margin-top: 10px;
             padding: 8px;
             background-color: #f9f9f9;
@@ -581,7 +581,7 @@
         
         .turmas-buttons {
             display: flex;
-            gap: 2px;
+            gap: 0;
             flex-wrap: wrap;
         }
         
@@ -589,13 +589,23 @@
             background-color: #CC0000;
             color: white;
             padding: 8px 12px;
-            border-radius: 6px;
+            border-radius: 0;
             font-weight: 600;
             transition: background-color 0.2s;
             cursor: pointer;
             border: none;
             min-width: 40px;
             text-align: center;
+            border-right: 1px solid white;
+        }
+        
+        .btn-turma-compact:first-child {
+            border-radius: 6px 0 0 6px;
+        }
+        
+        .btn-turma-compact:last-child {
+            border-radius: 0 6px 6px 0;
+            border-right: none;
         }
         
         .btn-turma-compact:hover {
@@ -727,7 +737,7 @@
             color: #1e40af;
         }
 
-        /* Novos estilos para a versão 9.8.1 */
+        /* Novos estilos para a versão 9.9 */
         .aluno-relatorio-card {
             background-color: #f8fafc;
             border: 2px solid #e2e8f0;
@@ -798,7 +808,7 @@
         <div id="content-area"></div>
 
         <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-            Desenvolvido por Geovane Modena | Versão 9.8.1
+            Desenvolvido por Geovane Modena | Versão 9.9
         </footer>
     </div>
 
@@ -1491,7 +1501,7 @@
     // Função de inicialização
     async function init() {
         try {
-            console.log('Inicializando sistema v9.8.1...');
+            console.log('Inicializando sistema v9.9...');
             const response = await apiGet('getUsers', {}, true);
             STATE.usuarios = response.data || response;
             console.log('Usuários carregados:', STATE.usuarios.length);
@@ -2014,6 +2024,21 @@
                         </div>
                     </div>
                     
+                    <div class="aluno-relatorio-card" onclick="toggleRelatorioAluno()">
+                        <div class="aluno-relatorio-header">
+                            <h4 class="font-semibold text-red-700">Meu Desempenho</h4>
+                            <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="m6 9 6 6 6-6"/>
+                            </svg>
+                        </div>
+                        <div class="aluno-relatorio-content" id="relatorio-aluno-content">
+                            <div class="text-center py-4">
+                                <div class="spinner"></div>
+                                <p class="mt-2 text-gray-600">Carregando relatório...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="fundamento-cientifico">
                         <div class="fundamento-title" onclick="toggleFundamentoCientifico()">
                             <span>Fundamentos Científicos da Aprendizagem</span>
@@ -2027,7 +2052,7 @@
                                 <li>O cérebro consolida melhor a memória entre 6h e 9h após o aprendizado inicial.</li>
                                 <li>O sono tem papel essencial — é durante o sono que ocorre a consolidação sináptica (transformar memórias de curto em longo prazo).</li>
                                 <li>A atenção sustentada é máxima no período entre 8h e 11h da manhã e tem uma segunda faixa ótima entre 17h e 20h.</li>
-                                <li>À noite, atividades reflexivas e creativas têm melhor rendimento, porque o córtex pré-frontal está menos sobrecarregado de estímulos novos.</li>
+                                <li>À noite, atividades reflexivas e criativas têm melhor rendimento, porque o córtex pré-frontal está menos sobrecarregado de estímulos novos.</li>
                                 <li>Sono de 7h a 9h por noite.</li>
                                 <li>Evitar telas nos 30 min antes de dormir.</li>
                                 <li>Fazer revisão leve antes do sono.</li>
@@ -2047,21 +2072,6 @@
                                     <li>WALKER, Matthew. Why We Sleep. 2018.</li>
                                     <li>BLOOM, Benjamin S. Taxonomy of Educational Objectives. 1956.</li>
                                 </ul>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="aluno-relatorio-card" onclick="toggleRelatorioAluno()">
-                        <div class="aluno-relatorio-header">
-                            <h4 class="font-semibold text-red-700">Meu Desempenho</h4>
-                            <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="m6 9 6 6 6-6"/>
-                            </svg>
-                        </div>
-                        <div class="aluno-relatorio-content" id="relatorio-aluno-content">
-                            <div class="text-center py-4">
-                                <div class="spinner"></div>
-                                <p class="mt-2 text-gray-600">Carregando relatório...</p>
                             </div>
                         </div>
                     </div>
@@ -2224,7 +2234,7 @@
         if (contador.liberada && !expirado) {
             horarioInfo = '<div class="horario-info horario-maxima">Entrega disponível hoje das 13h às 22h.</div>';
         } else if (!contador.liberada && !expirado) {
-            horarioInfo = '<div class="horario-info horario-fora">Entrega disponível apenas em seu dia específico, das 13h às 22h.</div>';
+            horarioInfo = '<div class="horario-info horario-fora">Conteúdo e entrega disponíveis apenas em seu dia específico, das 13h às 22h.</div>';
         } else if (expirado) {
             horarioInfo = '<div class="horario-info horario-fora">Prazo de entrega desta parte já expirou.</div>';
         }
@@ -2235,9 +2245,6 @@
                 <div class="flex justify-between items-center">
                     <strong>Parte ${numeroParte}: ${retencaoAviso}</strong>
                     <span class="contador ${contador.classe}">${contador.texto}</span>
-                </div>
-                <div class="conteudo-bloqueado">
-                    Conteúdo liberado para entrega apenas no dia específico desta parte, entre 13h e 22h.
                 </div>
                 ${horarioInfo}
             </div>`;
@@ -2359,7 +2366,7 @@
             CacheManager.remove(`api_getEntregasAluno_${JSON.stringify({rm: STATE.usuarioLogado.RM})}`);
             CacheManager.remove(`relatorio_${STATE.usuarioLogado.Turma}`);
             
-            // Recarregar as tarefas sem recarregar a página
+            // Recarregar as tarefas para habilitar o campo novamente
             await carregarTarefasAluno();
         } catch (error) {
             UIManager.showModal('Erro', `Erro ao excluir link: ${error.message}`);
@@ -2668,7 +2675,19 @@
                         let countNotasTarefa = 0;
                         
                         for (let parte = 1; parte <= 4; parte++) {
-                            const notaParte = entrega ? parseFloat(entrega[`NotaParte${parte}`] || 0) : 0;
+                            // Buscar nota da parte específica
+                            let notaParte = 0;
+                            if (entrega) {
+                                // Verificar se a nota está disponível diretamente
+                                if (entrega[`NotaParte${parte}`] !== undefined) {
+                                    notaParte = parseFloat(entrega[`NotaParte${parte}`]) || 0;
+                                } 
+                                // Se não, verificar se há link enviado (considerar como 2.5 se enviado)
+                                else if (entrega[`Link${parte}`]) {
+                                    notaParte = 2.5; // Nota padrão para entrega sem correção
+                                }
+                            }
+                            
                             const colunaParte = 3 + (j * 5) + (parte - 1);
                             
                             let classeNota = 'text-gray-600';
@@ -3020,7 +3039,7 @@
                     <strong>✓ Conexão bem-sucedida!</strong><br>
                     - Usuários: ${users.length} registros<br>
                     - Tarefas: ${tarefas.length} registros<br>
-                    - Status: Operacional com segurança v9.8.1
+                    - Status: Operacional com segurança v9.9
                 </div>
             `;
         } catch (error) {
