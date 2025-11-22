@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestão de Tarefas Escolar v10.0</title>
+    <title>Sistema de Gestão de Tarefas</title>
     
     <!-- Otimizações de Performance -->
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
@@ -356,20 +356,20 @@
         .checkbox-group {
             display: flex;
             flex-wrap: nowrap;
-            gap: 2px;
+            gap: 0;
             margin-top: 10px;
-            padding: 8px;
+            padding: 4px;
             background-color: #f9f9f9;
             border-radius: 8px;
-            overflow-x: auto;
+            overflow-x: hidden;
         }
         
         .checkbox-item {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 2px;
             white-space: nowrap;
-            margin-right: 12px;
+            margin-right: 8px;
         }
         
         .checkbox-item:last-child {
@@ -814,11 +814,11 @@
         /* Para melhorar a responsividade em telas menores */
         @media (max-width: 640px) {
             .checkbox-group {
-                gap: 1px;
+                gap: 0;
             }
             
             .checkbox-item {
-                margin-right: 8px;
+                margin-right: 6px;
             }
             
             .checkbox-item label {
@@ -831,7 +831,7 @@
     <div id="app-container" class="w-full max-w-6xl bg-white shadow-xl rounded-2xl p-6 sm:p-8 transition-all duration-300">
         <header class="mb-8 border-b pb-4">
             <div class="header-content">
-                <h1 class="text-3xl font-extrabold text-red-700 text-center">Sistema de Gestão de Tarefas v10.0</h1>
+                <h1 class="text-3xl font-extrabold text-red-700 text-center">Sistema de Gestão de Tarefas</h1>
                 <div id="user-info" class="user-info-container text-center mt-2 text-gray-600"></div>
                 <div class="absolute top-0 right-0 flex space-x-2">
                     <button id="diagnosticoBtn" class="btn-primario hidden">Diagnóstico</button>
