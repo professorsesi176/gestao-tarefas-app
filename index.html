@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestão de Tarefas Escolar</title>
+    <title>Sistema de Gestão de Tarefas Escolar v10.0</title>
     
     <!-- Otimizações de Performance -->
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
@@ -133,7 +133,6 @@
             font-weight: 600;
             margin-bottom: 0.5rem;
             color: #374151;
-            font-size: 1rem;
         }
         
         .table-responsive {
@@ -353,23 +352,24 @@
             padding-right: 40px;
         }
 
-        /* Estilos para tarefas e formulários - CHECKBOXES ULTRA COMPACTOS */
+        /* Estilos para tarefas e formulários */
         .checkbox-group {
             display: flex;
             flex-wrap: nowrap;
-            gap: 0;
-            margin-top: 8px;
-            padding: 0;
-            overflow-x: hidden;
+            gap: 2px;
+            margin-top: 10px;
+            padding: 8px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            overflow-x: auto;
         }
         
         .checkbox-item {
             display: flex;
             align-items: center;
+            gap: 4px;
             white-space: nowrap;
-            padding: 0;
-            margin: 0;
-            margin-right: -4px;
+            margin-right: 12px;
         }
         
         .checkbox-item:last-child {
@@ -378,22 +378,18 @@
         
         .checkbox-item input[type="checkbox"] {
             margin: 0;
-            transform: scale(0.75);
-            margin-right: -6px;
+            transform: scale(0.9);
         }
         
         .checkbox-item label {
             margin-bottom: 0;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             white-space: nowrap;
-            padding: 0;
-            margin-left: -6px;
-            line-height: 1;
         }
         
         .turma-checkbox {
-            width: 14px;
-            height: 14px;
+            width: 16px;
+            height: 16px;
             accent-color: #CC0000;
             cursor: pointer;
             margin: 0;
@@ -409,7 +405,6 @@
         .form-row label {
             margin-bottom: 0;
             min-width: 120px;
-            font-size: 1rem;
         }
         
         .form-row input, .form-row textarea {
@@ -819,15 +814,15 @@
         /* Para melhorar a responsividade em telas menores */
         @media (max-width: 640px) {
             .checkbox-group {
-                gap: 0;
+                gap: 1px;
             }
             
             .checkbox-item {
-                margin-right: -4px;
+                margin-right: 8px;
             }
             
             .checkbox-item label {
-                font-size: 0.95rem;
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -836,7 +831,7 @@
     <div id="app-container" class="w-full max-w-6xl bg-white shadow-xl rounded-2xl p-6 sm:p-8 transition-all duration-300">
         <header class="mb-8 border-b pb-4">
             <div class="header-content">
-                <h1 class="text-3xl font-extrabold text-red-700 text-center">Sistema de Gestão de Tarefas</h1>
+                <h1 class="text-3xl font-extrabold text-red-700 text-center">Sistema de Gestão de Tarefas v10.0</h1>
                 <div id="user-info" class="user-info-container text-center mt-2 text-gray-600"></div>
                 <div class="absolute top-0 right-0 flex space-x-2">
                     <button id="diagnosticoBtn" class="btn-primario hidden">Diagnóstico</button>
@@ -1639,35 +1634,35 @@
                     <h3 class="text-2xl font-bold mb-4 text-red-700" id="titulo-formulario">${STATE.tarefaEditando ? 'Editar Tarefa' : 'Criar Nova Tarefa'}</h3>
                     
                     <div class="form-row">
-                        <label class="block text-sm font-medium text-gray-700" style="font-size: 1rem;">Turmas:</label>
+                        <label class="block text-sm font-medium text-gray-700">Turmas:</label>
                         <div class="checkbox-group" id="turmasCheckboxes"></div>
                     </div>
                     
                     <div class="form-row">
-                        <label for="tema" class="block text-sm font-medium text-gray-700" style="font-size: 1rem;">Tema da Tarefa</label>
+                        <label for="tema" class="block text-sm font-medium text-gray-700">Tema da Tarefa</label>
                         <input type="text" id="tema" placeholder="Ex: Matemática - Frações" class="mt-1" required maxlength="${CONFIG.MAX_TEMA_LEN}">
                     </div>
                     
                     <div class="form-row">
-                        <label for="dataAula" class="block text-sm font-medium text-gray-700" style="font-size: 1rem;">Data da Aula</label>
+                        <label for="dataAula" class="block text-sm font-medium text-gray-700">Data da Aula</label>
                         <input type="date" id="dataAula" class="mt-1" required>
                     </div>
                     
                     <div class="mt-4 space-y-4">
                         <div>
-                            <label for="parte1" class="block text-sm font-medium text-gray-700 mb-2" style="font-size: 1rem;">Parte 1 (dia da aula, 13h–22h) <span class="retencao-aviso retencao-50">50% retenção</span></label>
+                            <label for="parte1" class="block text-sm font-medium text-gray-700 mb-2">Parte 1 (dia da aula, 13h–22h) <span class="retencao-aviso retencao-50">50% retenção</span></label>
                             <textarea id="parte1" placeholder="Descreva a parte 1 da tarefa. Use Enter para criar parágrafos." rows="4" required maxlength="${CONFIG.MAX_PARTE_LEN}"></textarea>
                         </div>
                         <div>
-                            <label for="parte2" class="block text-sm font-medium text-gray-700 mb-2" style="font-size: 1rem;">Parte 2 (7º dia, 13h–22h) <span class="retencao-aviso retencao-25">25% retenção</span></label>
+                            <label for="parte2" class="block text-sm font-medium text-gray-700 mb-2">Parte 2 (7º dia, 13h–22h) <span class="retencao-aviso retencao-25">25% retenção</span></label>
                             <textarea id="parte2" placeholder="Descreva a parte 2 da tarefa. Use Enter para criar parágrafos." rows="4" required maxlength="${CONFIG.MAX_PARTE_LEN}"></textarea>
                         </div>
                         <div>
-                            <label for="parte3" class="block text-sm font-medium text-gray-700 mb-2" style="font-size: 1rem;">Parte 3 (14º dia, 13h–22h) <span class="retencao-aviso retencao-15">15% retenção</span></label>
+                            <label for="parte3" class="block text-sm font-medium text-gray-700 mb-2">Parte 3 (14º dia, 13h–22h) <span class="retencao-aviso retencao-15">15% retenção</span></label>
                             <textarea id="parte3" placeholder="Descreva a parte 3 da tarefa. Use Enter para criar parágrafos." rows="4" required maxlength="${CONFIG.MAX_PARTE_LEN}"></textarea>
                         </div>
                         <div>
-                            <label for="parte4" class="block text-sm font-medium text-gray-700 mb-2" style="font-size: 1rem;">Parte 4 (28º dia, 13h–22h) <span class="retencao-aviso retencao-10">9.99% retenção</span></label>
+                            <label for="parte4" class="block text-sm font-medium text-gray-700 mb-2">Parte 4 (28º dia, 13h–22h) <span class="retencao-aviso retencao-10">9.99% retenção</span></label>
                             <textarea id="parte4" placeholder="Descreva a parte 4 da tarefa. Use Enter para criar parágrafos." rows="4" required maxlength="${CONFIG.MAX_PARTE_LEN}"></textarea>
                         </div>
                     </div>
@@ -1705,7 +1700,7 @@
             </div>
         `;
 
-        // Configurar checkboxes de turmas - VERSÃO 10.0: Checkboxes ULTRA compactos
+        // Configurar checkboxes de turmas - VERSÃO 10.0: Checkboxes compactos em linha única
         document.getElementById('turmasCheckboxes').innerHTML = CONFIG.TURMAS.map(t => `
             <div class="checkbox-item">
                 <input type="checkbox" value="${t}" class="turma-checkbox">
