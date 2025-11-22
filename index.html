@@ -353,14 +353,14 @@
             padding-right: 40px;
         }
 
-        /* Estilos para tarefas e formulários - CHECKBOXES ULTRA COMPACTOS (OTIMIZADOS) */
+        /* Estilos para tarefas e formulários - CHECKBOXES ULTRA COMPACTOS */
         .checkbox-group {
             display: flex;
             flex-wrap: nowrap;
             gap: 0;
-            margin-top: 4px;
+            margin-top: 8px;
             padding: 0;
-            overflow-x: auto;
+            overflow-x: hidden;
         }
         
         .checkbox-item {
@@ -369,7 +369,7 @@
             white-space: nowrap;
             padding: 0;
             margin: 0;
-            margin-right: -8px;
+            margin-right: -4px;
         }
         
         .checkbox-item:last-child {
@@ -378,22 +378,22 @@
         
         .checkbox-item input[type="checkbox"] {
             margin: 0;
-            transform: scale(0.7);
-            margin-right: -10px;
+            transform: scale(0.75);
+            margin-right: -6px;
         }
         
         .checkbox-item label {
             margin-bottom: 0;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             white-space: nowrap;
             padding: 0;
-            margin-left: -8px;
+            margin-left: -6px;
             line-height: 1;
         }
         
         .turma-checkbox {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             accent-color: #CC0000;
             cursor: pointer;
             margin: 0;
@@ -823,16 +823,11 @@
             }
             
             .checkbox-item {
-                margin-right: -8px;
+                margin-right: -4px;
             }
             
             .checkbox-item label {
-                font-size: 0.85rem;
-            }
-            
-            .checkbox-item input[type="checkbox"] {
-                transform: scale(0.65);
-                margin-right: -12px;
+                font-size: 0.95rem;
             }
         }
     </style>
@@ -1710,7 +1705,7 @@
             </div>
         `;
 
-        // Configurar checkboxes de turmas - VERSÃO 10.0: Checkboxes ULTRA compactos OTIMIZADOS
+        // Configurar checkboxes de turmas - VERSÃO 10.0: Checkboxes ULTRA compactos
         document.getElementById('turmasCheckboxes').innerHTML = CONFIG.TURMAS.map(t => `
             <div class="checkbox-item">
                 <input type="checkbox" value="${t}" class="turma-checkbox">
