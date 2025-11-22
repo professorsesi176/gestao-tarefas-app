@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestão de Tarefas Escolar</title>
+    <title>Sistema de Gestão de Tarefas Escolar v10.0</title>
     
     <!-- Otimizações de Performance -->
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
@@ -363,7 +363,7 @@
             border-radius: 8px;
             overflow-x: auto;
         }
-
+        
         .checkbox-item {
             display: flex;
             align-items: center;
@@ -371,22 +371,30 @@
             white-space: nowrap;
             margin-right: 12px;
         }
-
+        
         .checkbox-item:last-child {
             margin-right: 0;
         }
-
+        
         .checkbox-item input[type="checkbox"] {
             margin: 0;
             transform: scale(0.9);
         }
-
+        
         .checkbox-item label {
             margin-bottom: 0;
             font-size: 0.85rem;
             white-space: nowrap;
         }
-                
+        
+        .turma-checkbox {
+            width: 16px;
+            height: 16px;
+            accent-color: #CC0000;
+            cursor: pointer;
+            margin: 0;
+        }
+        
         .form-row {
             display: flex;
             align-items: center;
@@ -750,7 +758,7 @@
             color: #1e40af;
         }
 
-        /* Novos estilos para a versão 9.9 */
+        /* Novos estilos para a versão 10.0 */
         .aluno-relatorio-card {
             background-color: #f8fafc;
             border: 2px solid #e2e8f0;
@@ -802,13 +810,28 @@
         .tarefa-expand-content.expandido {
             display: block;
         }
+        
+        /* Para melhorar a responsividade em telas menores */
+        @media (max-width: 640px) {
+            .checkbox-group {
+                gap: 1px;
+            }
+            
+            .checkbox-item {
+                margin-right: 8px;
+            }
+            
+            .checkbox-item label {
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
     <div id="app-container" class="w-full max-w-6xl bg-white shadow-xl rounded-2xl p-6 sm:p-8 transition-all duration-300">
         <header class="mb-8 border-b pb-4">
             <div class="header-content">
-                <h1 class="text-3xl font-extrabold text-red-700 text-center">Sistema de Gestão de Tarefas</h1>
+                <h1 class="text-3xl font-extrabold text-red-700 text-center">Sistema de Gestão de Tarefas v10.0</h1>
                 <div id="user-info" class="user-info-container text-center mt-2 text-gray-600"></div>
                 <div class="absolute top-0 right-0 flex space-x-2">
                     <button id="diagnosticoBtn" class="btn-primario hidden">Diagnóstico</button>
@@ -821,7 +844,7 @@
         <div id="content-area"></div>
 
         <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-            Desenvolvido por Geovane Modena | Versão 9.9.2
+            Desenvolvido por Geovane Modena | Versão 10.0
         </footer>
     </div>
 
@@ -850,7 +873,6 @@
     // ==================== CONFIGURAÇÃO E CONSTANTES ====================
     const CONFIG = {
         API_URL: "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec",
-        // TOKEN REMOVIDO - Segurança por rate limiting no backend
         CACHE_TTL: 5 * 60 * 1000, // 5 minutos
         MAX_TEMA_LEN: 200,
         MAX_PARTE_LEN: 4000,
@@ -1125,7 +1147,7 @@
             
             return new Promise((resolve, reject) => {
                 const startTime = performance.now();
-                let url = `${CONFIG.API_URL}?`; // TOKEN REMOVIDO
+                let url = `${CONFIG.API_URL}?`;
                 
                 if (func) {
                     url += `func=${func}`;
@@ -1162,7 +1184,7 @@
         post: async (action, dados) => {
             return new Promise((resolve, reject) => {
                 const startTime = performance.now();
-                let url = `${CONFIG.API_URL}?action=${action}`; // TOKEN REMOVIDO
+                let url = `${CONFIG.API_URL}?action=${action}`;
                 
                 for (const key in dados) {
                     if (dados[key] !== undefined && dados[key] !== null) {
@@ -1506,7 +1528,7 @@
     // Função de inicialização
     async function init() {
         try {
-            console.log('Inicializando sistema v9.9.2...');
+            console.log('Inicializando sistema v10.0...');
             const response = await apiGet('getUsers', {}, true);
             STATE.usuarios = response.data || response;
             console.log('Usuários carregados:', STATE.usuarios.length);
@@ -1678,11 +1700,11 @@
             </div>
         `;
 
-        // Configurar checkboxes de turmas - CORREÇÃO: Checkboxes lado a lado
+        // Configurar checkboxes de turmas - VERSÃO 10.0: Checkboxes compactos em linha única
         document.getElementById('turmasCheckboxes').innerHTML = CONFIG.TURMAS.map(t => `
             <div class="checkbox-item">
-                <input type="checkbox" value="${t}" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
-                <label class="text-gray-700">${t}</label>
+                <input type="checkbox" value="${t}" class="turma-checkbox">
+                <label>${t}</label>
             </div>
         `).join("");
 
@@ -2676,7 +2698,7 @@
                         let countNotasTarefa = 0;
                         
                         for (let parte = 1; parte <= 4; parte++) {
-                            // CORREÇÃO VERSÃO 9.9.2: Buscar nota da parte específica corretamente
+                            // CORREÇÃO VERSÃO 10.0: Buscar nota da parte específica corretamente
                             let notaParte = 0;
                             if (entrega) {
                                 // Acessar diretamente a propriedade NotaParteX
@@ -3011,7 +3033,7 @@
                     <strong>✓ Conexão bem-sucedida!</strong><br>
                     - Usuários: ${users.length} registros<br>
                     - Tarefas: ${tarefas.length} registros<br>
-                    - Status: Operacional com segurança v9.9.2
+                    - Status: Operacional com segurança v10.0
                 </div>
             `;
         } catch (error) {
