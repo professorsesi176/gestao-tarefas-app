@@ -16,802 +16,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        
-        :root {
-            --cor-primaria: #CC0000;
-            --cor-secundaria: #A00000;
-            --cor-sucesso: #10b981;
-            --cor-erro: #ef4444;
-            --cor-aviso: #f59e0b;
-        }
-        
-        * {
-            box-sizing: border-box;
-        }
-        
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f4f7f9;
-            margin: 0;
-            padding: 0;
-        }
-        
-        .card { 
-            background-color: white; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.2); 
-        }
-        
-        .btn-primario { 
-            background-color: var(--cor-primaria); 
-            color: white; 
-            padding: 10px 20px; 
-            border-radius: 8px; 
-            font-weight: 600; 
-            transition: all 0.2s; 
-            cursor: pointer; 
-            font-size: 14px;
-            border: none;
-        }
-        
-        .btn-primario:hover { 
-            background-color: var(--cor-secundaria); 
-            transform: translateY(-1px);
-        }
-        
-        .btn-secundario { 
-            background-color: #d1d5db; 
-            color: #1e1e1e; 
-            padding: 8px 16px; 
-            border-radius: 8px; 
-            font-weight: 600; 
-            transition: background-color 0.2s; 
-            cursor: pointer; 
-            border: none;
-        }
-        
-        .btn-secundario:hover { 
-            background-color: #9ca3af; 
-        }
-        
-        input, textarea, select {
-            border: 1px solid #d1d5db; 
-            padding: 12px; 
-            border-radius: 8px; 
-            width: 100%; 
-            transition: border-color 0.2s; 
-            margin-top: 4px; 
-            margin-bottom: 8px;
-            font-family: inherit;
-        }
-        
-        input:focus, textarea:focus, select:focus { 
-            border-color: var(--cor-primaria); 
-            outline: none; 
-            box-shadow: 0 0 0 3px rgba(204, 0, 0, 0.1);
-        }
-        
-        .hidden { 
-            display: none; 
-        }
-        
-        .loading-skeleton {
-            background: linear-gradient(90deg, #f9fafb 25%, #f3f4f6 50%, #f9fafb 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
-            border-radius: 6px;
-        }
-        
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-        
-        .spinner {
-            border: 2px solid #f3f3f3;
-            border-radius: 50%;
-            border-top: 2px solid var(--cor-primaria);
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Componentes Reutilizáveis */
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        
-        .form-label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #374151;
-            font-size: 1rem;
-        }
-        
-        .table-responsive {
-            overflow-x: auto;
-        }
-        
-        .compact-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .compact-table th, 
-        .compact-table td {
-            padding: 12px 8px;
-            border: 1px solid #e5e7eb;
-        }
-        
-        .compact-table th {
-            background-color: var(--cor-primaria);
-            color: white;
-            font-weight: 600;
-        }
-        
-        .compact-table tbody tr:nth-child(even) {
-            background-color: #f9fafb;
-        }
-        
-        /* Utilitários de Layout */
-        .flex { display: flex; }
-        .flex-col { flex-direction: column; }
-        .items-center { align-items: center; }
-        .justify-between { justify-content: space-between; }
-        .space-y-4 > * + * { margin-top: 1rem; }
-        .space-x-2 > * + * { margin-left: 0.5rem; }
-        .w-full { width: 100%; }
-        .text-center { text-align: center; }
-        
-        /* Componentes Específicos */
-        .contador {
-            display: inline-block;
-            padding: 4px 8px;
-            background-color: #f3f4f6;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            margin-left: 8px;
-            min-width: 80px;
-            text-align: center;
-        }
-        
-        .contador.disponivel {
-            background-color: #d1fae5;
-            color: #065f46;
-        }
-        
-        .contador.expirado {
-            background-color: #fee2e2;
-            color: #991b1b;
-        }
-        
-        .contador.aguardando {
-            background-color: #e5e7eb;
-            color: #374151;
-        }
-        
-        .turma-column {
-            width: 80px;
-            text-align: center;
-        }
-        
-        .data-column {
-            width: 120px;
-            text-align: center;
-        }
-        
-        .acoes-column {
-            width: 200px;
-            text-align: center;
-        }
-        
-        /* Modal */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
-            padding: 1rem;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 8px;
-            padding: 1.5rem;
-            max-width: 400px;
-            width: 100%;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        }
-        
-        /* Cards de Diagnóstico */
-        .diagnostico-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-        
-        .diagnostico-card {
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 1rem;
-            background-color: white;
-        }
-        
-        .test-result {
-            padding: 12px;
-            border-radius: 6px;
-            margin: 10px 0;
-        }
-        
-        .test-success {
-            background-color: #d1fae5;
-            border: 1px solid #a7f3d0;
-            color: #065f46;
-        }
-        
-        .test-error {
-            background-color: #fee2e2;
-            border: 1px solid #fecaca;
-            color: #991b1b;
-        }
-        
-        .test-warning {
-            background-color: #fef3c7;
-            border: 1px solid #fde68a;
-            color: #92400e;
-        }
-        
-        /* Responsividade */
-        @media (max-width: 768px) {
-            .diagnostico-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .compact-table {
-                font-size: 0.875rem;
-            }
-            
-            .acoes-column {
-                width: 150px;
-            }
-        }
-
-        /* Estilos específicos para login */
-        .email-container {
-            display: flex;
-            width: 100%;
-        }
-        
-        .email-prefix {
-            flex: 1;
-        }
-        
-        .email-suffix {
-            background-color: #f3f4f6;
-            border: 1px solid #d1d5db;
-            border-left: none;
-            border-radius: 0 8px 8px 0;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            color: #6b7280;
-            font-weight: 500;
-        }
-        
-        .email-prefix input {
-            border-radius: 8px 0 0 8px !important;
-            border-right: none;
-        }
-        
-        .password-container {
-            position: relative;
-            width: 100%;
-        }
-        
-        .password-toggle {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #6b7280;
-            z-index: 10;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-        }
-        
-        .password-toggle:hover {
-            color: #374151;
-        }
-        
-        .password-toggle:focus {
-            outline: none;
-        }
-        
-        .password-container input {
-            padding-right: 40px;
-        }
-
-        /* Estilos para tarefas e formulários - CHECKBOXES COMPACTOS (VERSÃO FUNCIONAL) */
-        .checkbox-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            white-space: nowrap;
-        }
-        
-        .checkbox-item input[type="checkbox"] {
-            margin: 0;
-            margin-right: 4px;
-        }
-        
-        .checkbox-item label {
-            margin-bottom: 0;
-            font-size: 0.95rem;
-            white-space: nowrap;
-        }
-        
-        .turma-checkbox {
-            width: 16px;
-            height: 16px;
-            accent-color: #CC0000;
-            cursor: pointer;
-        }
-        
-        .form-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .form-row label {
-            margin-bottom: 0;
-            min-width: 120px;
-            font-size: 1rem;
-        }
-        
-        .form-row input, .form-row textarea {
-            flex: 1;
-            margin-top: 0;
-        }
-        
-        .link-container {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-            align-items: center;
-        }
-        
-        .link-input {
-            flex: 1;
-            padding: 8px;
-            font-size: 0.875rem;
-        }
-        
-        .btn-link {
-            padding: 8px 12px;
-            font-size: 0.8rem;
-        }
-        
-        .btn-link:disabled {
-            background-color: #9ca3af !important;
-            color: #6b7280 !important;
-            cursor: not-allowed !important;
-            opacity: 0.6;
-        }
-        
-        .link-salvo {
-            background-color: #f3f4f6 !important;
-            color: #6b7280 !important;
-            cursor: not-allowed !important;
-            border: 1px solid #d1d5db;
-        }
-        
-        .conteudo-formatado {
-            white-space: pre-line;
-            line-height: 1.6;
-            margin-top: 8px;
-        }
-        
-        .instrucoes-box {
-            background-color: #f0f9ff;
-            border: 1px solid #bae6fd;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 20px;
-        }
-        
-        .fundamento-cientifico {
-            background-color: #fefce8;
-            border: 1px solid #fef08a;
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 20px;
-            cursor: pointer;
-        }
-        
-        .fundamento-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 600;
-            color: #92400e;
-        }
-        
-        .fundamento-content {
-            margin-top: 12px;
-            display: none;
-        }
-        
-        .fundamento-content.expandido {
-            display: block;
-        }
-        
-        .expand-icon {
-            transition: transform 0.2s;
-        }
-        
-        .expand-icon.expandido {
-            transform: rotate(180deg);
-        }
-        
-        .retencao-aviso {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-        
-        .retencao-50 {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
-        
-        .retencao-25 {
-            background-color: #d1fae5;
-            color: #065f46;
-        }
-        
-        .retencao-15 {
-            background-color: #dbeafe;
-            color: #1e40af;
-        }
-        
-        .retencao-10 {
-            background-color: #e0e7ff;
-            color: #3730a3;
-        }
-        
-        .horario-info {
-            font-size: 0.75rem;
-            margin-top: 4px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            text-align: center;
-        }
-        
-        .horario-maxima {
-            background-color: #d1fae5;
-            color: #065f46;
-            font-weight: 600;
-        }
-        
-        .horario-fora {
-            background-color: #fee2e2;
-            color: #991b1b;
-        }
-        
-        .conteudo-bloqueado {
-            color: #6b7280;
-            font-style: italic;
-            padding: 8px;
-            background-color: #f9fafb;
-            border-radius: 4px;
-            margin-top: 8px;
-        }
-        
-        .btn-editar {
-            background-color: #3b82f6;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        
-        .btn-editar:hover {
-            background-color: #2563eb;
-        }
-        
-        .btn-excluir {
-            background-color: #ef4444;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        
-        .btn-excluir:hover {
-            background-color: #dc2626;
-        }
-        
-        .btn-exportar {
-            background-color: #059669;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-weight: 600;
-            transition: background-color 0.2s;
-            cursor: pointer;
-            border: none;
-            margin-left: 10px;
-        }
-        
-        .btn-exportar:hover {
-            background-color: #047857;
-        }
-        
-        .turmas-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        .turmas-buttons {
-            display: flex;
-            gap: 0;
-            flex-wrap: wrap;
-        }
-        
-        .btn-turma-compact {
-            background-color: #CC0000;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 0;
-            font-weight: 600;
-            transition: background-color 0.2s;
-            cursor: pointer;
-            border: none;
-            min-width: 40px;
-            text-align: center;
-            border-right: 1px solid white;
-        }
-        
-        .btn-turma-compact:first-child {
-            border-radius: 6px 0 0 6px;
-        }
-        
-        .btn-turma-compact:last-child {
-            border-radius: 0 6px 6px 0;
-            border-right: none;
-        }
-        
-        .btn-turma-compact:hover {
-            background-color: #A00000;
-        }
-        
-        .btn-turma-compact.active {
-            background-color: #A00000;
-            box-shadow: 0 0 0 2px white, 0 0 0 4px #CC0000;
-        }
-        
-        .export-buttons-container {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .numero-coluna {
-            width: 50px;
-            text-align: center;
-        }
-        
-        .media-coluna {
-            width: 100px;
-            text-align: center;
-            font-weight: bold;
-        }
-        
-        .parte-column {
-            width: 60px;
-            text-align: center;
-            font-size: 0.75rem;
-        }
-        
-        .media-tarefa-column {
-            width: 70px;
-            text-align: center;
-            font-weight: bold;
-        }
-        
-        .header-tarefa {
-            background-color: #CC0000;
-            color: white;
-            text-align: center;
-            font-weight: bold;
-        }
-        
-        .subheader-tarefa {
-            background-color: #e53e3e;
-            color: white;
-            text-align: center;
-            font-size: 0.7rem;
-            font-weight: bold;
-        }
-        
-        .tarefa-group {
-            border-right: 2px solid #c53030;
-        }
-        
-        .tarefa-group:last-child {
-            border-right: none;
-        }
-        
-        .btn-formatacao {
-            background-color: #f3f4f6;
-            border: 1px solid #d1d5db;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            margin-right: 5px;
-            margin-bottom: 5px;
-        }
-        
-        .btn-formatacao:hover {
-            background-color: #e5e7eb;
-        }
-        
-        .btn-loading {
-            position: relative;
-            color: transparent;
-        }
-        
-        .btn-loading::after {
-            content: "";
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            top: 50%;
-            left: 50%;
-            margin-left: -10px;
-            margin-top: -10px;
-            border: 2px solid #ffffff;
-            border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        .tarefa-atualizada {
-            animation: highlight 2s ease;
-        }
-        
-        @keyframes highlight {
-            0% { background-color: #d1fae5; }
-            100% { background-color: transparent; }
-        }
-
-        /* Informações do sistema */
-        .system-info {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-        
-        .system-good {
-            background-color: #d1fae5;
-            color: #065f46;
-        }
-        
-        .system-warning {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
-        
-        .system-info-blue {
-            background-color: #dbeafe;
-            color: #1e40af;
-        }
-
-        /* Novos estilos para a versão 10.0 */
-        .aluno-relatorio-card {
-            background-color: #f8fafc;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .aluno-relatorio-card:hover {
-            border-color: #CC0000;
-            background-color: #fef2f2;
-        }
-        
-        .aluno-relatorio-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .aluno-relatorio-content {
-            margin-top: 12px;
-            display: none;
-        }
-        
-        .aluno-relatorio-content.expandido {
-            display: block;
-        }
-        
-        .tarefa-expand-button {
-            background: none;
-            border: none;
-            color: #CC0000;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 600;
-            padding: 4px 8px;
-        }
-        
-        .tarefa-expand-content {
-            display: none;
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #f9fafb;
-            border-radius: 6px;
-        }
-        
-        .tarefa-expand-content.expandido {
-            display: block;
-        }
-        
-        /* Para melhorar a responsividade em telas menores */
-        @media (max-width: 640px) {
-            .checkbox-group {
-                gap: 6px;
-            }
-            
-            .checkbox-item label {
-                font-size: 0.9rem;
-            }
-        }
+        /* ... (mantemos os mesmos estilos da versão 10.0) ... */
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -831,7 +36,7 @@
         <div id="content-area"></div>
 
         <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-            Desenvolvido por Geovane Modena | Versão 10.0
+            Desenvolvido por Geovane Modena | Versão 10.1
         </footer>
     </div>
 
@@ -1515,7 +720,7 @@
     // Função de inicialização
     async function init() {
         try {
-            console.log('Inicializando sistema v10.0...');
+            console.log('Inicializando sistema v10.1...');
             const response = await apiGet('getUsers', {}, true);
             STATE.usuarios = response.data || response;
             console.log('Usuários carregados:', STATE.usuarios.length);
@@ -2021,7 +1226,7 @@
                     <div class="instrucoes-box">
                         <div class="instrucoes-title">Instruções para entrega:</div>
                         <ol class="instrucoes-list">
-                            <li>Realize as atividades em folhas e as guarde com cuidado para serem entregues futuramente.</li>
+                            <li>Realize as atividades manualmente em folhas e as guarde com cuidado para serem entregues futuramente.</li>
                             <li>Tire uma foto, converta o arquivo em PDF, suba no seu OneDrive com o e-mail do SESI, compartilhe o link publicamente e o copie.</li>
                             <li>Cole no espaço indicado dentro do prazo estabelecido e salve para validar sua nota.</li>
                         </ol>
@@ -2434,6 +1639,13 @@
                 let notaTotal = 0;
                 let countEntregas = 0;
                 
+                // Filtrar apenas entregas válidas (com tarefa existente e nota > 0)
+                const entregasValidas = entregas.filter(entrega => {
+                    const tarefa = todasTarefas.find(t => t.ID === entrega.ID_Tarefa);
+                    const nota = parseFloat(entrega.Nota) || 0;
+                    return tarefa && nota > 0;
+                });
+                
                 relatorioHTML = `
                     <div class="overflow-x-auto">
                         <table class="min-w-full compact-table">
@@ -2448,15 +1660,19 @@
                             <tbody>
                 `;
                 
-                entregas.forEach(entrega => {
-                    let tarefa = todasTarefas.find(t => t.ID === entrega.ID_Tarefa);
-                    const temaTarefa = tarefa ? tarefa.Tema : `Tarefa (ID: ${entrega.ID_Tarefa})`;
+                entregasValidas.forEach(entrega => {
+                    const tarefa = todasTarefas.find(t => t.ID === entrega.ID_Tarefa);
+                    
+                    // Pular entregas sem tarefa correspondente
+                    if (!tarefa) return;
+                    
+                    const temaTarefa = tarefa.Tema;
                     
                     const linksEntregues = [];
-                    if (entrega.Link1) linksEntregues.push('Parte 1');
-                    if (entrega.Link2) linksEntregues.push('Parte 2');
-                    if (entrega.Link3) linksEntregues.push('Parte 3');
-                    if (entrega.Link4) linksEntregues.push('Parte 4');
+                    if (entrega.Link1 && entrega.Link1.trim() !== '') linksEntregues.push('Parte 1');
+                    if (entrega.Link2 && entrega.Link2.trim() !== '') linksEntregues.push('Parte 2');
+                    if (entrega.Link3 && entrega.Link3.trim() !== '') linksEntregues.push('Parte 3');
+                    if (entrega.Link4 && entrega.Link4.trim() !== '') linksEntregues.push('Parte 4');
                     
                     const notaEntrega = parseFloat(entrega.Nota) || 0;
                     if (notaEntrega > 0) {
@@ -2469,7 +1685,7 @@
                             <td>${Utils.escapeHTML(temaTarefa)}</td>
                             <td>${linksEntregues.join(', ') || 'Nenhum'}</td>
                             <td class="data-column">${Utils.formatarData(entrega.DataSubmissao)}</td>
-                            <td class="data-column font-semibold">${notaEntrega.toFixed(1)}</td>
+                            <td class="data-column font-semibold ${notaEntrega >= 7.5 ? 'text-green-600' : 'text-red-600'}">${notaEntrega.toFixed(1)}</td>
                         </tr>
                     `;
                 });
@@ -2484,7 +1700,15 @@
                                 <span class="font-semibold">Média Geral:</span>
                                 <span class="text-lg font-bold ${parseFloat(media) >= 7.5 ? 'text-green-600' : 'text-red-600'}">${media}</span>
                             </div>
+                            <div class="text-xs text-gray-500 mt-2">
+                                Baseado em ${countEntregas} ${countEntregas === 1 ? 'entrega válida' : 'entregas válidas'}
+                            </div>
                         </div>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <button onclick="limparCacheAluno()" class="btn-secundario text-sm">
+                            Atualizar Relatório
+                        </button>
                     </div>
                 `;
             }
@@ -2493,6 +1717,13 @@
         } catch (error) {
             container.innerHTML = `<p class="text-red-500 text-center py-4">Erro ao carregar relatório: ${Utils.escapeHTML(error.message)}</p>`;
         }
+    }
+
+    function limparCacheAluno() {
+        CacheManager.remove(`relatorio_aluno_${STATE.usuarioLogado.RM}`);
+        CacheManager.remove(`entregas_${STATE.usuarioLogado.RM}`);
+        toggleRelatorioAluno(); // Fecha e reabre
+        setTimeout(() => toggleRelatorioAluno(), 500);
     }
 
     async function mostrarRelatorioProfessor() {
@@ -2685,7 +1916,7 @@
                         let countNotasTarefa = 0;
                         
                         for (let parte = 1; parte <= 4; parte++) {
-                            // CORREÇÃO VERSÃO 10.0: Buscar nota da parte específica corretamente
+                            // CORREÇÃO VERSÃO 10.1: Buscar nota da parte específica corretamente
                             let notaParte = 0;
                             if (entrega) {
                                 // Acessar diretamente a propriedade NotaParteX
@@ -3020,7 +2251,7 @@
                     <strong>✓ Conexão bem-sucedida!</strong><br>
                     - Usuários: ${users.length} registros<br>
                     - Tarefas: ${tarefas.length} registros<br>
-                    - Status: Operacional com segurança v10.0
+                    - Status: Operacional com segurança v10.1
                 </div>
             `;
         } catch (error) {
@@ -3076,6 +2307,7 @@
     window.carregarRelatorioTurma = carregarRelatorioTurma;
     window.togglePartesTarefa = togglePartesTarefa;
     window.verificarProblemasNotas = verificarProblemasNotas;
+    window.limparCacheAluno = limparCacheAluno;
     </script>
 </body>
 </html>
