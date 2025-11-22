@@ -356,7 +356,7 @@
         .checkbox-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 4px; /* Reduzido de 8px para 4px */
             margin-top: 10px;
             padding: 8px;
             background-color: #f9f9f9;
@@ -366,8 +366,9 @@
         .checkbox-item {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px; /* Reduzido de 6px para 4px */
             white-space: nowrap;
+            margin-right: 8px; /* Adicionado para espaçamento entre itens */
         }
         
         .checkbox-item label {
@@ -790,6 +791,50 @@
         .tarefa-expand-content.expandido {
             display: block;
         }
+
+        /* Estilos para diagnóstico de notas */
+        .diagnostico-notas {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+            background-color: #f9fafb;
+        }
+        
+        .passo-diagnostico {
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            border-left: 4px solid #d1d5db;
+        }
+        
+        .passo-sucesso {
+            border-left-color: #10b981;
+            background-color: #ecfdf5;
+        }
+        
+        .passo-erro {
+            border-left-color: #ef4444;
+            background-color: #fef2f2;
+        }
+        
+        .passo-aviso {
+            border-left-color: #f59e0b;
+            background-color: #fffbeb;
+        }
+        
+        .detalhes-nota {
+            font-family: monospace;
+            font-size: 0.8rem;
+            background-color: #1f2937;
+            color: #f9fafb;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 4px;
+            overflow-x: auto;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
@@ -809,7 +854,7 @@
         <div id="content-area"></div>
 
         <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-            Desenvolvido por Geovane Modena | Versão 9.9.2
+            Desenvolvido por Geovane Modena | Versão 9.9.3
         </footer>
     </div>
 
@@ -838,7 +883,6 @@
     // ==================== CONFIGURAÇÃO E CONSTANTES ====================
     const CONFIG = {
         API_URL: "https://script.google.com/macros/s/AKfycbzKymbA3QgIdhBw7AfUJQveK3l3gbzT-2eccOJpF1K4E-HrEc51pefiJFWCEnDWZm4V/exec",
-        // TOKEN REMOVIDO - Segurança por rate limiting no backend
         CACHE_TTL: 5 * 60 * 1000, // 5 minutos
         MAX_TEMA_LEN: 200,
         MAX_PARTE_LEN: 4000,
@@ -1486,6 +1530,17 @@
                     </div>
                 </div>
             `;
+        },
+
+        diagnosticoNotas: () => {
+            return `
+                <div class="diagnostico-card">
+                    <h4 class="font-semibold mb-3">Diagnóstico de Notas</h4>
+                    <button onclick="diagnosticarProblemasNotas()" class="btn-primario w-full mb-3">Diagnosticar Problemas de Notas</button>
+                    <button onclick="forcarAtualizacaoNotas()" class="btn-primario w-full mb-3" style="background-color: #f59e0b;">Forçar Atualização de Notas</button>
+                    <div id="resultado-diagnostico-notas"></div>
+                </div>
+            `;
         }
     };
 
@@ -1494,7 +1549,7 @@
     // Função de inicialização
     async function init() {
         try {
-            console.log('Inicializando sistema v9.9.2...');
+            console.log('Inicializando sistema v9.9.3...');
             const response = await apiGet('getUsers', {}, true);
             STATE.usuarios = response.data || response;
             console.log('Usuários carregados:', STATE.usuarios.length);
@@ -2664,7 +2719,7 @@
                         let countNotasTarefa = 0;
                         
                         for (let parte = 1; parte <= 4; parte++) {
-                            // CORREÇÃO VERSÃO 9.9.2: Buscar nota da parte específica corretamente
+                            // CORREÇÃO VERSÃO 9.9.3: Buscar nota da parte específica corretamente
                             let notaParte = 0;
                             if (entrega) {
                                 // Acessar diretamente a propriedade NotaParteX
@@ -2815,7 +2870,7 @@
         
         UIManager.elements.contentArea.innerHTML = `
             <div class="card p-6">
-                <h3 class="text-2xl font-bold text-red-700 mb-4">Painel de Diagnóstico</h3>
+                <h3 class="text-2xl font-bold text-red-700 mb-4">Painel de Diagnóstico v9.9.3</h3>
                 
                 <div class="diagnostico-grid">
                     ${Components.metricasPerformance()}
@@ -2825,6 +2880,8 @@
                         <button onclick="testarConexaoCompleta()" class="btn-primario w-full mb-3">Testar Conexão Completa</button>
                         <div id="resultado-conexao"></div>
                     </div>
+                    
+                    ${Components.diagnosticoNotas()}
                     
                     <div class="diagnostico-card">
                         <h4 class="font-semibold mb-3">Status do Cache</h4>
@@ -2879,6 +2936,199 @@
                 </div>
             </div>
         `;
+    }
+
+    async function diagnosticarProblemasNotas() {
+        const resultado = document.getElementById('resultado-diagnostico-notas');
+        resultado.innerHTML = `
+            <div class="diagnostico-notas">
+                <div class="passo-diagnostico">
+                    <strong>Passo 1:</strong> Iniciando diagnóstico de notas...
+                    <div class="spinner mt-2"></div>
+                </div>
+            </div>
+        `;
+        
+        try {
+            // Passo 1: Carregar entregas
+            const entregasResponse = await apiGet('getEntregas', {}, true);
+            const entregas = entregasResponse.data || entregasResponse;
+            
+            let diagnosticoHTML = `
+                <div class="passo-diagnostico passo-sucesso">
+                    <strong>Passo 1:</strong> Carregamento de entregas
+                    <div class="text-sm mt-1">✓ ${entregas.length} entregas carregadas</div>
+                </div>
+            `;
+            
+            // Passo 2: Verificar estrutura das entregas
+            if (entregas.length > 0) {
+                const primeiraEntrega = entregas[0];
+                const temNotasPartes = primeiraEntrega.NotaParte1 !== undefined;
+                
+                diagnosticoHTML += `
+                    <div class="passo-diagnostico ${temNotasPartes ? 'passo-sucesso' : 'passo-erro'}">
+                        <strong>Passo 2:</strong> Estrutura das entregas
+                        <div class="text-sm mt-1">
+                            ${temNotasPartes ? 
+                                '✓ Estrutura de notas por parte encontrada' : 
+                                '✗ Estrutura de notas por parte não encontrada'}
+                        </div>
+                        ${!temNotasPartes ? `
+                            <div class="detalhes-nota">
+                                Estrutura esperada: NotaParte1, NotaParte2, NotaParte3, NotaParte4
+                                <br>Estrutura atual: ${Object.keys(primeiraEntrega).join(', ')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                // Passo 3: Verificar notas individuais
+                let entregasComNotas = 0;
+                let entregasSemNotas = 0;
+                
+                entregas.forEach(entrega => {
+                    const temNota = entrega.Nota && parseFloat(entrega.Nota) > 0;
+                    if (temNota) {
+                        entregasComNotas++;
+                    } else {
+                        entregasSemNotas++;
+                    }
+                });
+                
+                diagnosticoHTML += `
+                    <div class="passo-diagnostico ${entregasComNotas > 0 ? 'passo-sucesso' : 'passo-aviso'}">
+                        <strong>Passo 3:</strong> Distribuição de notas
+                        <div class="text-sm mt-1">
+                            ✓ ${entregasComNotas} entregas com notas
+                            <br>⚠ ${entregasSemNotas} entregas sem notas
+                        </div>
+                    </div>
+                `;
+                
+                // Passo 4: Verificar cálculo automático
+                let calculosCorretos = 0;
+                let calculosIncorretos = 0;
+                
+                if (temNotasPartes) {
+                    entregas.slice(0, 10).forEach(entrega => { // Amostra de 10 entregas
+                        const n1 = parseFloat(entrega.NotaParte1) || 0;
+                        const n2 = parseFloat(entrega.NotaParte2) || 0;
+                        const n3 = parseFloat(entrega.NotaParte3) || 0;
+                        const n4 = parseFloat(entrega.NotaParte4) || 0;
+                        const totalCalculado = n1 + n2 + n3 + n4;
+                        const totalReal = parseFloat(entrega.Nota) || 0;
+                        
+                        if (Math.abs(totalCalculado - totalReal) < 0.1) {
+                            calculosCorretos++;
+                        } else {
+                            calculosIncorretos++;
+                        }
+                    });
+                }
+                
+                diagnosticoHTML += `
+                    <div class="passo-diagnostico ${calculosIncorretos === 0 ? 'passo-sucesso' : 'passo-erro'}">
+                        <strong>Passo 4:</strong> Verificação de cálculos
+                        <div class="text-sm mt-1">
+                            ${calculosIncorretos === 0 ? 
+                                '✓ Cálculos automáticos funcionando corretamente' : 
+                                `✗ ${calculosIncorretos} cálculos incorretos detectados`}
+                        </div>
+                    </div>
+                `;
+                
+                // Passo 5: Recomendações
+                let recomendacoes = [];
+                
+                if (!temNotasPartes) {
+                    recomendacoes.push("Execute 'Forçar Atualização de Notas' para corrigir a estrutura");
+                }
+                
+                if (entregasSemNotas > entregasComNotas) {
+                    recomendacoes.push("Muitas entregas sem notas - verifique se os alunos estão enviando nos horários corretos");
+                }
+                
+                if (calculosIncorretos > 0) {
+                    recomendacoes.push("Problemas de cálculo detectados - execute 'Forçar Atualização de Notas'");
+                }
+                
+                diagnosticoHTML += `
+                    <div class="passo-diagnostico ${recomendacoes.length === 0 ? 'passo-sucesso' : 'passo-aviso'}">
+                        <strong>Passo 5:</strong> Recomendações
+                        <div class="text-sm mt-1">
+                            ${recomendacoes.length === 0 ? 
+                                '✓ Sistema funcionando adequadamente' : 
+                                recomendacoes.map(rec => `• ${rec}`).join('<br>')}
+                        </div>
+                    </div>
+                `;
+                
+            } else {
+                diagnosticoHTML += `
+                    <div class="passo-diagnostico passo-aviso">
+                        <strong>Passo 2:</strong> Nenhuma entrega encontrada
+                        <div class="text-sm mt-1">
+                            ⚠ Não há entregas para analisar
+                        </div>
+                    </div>
+                `;
+            }
+            
+            resultado.innerHTML = `
+                <div class="diagnostico-notas">
+                    ${diagnosticoHTML}
+                </div>
+            `;
+            
+        } catch (error) {
+            resultado.innerHTML = `
+                <div class="diagnostico-notas">
+                    <div class="passo-diagnostico passo-erro">
+                        <strong>Erro no diagnóstico:</strong> ${Utils.escapeHTML(error.message)}
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    async function forcarAtualizacaoNotas() {
+        const resultado = document.getElementById('resultado-diagnostico-notas');
+        resultado.innerHTML = `
+            <div class="diagnostico-notas">
+                <div class="passo-diagnostico">
+                    <strong>Forçando atualização de notas...</strong>
+                    <div class="spinner mt-2"></div>
+                </div>
+            </div>
+        `;
+        
+        try {
+            const response = await apiGet('atualizarNotas', {}, true);
+            
+            resultado.innerHTML = `
+                <div class="diagnostico-notas">
+                    <div class="passo-diagnostico passo-sucesso">
+                        <strong>Atualização concluída:</strong> ${response.message}
+                        <div class="text-sm mt-1">
+                            ✓ Todas as notas foram recalculadas com base nos horários de entrega
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Limpar cache para forçar recarregamento
+            CacheManager.clear();
+            
+        } catch (error) {
+            resultado.innerHTML = `
+                <div class="diagnostico-notas">
+                    <div class="passo-diagnostico passo-erro">
+                        <strong>Erro na atualização:</strong> ${Utils.escapeHTML(error.message)}
+                    </div>
+                </div>
+            `;
+        }
     }
 
     async function verificarProblemasNotas() {
@@ -2999,7 +3249,7 @@
                     <strong>✓ Conexão bem-sucedida!</strong><br>
                     - Usuários: ${users.length} registros<br>
                     - Tarefas: ${tarefas.length} registros<br>
-                    - Status: Operacional com segurança v9.9.2
+                    - Status: Operacional com segurança v9.9.3
                 </div>
             `;
         } catch (error) {
@@ -3055,6 +3305,8 @@
     window.carregarRelatorioTurma = carregarRelatorioTurma;
     window.togglePartesTarefa = togglePartesTarefa;
     window.verificarProblemasNotas = verificarProblemasNotas;
+    window.diagnosticarProblemasNotas = diagnosticarProblemasNotas;
+    window.forcarAtualizacaoNotas = forcarAtualizacaoNotas;
     </script>
 </body>
 </html>
