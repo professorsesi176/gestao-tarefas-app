@@ -356,7 +356,7 @@
         .checkbox-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 2px; /* Reduzido de 1px para 2px */
+            gap: 8px;
             margin-top: 10px;
             padding: 8px;
             background-color: #f9f9f9;
@@ -366,14 +366,13 @@
         .checkbox-item {
             display: flex;
             align-items: center;
-            gap: 4px; /* Reduzido de 6px para 4px */
-            margin-right: 8px; /* Adicionado espaçamento à direita */
+            gap: 6px;
+            white-space: nowrap;
         }
         
         .checkbox-item label {
             margin-bottom: 0;
             font-size: 0.9rem;
-            white-space: nowrap; /* Impede quebra de linha */
         }
         
         .form-row {
@@ -810,7 +809,7 @@
         <div id="content-area"></div>
 
         <footer class="mt-8 pt-4 border-t text-xs text-gray-500 text-center">
-            Desenvolvido por Geovane Modena | Versão 9.9.1
+            Desenvolvido por Geovane Modena | Versão 9.9.2
         </footer>
     </div>
 
@@ -1487,9 +1486,7 @@
                     </div>
                 </div>
             `;
-        },
-
-        // REMOVIDO: botoesFormatacao não é mais usado para o professor
+        }
     };
 
     // ==================== FUNÇÕES PRINCIPAIS ====================
@@ -1497,7 +1494,7 @@
     // Função de inicialização
     async function init() {
         try {
-            console.log('Inicializando sistema v9.9.1...');
+            console.log('Inicializando sistema v9.9.2...');
             const response = await apiGet('getUsers', {}, true);
             STATE.usuarios = response.data || response;
             console.log('Usuários carregados:', STATE.usuarios.length);
@@ -1669,7 +1666,7 @@
             </div>
         `;
 
-        // Configurar checkboxes de turmas
+        // Configurar checkboxes de turmas - CORREÇÃO: Checkboxes lado a lado
         document.getElementById('turmasCheckboxes').innerHTML = CONFIG.TURMAS.map(t => `
             <div class="checkbox-item">
                 <input type="checkbox" value="${t}" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
@@ -2667,14 +2664,14 @@
                         let countNotasTarefa = 0;
                         
                         for (let parte = 1; parte <= 4; parte++) {
-                            // CORREÇÃO: Buscar nota da parte específica corretamente
+                            // CORREÇÃO VERSÃO 9.9.2: Buscar nota da parte específica corretamente
                             let notaParte = 0;
                             if (entrega) {
                                 // Acessar diretamente a propriedade NotaParteX
                                 const notaProp = `NotaParte${parte}`;
                                 notaParte = parseFloat(entrega[notaProp]) || 0;
                                 
-                                // Se não há nota específica mas há link, considerar 2.5
+                                // Se não há nota específica mas há link, considerar 2.5 (nota padrão para entrega sem correção)
                                 if (notaParte === 0 && entrega[`Link${parte}`]) {
                                     notaParte = 2.5;
                                 }
@@ -2809,35 +2806,6 @@
         } catch (error) {
             UIManager.showModal('Erro', `Erro ao exportar para PDF: ${error.message}`);
         }
-    }
-
-    // ==================== FUNÇÕES DE FORMATAÇÃO ====================
-    function adicionarFormatacao(parteId, tipo) {
-        const textarea = document.getElementById(parteId);
-        const inicio = textarea.selectionStart;
-        const fim = textarea.selectionEnd;
-        const textoSelecionado = textarea.value.substring(inicio, fim);
-        
-        let textoFormatado = '';
-        let novoInicio = inicio;
-        let novoFim = fim;
-        
-        switch(tipo) {
-            case 'urls':
-                if (textoSelecionado) {
-                    const urlRegex = /(https?:\/\/[^\s]+)/g;
-                    textoFormatado = textoSelecionado.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
-                } else {
-                    textoFormatado = 'https://exemplo.com';
-                    novoFim = inicio + 19;
-                }
-                break;
-        }
-        
-        textarea.value = textarea.value.substring(0, inicio) + textoFormatado + textarea.value.substring(fim);
-        
-        textarea.focus();
-        textarea.setSelectionRange(novoInicio, novoFim);
     }
 
     // ==================== PAINEL DE DIAGNÓSTICO ====================
@@ -3031,7 +2999,7 @@
                     <strong>✓ Conexão bem-sucedida!</strong><br>
                     - Usuários: ${users.length} registros<br>
                     - Tarefas: ${tarefas.length} registros<br>
-                    - Status: Operacional com segurança v9.9.1
+                    - Status: Operacional com segurança v9.9.2
                 </div>
             `;
         } catch (error) {
@@ -3082,7 +3050,6 @@
     window.salvarLink = salvarLink;
     window.excluirLink = excluirLink;
     window.toggleFundamentoCientifico = toggleFundamentoCientifico;
-    window.adicionarFormatacao = adicionarFormatacao;
     window.exportarParaExcel = exportarParaExcel;
     window.exportarParaPDF = exportarParaPDF;
     window.carregarRelatorioTurma = carregarRelatorioTurma;
